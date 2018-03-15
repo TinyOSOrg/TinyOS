@@ -6,6 +6,5 @@ hd60M.img : build/mbr.bin
 build/mbr.bin : src/boot/mbr.s
 	nasm src/boot/mbr.s -o build/mbr.bin
 
-
 clear :
 	rm build/mbr.bin
