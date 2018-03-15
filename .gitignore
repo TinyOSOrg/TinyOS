@@ -1,0 +1,4 @@
+# 生成文件
+build/
+# 虚拟机日志
+bochs.out

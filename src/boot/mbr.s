@@ -27,5 +27,5 @@ SECTION MBR vstart=0x7c00
 	jmp $
 
 	message db "Hello, OS!"
-	times 510-($-$$) db 0
+	times 510 - ($ - $$) db 0
 	db 0x55, 0xaa
