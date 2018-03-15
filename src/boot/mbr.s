@@ -12,18 +12,6 @@ SECTION MBR vstart=0x7c00
 	mov dx, 0x184f
 	int 0x10
 
-	mov ah, 3
-	mov bh, 0
-	int 0x10
-
-	mov ax, message
-	mov bp, ax
-	mov cx, 10
-	mov ax, 0x1301
-
-	mov bx, 0x2
-	int 0x10
-
 	mov ax, 'M'
 	mov bl, 0
 	mov bh, 0
@@ -82,6 +70,5 @@ print_char:
 
 	ret
 	
-	message db "Hello, OS!"
 	times 510 - ($ - $$) db 0
 	db 0x55, 0xaa
