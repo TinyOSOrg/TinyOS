@@ -6,69 +6,87 @@ SECTION MBR vstart=0x7c00
 	mov fs, ax
 	mov sp, 0x7c00
 
+	; 清屏
 	mov ax, 0x0600
 	mov bx, 0x0700
 	mov cx, 0
 	mov dx, 0x184f
 	int 0x10
 
-	mov ax, 'M'
-	mov bl, 0
-	mov bh, 0
-	call print_char
+	; 加载bootloader到0x900并执行之
+	mov eax, 0x2
+	mov bx, 0x900
+	mov cx, 1
+	call read_disk
 
-	mov ax, 'i'
-	mov bl, 0
-	mov bh, 1
-	call print_char
-
-	mov ax, 'n'
-	mov bl, 0
-	mov bh, 2
-	call print_char
-
-	mov ax, 'e'
-	mov bl, 0
-	mov bh, 3
-	call print_char
+	jmp 0x900
 
 	jmp $
 
-; al存字符ASCII码
-; bl存行，bh存列
-print_char:
-	push ds
+; eax：LBA
+; bx ：目的地址
+; cx ：扇区数目
 
-	; 设置ds
-	push ax
-	mov ax, 0xB000
-	mov ds, ax
-	pop ax
-
-	; 计算输出地址
-	push cx
-	push ax
-	mov al, bl
-	mov cl, 80
-	mul cl
-	movzx cx, bh
-	add ax, cx
-	shl ax, 1
-	pop cx ; 把之前的ax放到cx中
-
-	push bx
-	mov bx, ax
-	mov [bx + 0x8000], cl
-	mov ax, 0x0f
-	mov [bx + 0x8001], ax
-	pop bx
-
-	mov ax, cx
-	pop cx
-
-	pop ds
-
-	ret
+read_disk:
+    ; 备份eax和cx，等会儿会覆盖这俩
+    mov esi, eax
+    mov di, cx
+    
+    ; 设置扇区数
+    mov dx, 0x1f2
+    mov al, cl
+    out dx, al
+    mov eax, esi
+    
+    ; 写入LBA的低三个字节
+    mov dx, 0x1f3
+    out dx, al
+    
+    mov cl, 8
+    shr eax, cl
+    mov dx, 0x1f4
+    out dx, al
+    
+    shr eax, cl
+    mov dx, 0x1f5
+    out dx, al
+    
+    ; 写入Device端口，用al来构造它
+    shr eax, cl
+    and al, 0x0f
+    or al, 0xe0
+    mov dx, 0x1f6
+    out dx, al
+    
+    ; 写Command
+    ; 0xec为硬盘识别（这啥），0x20为读，0x30为写
+    mov dx, 0x1f7
+    mov al, 0x20
+    out dx, al
+    
+    ; 轮询硬盘状态直到数据准备就绪
+.waiting_disk_reading:
+    in al, dx    ; Command和Status是同一个端口号，无需准备dx
+    and al, 0x88 ; 提取第3位和第7位
+    cmp al, 0x8  ; 第3位为1，第7位为0
+    jnz .waiting_disk_reading
+    
+    ; 从Data（0x1f0）端口读数据
+    
+    ; 计算读取次数
+    ; 一次读两个字节，一个扇区需要读256次
+    mov ax, di
+    mov dx, 256
+    mul dx
+    mov cx, ax
+    
+    mov dx, 0x1f0
+.read_from_disk_port_to_mem:
+    in ax, dx
+    mov [bx], ax
+    add bx, 2
+    loop .read_from_disk_port_to_mem
+    ret
 	
 	times 510 - ($ - $$) db 0
 	db 0x55, 0xaa
