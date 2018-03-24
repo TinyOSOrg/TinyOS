@@ -1,3 +1,5 @@
+%include "src/boot/boot.inc"
+
 SECTION MBR vstart=0x7c00
 	mov ax, cs
 	mov ds, ax
@@ -13,13 +15,13 @@ SECTION MBR vstart=0x7c00
 	mov dx, 0x184f
 	int 0x10
 
-	; 加载bootloader到0x900并执行之
-	mov eax, 0x2
-	mov bx, 0x900
-	mov cx, 1
+	; 加载bootloader到 BOOTLOADER_START_ADDR 并执行之
+	mov eax, BOOTLOADER_START_SECTOR
+	mov bx, BOOTLOADER_START_ADDR
+	mov cx, BOOTLOADER_SECTOR_COUNT
 	call read_disk
 
-	jmp 0x900
+	jmp BOOTLOADER_START_ADDR
 
 	jmp $
 
@@ -51,7 +53,7 @@ read_disk:
     mov dx, 0x1f5
     out dx, al
     
-    ; 写入Device端口，用al来构造它
+    ; 写入Device端口，用al来构造其值
     shr eax, cl
     and al, 0x0f
     or al, 0xe0
@@ -59,17 +61,17 @@ read_disk:
     out dx, al
     
     ; 写Command
-    ; 0xec为硬盘识别（这啥），0x20为读，0x30为写
+    ; 0x20为读，0x30为写
     mov dx, 0x1f7
     mov al, 0x20
     out dx, al
     
     ; 轮询硬盘状态直到数据准备就绪
-.waiting_disk_reading:
+waiting_disk_reading:
     in al, dx    ; Command和Status是同一个端口号，无需准备dx
     and al, 0x88 ; 提取第3位和第7位
     cmp al, 0x8  ; 第3位为1，第7位为0
-    jnz .waiting_disk_reading
+    jnz waiting_disk_reading
     
     ; 从Data（0x1f0）端口读数据
     
@@ -81,11 +83,12 @@ read_disk:
     mov cx, ax
     
     mov dx, 0x1f0
-.read_from_disk_port_to_mem:
+read_from_disk_port_to_mem:
     in ax, dx
     mov [bx], ax
     add bx, 2
-    loop .read_from_disk_port_to_mem
+    loop read_from_disk_port_to_mem
+    
     ret
 	
 	times 510 - ($ - $$) db 0
