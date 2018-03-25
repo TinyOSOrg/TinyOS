@@ -1,4 +1,4 @@
-%include "src/boot/boot.s"
+%include "src/boot/boot.inc"
 
 SECTION BOOT_LOADER vstart=BOOTLOADER_START_ADDR
     jmp bootloader_start
@@ -7,13 +7,13 @@ SECTION BOOT_LOADER vstart=BOOTLOADER_START_ADDR
 ; GDT数据
 
 GDT_START:
-    dd 0x0
-    dd 0x0
+    dd 0x00000000
+    dd 0x00000000
 GDT_CODE_DESC:
-    dd 0xffff
+    dd 0x0000ffff
     dd SEGMENT_DESC_CODE_HIGH
 GDT_DATA_DESC:
-    dd 0xffff
+    dd 0x0000ffff
     dd SEGMENT_DESC_DATA_HIGH
 GDT_VIDEO_DESC:
     dd 0x80000007
@@ -41,9 +41,9 @@ GDT_ENTRY dw GDT_BYTE_SIZE - 1
 ;-----------------------------------------------------
 ; bootloader
 ; Hello, protection mode!
-bootloader_start:
 
     ; 打开A20地址线
+    ; 开关在键盘控制器，神经病啊……
     in al, 0x92
     or al, 0x2
     out 0x92, al
@@ -77,6 +77,6 @@ new_world_in_protection_mode:
 
 ;-----------------------------------------------------
 
-    mov byte [gs:0], 'A'
+    mov byte [gs:160], 'A'
 
     jmp $

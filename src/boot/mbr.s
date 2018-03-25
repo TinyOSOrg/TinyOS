@@ -1,4 +1,4 @@
-%include "src/boot/boot.inc"
+%include "src/boot/boot.s"
 
 SECTION MBR vstart=0x7c00
 	mov ax, cs
