@@ -41,6 +41,7 @@ GDT_ENTRY dw GDT_BYTE_SIZE - 1
 ;-----------------------------------------------------
 ; bootloader
 ; Hello, protection mode!
+
 bootloader_start:
 
     ; 打开A20地址线

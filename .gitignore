@@ -2,3 +2,5 @@
 build/
 # 虚拟机日志
 bochs.out
+# 磁盘映像
+hd60M.img
