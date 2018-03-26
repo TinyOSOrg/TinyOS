@@ -22,7 +22,11 @@ GDT_VIDEO_DESC:
 GDT_BYTE_SIZE equ $ - GDT_START
 
 ; 预留一些GDT空位
-times 50 dq 0x0
+times 128 dq 0x0
+
+; 总内存容量
+; 跟据ndisasm的结果，bootloader被加载后memory_byte_size位于0xd23处
+memory_byte_size dd 0x512
 
 ; 段选择子
 SEGMENT_SELECTOR_CODE  equ (0x1 << 3) + \
@@ -38,11 +42,59 @@ SEGMENT_SELECTOR_VIDEO equ (0x3 << 3) + \
 GDT_ENTRY dw GDT_BYTE_SIZE - 1
           dd GDT_START
 
+; 用来临时存放ARDS结构体的区域
+; 不知道会有多少，区域留个20个吧
+tmp_ARDS_buffer times 400 db 0x0
+; ARDS结构体数量
+tmp_ARDS_count dw 0x0
+
 ;-----------------------------------------------------
 ; bootloader
-; Hello, protection mode!
 
 bootloader_start:
+
+    ; 用int15h获取内存总容量
+
+    mov ebx, 0 ; 初始化ARDS Continuation
+    mov edx, 0x534d4150
+    mov di, tmp_ARDS_buffer
+    
+int15h_e820_loop_start:
+
+    mov eax, 0xe820
+    mov ecx, 20
+    int 0x15
+
+    inc word [tmp_ARDS_count]
+    add di, cx
+
+    cmp ebx, 0
+    jnz int15h_e820_loop_start ; ebx为0表示已经得到全部ARDS结构体
+
+    ; 找到ARDS中最大的那个，作为总容量
+    mov cx, [tmp_ARDS_count]
+
+    mov edx, 0
+    mov ebx, tmp_ARDS_buffer
+
+find_max_ards_size:
+
+    mov eax, [ebx]
+    add eax, [ebx + 8]
+    add ebx, 20
+
+    cmp edx, eax
+    jg next_ards
+
+    mov edx, eax
+
+next_ards:
+
+    loop find_max_ards_size
+
+    mov [memory_byte_size], edx
+
+    ; Hello, protection mode!
 
     ; 打开A20地址线
     in al, 0x92
