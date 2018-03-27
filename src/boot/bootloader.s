@@ -129,7 +129,79 @@ new_world_in_protection_mode:
     mov esp, BOOTLOADER_START_ADDR
 
 ;-----------------------------------------------------
+; 调用分页
+
+    call page_setup
+
+    sgdt [GDT_ENTRY]
+
+    mov ebx, [GDT_ENTRY + 2]
+    or dword [ebx + 0x18 + 4], 0xc0000000
+
+    add dword [GDT_ENTRY + 2], 0xc0000000
+
+    add esp, 0xc0000000
+
+    mov eax, PAGE_DIR_ENTRY_ADDR
+    mov cr3, eax
+
+    mov eax, cr0
+    or eax, 0x80000000
+    mov cr0, eax
+
+    lgdt [GDT_ENTRY]
+
+;-----------------------------------------------------
 
     mov byte [gs:0], 'A'
 
     jmp $
+
+;-----------------------------------------------------
+; 分页
+; PDE放在0x100000处，占据4096字节，其上是1024个PTE
+; PDE + 0x1000就是第一个PTE入口
+
+page_setup:
+
+    ; 清空PDE空间
+    mov esi, 0
+    mov ecx, 1024
+clear_PDE:
+    mov dword [PAGE_DIR_ENTRY_ADDR + esi * 4], 0x0
+    inc esi
+    loop clear_PDE
+
+    ; 创建PDE
+    
+    mov eax, (PAGE_DIR_ENTRY_ADDR + 0x1000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
+    mov [PAGE_DIR_ENTRY_ADDR], eax ; 页目录第0项指向首个页表
+    mov [PAGE_DIR_ENTRY_ADDR + 0xc00], eax ; 页目录第768项，为进程虚拟空间中操作系统占据区域的开头
+
+    sub eax, 0x1000
+    mov [PAGE_DIR_ENTRY_ADDR + 0x1000], eax ; 页目录最后一项指向页目录本身所在页面
+
+    ; 把首个页表的前256项指向物理地址的低1M空间
+    ; 保证开启分页后bootloader还能用
+    
+    mov ebx, PAGE_DIR_ENTRY_ADDR + 0x1000
+    mov ecx, 256
+    mov esi, 0
+    mov edx, PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
+make_PTE:
+    mov [ebx + esi * 4], edx
+    add edx, 0x1000
+    inc esi
+    loop make_PTE
+
+    mov eax, (PAGE_DIR_ENTRY_ADDR + 0x2000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
+    mov ebx, PAGE_DIR_ENTRY_ADDR
+    mov ecx, 254
+    mov esi, 769
+make_kernel_PDE:
+    mov [ebx + esi * 4], eax
+    inc esi
+    add eax, 0x1000
+    loop make_kernel_PDE
+    
+    ret
