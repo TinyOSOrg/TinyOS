@@ -1,6 +1,7 @@
 %include "src/boot/boot.s"
 
 SECTION BOOT_LOADER vstart=BOOTLOADER_START_ADDR
+
     jmp bootloader_start
 
 ;-----------------------------------------------------
@@ -131,16 +132,22 @@ new_world_in_protection_mode:
 ;-----------------------------------------------------
 ; 分页
 
-    call page_setup
+    call init_page
 
+    ; 存下描述符表地址
     sgdt [GDT_ENTRY]
 
-    mov ebx, [GDT_ENTRY + 2]
-    or dword [ebx + 0x18 + 4], 0xc0000000
+    ; 修改video段基址，使之使用虚拟地址
+    mov ebx, [GDT_ENTRY + 0x2]
+    or dword [ebx + 0x1c], 0xc0000000
 
-    add dword [GDT_ENTRY + 2], 0xc0000000
+    ; 修改描述符表地址，使之使用虚拟地址
+    add dword [GDT_ENTRY + 0x2], 0xc0000000
 
+    ; 使栈指针使用虚拟地址
     add esp, 0xc0000000
+
+    ; 启用分页
 
     mov eax, PAGE_DIR_ENTRY_ADDR
     mov cr3, eax
@@ -149,6 +156,7 @@ new_world_in_protection_mode:
     or eax, 0x80000000
     mov cr0, eax
 
+    ; 重新加载描述符表
     lgdt [GDT_ENTRY]
 
 ;-----------------------------------------------------
@@ -162,11 +170,11 @@ new_world_in_protection_mode:
 ; PDE放在0x100000处，占据4096字节，其上是1024个PTE
 ; PDE + 0x1000就是第一个PTE入口
 
-page_setup:
+init_page:
 
-    ; 清空PDE空间
-    mov esi, 0
-    mov ecx, 1024
+    ; 清空PDE
+    mov esi, 0x0
+    mov ecx, 0x400
 clear_PDE:
     mov dword [PAGE_DIR_ENTRY_ADDR + esi * 4], 0x0
     inc esi
@@ -175,10 +183,14 @@ clear_PDE:
     ; 创建PDE
     
     mov eax, (PAGE_DIR_ENTRY_ADDR + 0x1000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
+    mov [PAGE_DIR_ENTRY_ADDR + 0xc00], eax
     mov [PAGE_DIR_ENTRY_ADDR], eax ; 页目录第0项指向首个页表
 
+    ; 页目录最后一项指向页目录本身所在页面
+    ; 也就是说以后可以通过访问虚拟地址顶端的4KB来访问页目录
+
     sub eax, 0x1000
-    mov [PAGE_DIR_ENTRY_ADDR + 0xffc], eax ; 页目录最后一项指向页目录本身所在页面
+    mov [PAGE_DIR_ENTRY_ADDR + 0xffc], eax
 
     ; 把首个页表的前256项指向物理地址的低1M空间
     ; 保证开启分页后bootloader还能用
@@ -193,13 +205,13 @@ make_PTE:
     inc esi
     loop make_PTE
 
-    ; 把页目录第768项指向第0个页表，以此类推直到页目录的第1022项
+    ; 把页目录第769项指向第1个页表，以此类推直到页目录的第1022项
     ; 虚拟空间中3GB～4GB是操作系统专用，存放在0～255页表中
 
-    mov eax, (PAGE_DIR_ENTRY_ADDR + 0x1000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
+    mov eax, (PAGE_DIR_ENTRY_ADDR + 0x2000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
     mov ebx, PAGE_DIR_ENTRY_ADDR
-    mov ecx, 0xff
-    mov esi, 0x300
+    mov ecx, 0xfe
+    mov esi, 0x301
 make_kernel_PDE:
     mov [ebx + esi * 4], eax
     inc esi
