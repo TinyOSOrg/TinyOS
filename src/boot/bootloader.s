@@ -129,7 +129,7 @@ new_world_in_protection_mode:
     mov esp, BOOTLOADER_START_ADDR
 
 ;-----------------------------------------------------
-; 调用分页
+; 分页
 
     call page_setup
 
@@ -158,7 +158,7 @@ new_world_in_protection_mode:
     jmp $
 
 ;-----------------------------------------------------
-; 分页
+; 启用分页
 ; PDE放在0x100000处，占据4096字节，其上是1024个PTE
 ; PDE + 0x1000就是第一个PTE入口
 
@@ -176,17 +176,16 @@ clear_PDE:
     
     mov eax, (PAGE_DIR_ENTRY_ADDR + 0x1000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
     mov [PAGE_DIR_ENTRY_ADDR], eax ; 页目录第0项指向首个页表
-    mov [PAGE_DIR_ENTRY_ADDR + 0xc00], eax ; 页目录第768项，为进程虚拟空间中操作系统占据区域的开头
 
     sub eax, 0x1000
-    mov [PAGE_DIR_ENTRY_ADDR + 0x1000], eax ; 页目录最后一项指向页目录本身所在页面
+    mov [PAGE_DIR_ENTRY_ADDR + 0xffc], eax ; 页目录最后一项指向页目录本身所在页面
 
     ; 把首个页表的前256项指向物理地址的低1M空间
     ; 保证开启分页后bootloader还能用
     
     mov ebx, PAGE_DIR_ENTRY_ADDR + 0x1000
-    mov ecx, 256
-    mov esi, 0
+    mov ecx, 0x100
+    mov esi, 0x0
     mov edx, PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
 make_PTE:
     mov [ebx + esi * 4], edx
@@ -194,10 +193,13 @@ make_PTE:
     inc esi
     loop make_PTE
 
-    mov eax, (PAGE_DIR_ENTRY_ADDR + 0x2000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
+    ; 把页目录第768项指向第0个页表，以此类推直到页目录的第1022项
+    ; 虚拟空间中3GB～4GB是操作系统专用，存放在0～255页表中
+
+    mov eax, (PAGE_DIR_ENTRY_ADDR + 0x1000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
     mov ebx, PAGE_DIR_ENTRY_ADDR
-    mov ecx, 254
-    mov esi, 769
+    mov ecx, 0xff
+    mov esi, 0x300
 make_kernel_PDE:
     mov [ebx + esi * 4], eax
     inc esi
