@@ -130,6 +130,15 @@ new_world_in_protection_mode:
     mov esp, BOOTLOADER_START_ADDR
 
 ;-----------------------------------------------------
+; 加载内核文件
+
+    mov eax, KERNEL_START_SECTOR
+    mov ebx, KERNEL_START_ADDR
+    mov ecx, KERNEL_SECTOR_COUNT
+
+    call read_disk_under_protection_mode
+
+;-----------------------------------------------------
 ; 分页
 
     call init_page
@@ -163,7 +172,16 @@ new_world_in_protection_mode:
 
     mov byte [gs:0], 'A'
 
-    jmp $
+;-----------------------------------------------------
+; 进入内核
+
+    jmp SEGMENT_SELECTOR_CODE:hello_kernel
+
+hello_kernel:
+
+    call init_kernel
+    mov esp, 0xc009f000
+    jmp KERNEL_ENTRY
 
 ;-----------------------------------------------------
 ; 启用分页
@@ -218,4 +236,123 @@ make_kernel_PDE:
     add eax, 0x1000
     loop make_kernel_PDE
     
+    ret
+
+;-----------------------------------------------------
+; 保护模式下读硬盘，抄的实模式下的那个
+; eax: LBA
+; ebx: addr
+; ecx: sector count
+
+read_disk_under_protection_mode:
+
+    mov esi,eax
+    mov di,cx
+    
+    mov dx,0x1f2
+    mov al,cl
+    out dx,al
+
+    mov eax,esi
+
+    mov dx,0x1f3                       
+    out dx,al                          
+
+    mov cl,8
+    shr eax,cl
+    mov dx,0x1f4
+    out dx,al
+
+    shr eax,cl
+    mov dx,0x1f5
+    out dx,al
+
+    shr eax,cl
+    and al,0x0f
+    or al,0xe0
+    mov dx,0x1f6
+    out dx,al
+
+    mov dx,0x1f7
+    mov al,0x20                        
+    out dx,al
+
+waiting_disk_reading:
+    nop
+    in al,dx
+    and al,0x88
+    cmp al,0x08
+    jnz waiting_disk_reading
+
+    mov ax, di
+
+    mov dx, 256
+    mul dx
+    mov cx, ax	   
+    mov dx, 0x1f0
+read_from_disk_port_to_mem:
+    in ax,dx		
+    mov [ebx], ax
+    add ebx, 2
+
+    loop read_from_disk_port_to_mem
+
+    ret
+
+;-----------------------------------------------------
+; kernel重定位
+
+init_kernel:
+    
+    mov eax, 0x0
+    mov ecx, 0x0
+    mov edx, 0x0
+
+    mov dx, [KERNEL_START_ADDR + 0x2a]  ; 取得program header大小
+    mov ebx, [KERNEL_START_ADDR + 0x1c] ; 取得第一个ph偏移量
+    add ebx, KERNEL_START_ADDR          ; 计算出第一个ph地址
+    mov cx, [KERNEL_START_ADDR + 0x2c]  ; 取得ph数量
+
+for_each_seg:
+
+    cmp byte [ebx], 0x0
+    je ph_unused
+
+    push dword [ebx + 0x10]
+    mov eax, [ebx + 0x4]
+    add eax, KERNEL_START_ADDR
+    push eax
+    push dword [ebx + 0x8]
+    call memcpy
+    add esp, 0xc
+
+ph_unused:
+
+    add ebx, edx
+    loop for_each_seg
+
+    ret
+
+;-----------------------------------------------------
+; memcpy
+; 和c的memcpy(dst, src, size)约定一样
+
+memcpy:
+
+    cld
+    
+    push ebp
+    mov ebp, esp
+    push ecx
+
+    mov eax, $
+    mov edi, [ebp + 0x8]
+    mov esi, [ebp + 0xc]
+    mov ecx, [ebp + 0x10]
+
+    rep movsb
+
+    pop ecx
+    pop ebp
+
     ret
