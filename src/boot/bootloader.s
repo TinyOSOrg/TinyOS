@@ -239,61 +239,84 @@ make_kernel_PDE:
     ret
 
 ;-----------------------------------------------------
+; memcpy
+; 和c的memcpy(dst, src, size)约定一样
+
+memcpy:
+
+    cld
+    
+    push ebp
+    mov ebp, esp
+    push ecx
+
+    mov edi, [ebp + 0x8]
+    mov esi, [ebp + 0xc]
+    mov ecx, [ebp + 0x10]
+
+    rep movsb
+
+    pop ecx
+    pop ebp
+
+    ret
+
+;-----------------------------------------------------
 ; 保护模式下读硬盘，抄的实模式下的那个
 ; eax: LBA
 ; ebx: addr
-; ecx: sector count
+; cx: sector count
 
 read_disk_under_protection_mode:
 
-    mov esi,eax
-    mov di,cx
+    mov esi, eax
+    mov di, cx
     
-    mov dx,0x1f2
-    mov al,cl
-    out dx,al
+    mov dx, 0x1f2
+    mov al, cl
+    out dx, al
 
-    mov eax,esi
+    mov eax, esi
 
-    mov dx,0x1f3                       
-    out dx,al                          
+    mov dx, 0x1f3                       
+    out dx, al                          
 
-    mov cl,8
-    shr eax,cl
-    mov dx,0x1f4
-    out dx,al
+    mov cl, 0x8
+    shr eax, cl
+    mov dx, 0x1f4
+    out dx, al
 
-    shr eax,cl
-    mov dx,0x1f5
-    out dx,al
+    shr eax, cl
+    mov dx, 0x1f5
+    out dx, al
 
-    shr eax,cl
-    and al,0x0f
-    or al,0xe0
-    mov dx,0x1f6
-    out dx,al
+    shr eax, cl
+    and al, 0x0f
+    or al, 0xe0
+    mov dx, 0x1f6
+    out dx, al
 
-    mov dx,0x1f7
-    mov al,0x20                        
-    out dx,al
+    mov dx, 0x1f7
+    mov al, 0x20                        
+    out dx, al
 
 waiting_disk_reading:
     nop
-    in al,dx
-    and al,0x88
-    cmp al,0x08
+    in al, dx
+    and al, 0x88
+    cmp al, 0x08
     jnz waiting_disk_reading
 
     mov ax, di
 
-    mov dx, 256
+    mov dx, 0x100
     mul dx
     mov cx, ax	   
     mov dx, 0x1f0
 read_from_disk_port_to_mem:
-    in ax,dx		
+    in ax, dx		
     mov [ebx], ax
-    add ebx, 2
+    add ebx, 0x2
 
     loop read_from_disk_port_to_mem
 
@@ -330,29 +353,5 @@ ph_unused:
 
     add ebx, edx
     loop for_each_seg
-
-    ret
-
-;-----------------------------------------------------
-; memcpy
-; 和c的memcpy(dst, src, size)约定一样
-
-memcpy:
-
-    cld
-    
-    push ebp
-    mov ebp, esp
-    push ecx
-
-    mov eax, $
-    mov edi, [ebp + 0x8]
-    mov esi, [ebp + 0xc]
-    mov ecx, [ebp + 0x10]
-
-    rep movsb
-
-    pop ecx
-    pop ebp
 
     ret
