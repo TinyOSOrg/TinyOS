@@ -21,7 +21,6 @@ build/bootloader.bin : src/boot/bootloader.s src/boot/boot.s
 	nasm src/boot/bootloader.s -o build/bootloader.bin
 
 build/kernel.bin : $(OBJ_FILE)
-	# -Ttext参数和boot.s中的KERNEL_ENTRY对应
 	$(LD) $(LD_FLAGS) $(OBJ_FILE) -Ttext 0xc0002000 -e main -o build/kernel.bin
 
 build/main.o : src/kernel/main.c
