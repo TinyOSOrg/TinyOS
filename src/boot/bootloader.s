@@ -239,25 +239,36 @@ make_kernel_PDE:
     ret
 
 ;-----------------------------------------------------
-; memcpy
-; 和c的memcpy(dst, src, size)约定一样
+; kernel重定位
 
-memcpy:
-
-    cld
+init_kernel:
     
-    push ebp
-    mov ebp, esp
-    push ecx
+    mov eax, 0x0
+    mov ecx, 0x0
+    mov edx, 0x0
 
-    mov edi, [ebp + 0x8]
-    mov esi, [ebp + 0xc]
-    mov ecx, [ebp + 0x10]
+    mov dx, [KERNEL_START_ADDR + 0x2a]  ; 取得program header大小
+    mov ebx, [KERNEL_START_ADDR + 0x1c] ; 取得第一个ph偏移量
+    add ebx, KERNEL_START_ADDR          ; 计算出第一个ph地址
+    mov cx, [KERNEL_START_ADDR + 0x2c]  ; 取得ph数量
 
-    rep movsb
+for_each_seg:
 
-    pop ecx
-    pop ebp
+    cmp byte [ebx], 0x0
+    je ph_unused
+
+    push dword [ebx + 0x10]
+    mov eax, [ebx + 0x4]
+    add eax, KERNEL_START_ADDR
+    push eax
+    push dword [ebx + 0x8]
+    call memcpy
+    add esp, 0xc
+
+ph_unused:
+
+    add ebx, edx
+    loop for_each_seg
 
     ret
 
@@ -323,35 +334,24 @@ read_from_disk_port_to_mem:
     ret
 
 ;-----------------------------------------------------
-; kernel重定位
+; memcpy
+; 和c的memcpy(dst, src, size)约定一样
 
-init_kernel:
+memcpy:
+
+    cld
     
-    mov eax, 0x0
-    mov ecx, 0x0
-    mov edx, 0x0
+    push ebp
+    mov ebp, esp
+    push ecx
 
-    mov dx, [KERNEL_START_ADDR + 0x2a]  ; 取得program header大小
-    mov ebx, [KERNEL_START_ADDR + 0x1c] ; 取得第一个ph偏移量
-    add ebx, KERNEL_START_ADDR          ; 计算出第一个ph地址
-    mov cx, [KERNEL_START_ADDR + 0x2c]  ; 取得ph数量
+    mov edi, [ebp + 0x8]
+    mov esi, [ebp + 0xc]
+    mov ecx, [ebp + 0x10]
 
-for_each_seg:
+    rep movsb
 
-    cmp byte [ebx], 0x0
-    je ph_unused
-
-    push dword [ebx + 0x10]
-    mov eax, [ebx + 0x4]
-    add eax, KERNEL_START_ADDR
-    push eax
-    push dword [ebx + 0x8]
-    call memcpy
-    add esp, 0xc
-
-ph_unused:
-
-    add ebx, edx
-    loop for_each_seg
+    pop ecx
+    pop ebp
 
     ret

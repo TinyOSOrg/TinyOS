@@ -1,6 +1,10 @@
+
+void PrintStr(const char *str);
+
 int main(void)
 {
+    PrintStr("Hello, C!");
     while(1)
-        *(char*)0xc00b8000 = 'C';
+        ;
     return 0;
 }
