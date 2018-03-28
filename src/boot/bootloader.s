@@ -29,6 +29,8 @@ times 128 dq 0x0
 ; 跟据ndisasm的结果，bootloader被加载后memory_byte_size位于0xd23处
 memory_byte_size dd 0x512
 
+kernel_entry dd 0x0
+
 ; 段选择子
 SEGMENT_SELECTOR_CODE  equ (0x1 << 3) + \
                            SEGMENT_SELECTOR_ATTRIB_RPL_0 + \
@@ -181,7 +183,7 @@ hello_kernel:
 
     call init_kernel
     mov esp, 0xc009f000
-    jmp KERNEL_ENTRY
+    jmp [kernel_entry]
 
 ;-----------------------------------------------------
 ; 启用分页
@@ -246,6 +248,13 @@ init_kernel:
     mov eax, 0x0
     mov ecx, 0x0
     mov edx, 0x0
+
+    ; 取得kernel入口
+
+    mov eax, [KERNEL_START_ADDR + 0x18]
+    mov [kernel_entry], eax
+
+    ; 取得segments信息
 
     mov dx, [KERNEL_START_ADDR + 0x2a]  ; 取得program header大小
     mov ebx, [KERNEL_START_ADDR + 0x1c] ; 取得第一个ph偏移量
