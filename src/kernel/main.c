@@ -1,10 +1,15 @@
+#include <print.h>
 
-void PrintStr(const char *str);
+void print(const char *str)
+{
+    int16_t pos = 0;
+    while(*str)
+        _set_char(pos++, *str++);
+}
 
 int main(void)
 {
-    PrintStr("Hello, C!");
+    print("minecraft");
     while(1)
         ;
-    return 0;
 }
