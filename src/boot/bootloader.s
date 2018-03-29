@@ -25,10 +25,7 @@ GDT_BYTE_SIZE equ $ - GDT_START
 ; 预留一些GDT空位
 times 128 dq 0x0
 
-; 总内存容量
-; 跟据ndisasm的结果，bootloader被加载后memory_byte_size位于0xd23处
-memory_byte_size dd 0x512
-
+; kernel.bin重定位后的入口地址
 kernel_entry dd 0x0
 
 ; 段选择子
@@ -95,7 +92,7 @@ next_ards:
 
     loop find_max_ards_size
 
-    mov [memory_byte_size], edx
+    mov [TOTAL_MEMORY_SIZE_ADDR], edx
 
     ; Hello, protection mode!
 
@@ -169,10 +166,6 @@ new_world_in_protection_mode:
 
     ; 重新加载描述符表
     lgdt [GDT_ENTRY]
-
-;-----------------------------------------------------
-
-    mov byte [gs:0], 'A'
 
 ;-----------------------------------------------------
 ; 进入内核

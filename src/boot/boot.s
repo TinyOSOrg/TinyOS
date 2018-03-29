@@ -2,11 +2,24 @@
 ; mbr如何加载bootloader
 
 ; loader被加载到内存中的位置
-BOOTLOADER_START_ADDR   equ 0x900
+BOOTLOADER_START_ADDR   equ 0x200
 ; loader从哪个扇区开始
 BOOTLOADER_START_SECTOR equ 0x1
 ; 加载loader的时候读多少个扇区
 BOOTLOADER_SECTOR_COUNT equ 0x4
+
+;=====================================================
+; kernel
+
+KERNEL_START_ADDR   equ 0x70000
+KERNEL_START_SECTOR equ 9
+KERNEL_SECTOR_COUNT equ 200
+
+;=====================================================
+; 总内存容量存放在哪
+; 4个字节
+
+TOTAL_MEMORY_SIZE_ADDR equ 0x200
 
 ;=====================================================
 ; 全局描述符表
@@ -111,10 +124,3 @@ PAGE_READ_WRITE_READ_WRITE equ 10b
 
 PAGE_USER_USER  equ 100b
 PAGE_USER_SUPER equ 000b
-
-;=====================================================
-; kernel
-
-KERNEL_START_ADDR   equ 0x70000
-KERNEL_START_SECTOR equ 9
-KERNEL_SECTOR_COUNT equ 200

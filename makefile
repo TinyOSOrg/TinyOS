@@ -21,7 +21,7 @@ build/bootloader.bin : src/boot/bootloader.s src/boot/boot.s
 	nasm src/boot/bootloader.s -o build/bootloader.bin
 
 build/kernel.bin : $(OBJ_FILE)
-	$(LD) $(LD_FLAGS) $(OBJ_FILE) -Ttext 0xc0002000 -e main -o build/kernel.bin
+	$(LD) $(LD_FLAGS) $(OBJ_FILE) -Ttext 0xc0001200 -e main -o build/kernel.bin
 
 build/main.o : src/kernel/main.c
 	$(CC) $(CC_FLAGS) -c src/kernel/main.c -o build/main.o
