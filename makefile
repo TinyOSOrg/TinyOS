@@ -23,11 +23,11 @@ hd60M.img : $(BOOTBIN_FILE)
 
 # MBR编译
 src/boot/mbr.bootbin : src/boot/mbr.s src/boot/boot.s
-	$(ASM) src/boot/mbr.s -o src/boot/mbr.bootbin
+	$(ASM) $(ASM_FLAGS) src/boot/mbr.s -o src/boot/mbr.bootbin
 
 # bootloader
 src/boot/bootloader.bootbin : src/boot/bootloader.s src/boot/boot.s
-	$(ASM) src/boot/bootloader.s -o src/boot/bootloader.bootbin
+	$(ASM) $(ASM_FLAGS) src/boot/bootloader.s -o src/boot/bootloader.bootbin
 
 src/boot/kernel.bootbin : $(C_OBJ_FILES) $(S_BIN_FILES)
 	$(LD) $(LD_FLAGS) $(C_OBJ_FILES) $(S_BIN_FILES) -Ttext 0xc0001200 -e main -o src/boot/kernel.bootbin
@@ -36,7 +36,7 @@ src/boot/kernel.bootbin : $(C_OBJ_FILES) $(S_BIN_FILES)
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
 %.bin:%.s
-	$(ASM) -f elf $< -o $@
+	$(ASM) $(ASM_FLAGS) -f elf $< -o $@
 
 # 头文件依赖
 %.d:%.c
