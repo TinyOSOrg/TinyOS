@@ -30,7 +30,7 @@ src/boot/bootloader.bootbin : src/boot/bootloader.s src/boot/boot.s
 	$(ASM) $(ASM_FLAGS) src/boot/bootloader.s -o src/boot/bootloader.bootbin
 
 src/boot/kernel.bootbin : $(C_OBJ_FILES) $(S_BIN_FILES)
-	$(LD) $(LD_FLAGS) $(C_OBJ_FILES) $(S_BIN_FILES) -Ttext 0xc0001200 -e main -o src/boot/kernel.bootbin
+	$(LD) $(LD_FLAGS) $(C_OBJ_FILES) $(S_BIN_FILES) -Ttext 0xc0002000 -e main -o src/boot/kernel.bootbin
 
 %.o:%.c
 	$(CC) $(CC_FLAGS) -c $< -o $@
