@@ -3,6 +3,8 @@
 
 #include "integer.h"
 
-void _set_char(int16_t idx, char ch);
+void _reset_cursor(void);
+
+void _put_char(uint8_t ch);
 
 #endif //TINY_OS_PRINT_H

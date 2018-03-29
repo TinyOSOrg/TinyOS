@@ -8,3 +8,4 @@ hd60M.img
 *.o
 *.d
 *.bin
+*.bootbin

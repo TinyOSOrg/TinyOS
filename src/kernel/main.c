@@ -2,14 +2,14 @@
 
 void print(const char *str)
 {
-    int16_t pos = 0;
     while(*str)
-        _set_char(pos++, *str++);
+        _put_char(*str++);
 }
 
 int main(void)
 {
-    print("minecraft");
+    _reset_cursor();
+    print("minecraft\nsb\bs");
     while(1)
         ;
 }
