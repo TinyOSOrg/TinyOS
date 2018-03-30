@@ -32,10 +32,10 @@ src/boot/bootloader.bootbin : src/boot/bootloader.s src/boot/boot.s
 src/boot/kernel.bootbin : $(C_OBJ_FILES) $(S_BIN_FILES)
 	$(LD) $(LD_FLAGS) $(C_OBJ_FILES) $(S_BIN_FILES) -Ttext 0xc0002000 -e main -o src/boot/kernel.bootbin
 
-%.o:%.c
+%.o : %.c
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
-%.bin:%.s
+%.bin : %.s
 	$(ASM) $(ASM_FLAGS) -f elf $< -o $@
 
 # 头文件依赖

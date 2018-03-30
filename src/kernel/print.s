@@ -9,11 +9,10 @@ section .text
 
 global _reset_cursor
 global _put_char
+global _set_char_at_cursor
 
 _reset_cursor:
     pushad
-    mov ax, SEGMENT_SELECTOR_VIDEO
-    mov gs, ax
 
     mov dx, 0x03d4
     mov al, 0x0e
@@ -129,6 +128,35 @@ update_cursor:
     mov dx, 0x03d5
     mov al, bl
     out dx, al
+
+    popad
+    ret
+
+_set_char_at_cursor:
+    pushad
+    mov ax, SEGMENT_SELECTOR_VIDEO
+    mov gs, ax
+
+    mov dx, 0x03d4
+    mov al, 0x0e
+    out dx, al
+    mov dx, 0x03d5
+    in al, dx
+    mov ah, al
+
+    mov dx, 0x03d4
+    mov al, 0x0f
+    out dx, al
+    mov dx, 0x03d5
+    in al, dx
+
+    mov bx, ax
+    mov ecx, [esp + 36]
+
+    shl bx, 1
+    mov [gs:bx], cl
+    inc bx
+    mov byte [gs:bx], 0x07
 
     popad
     ret

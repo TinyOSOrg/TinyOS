@@ -221,15 +221,15 @@ make_PTE:
     ; 把页目录第769项指向第1个页表，以此类推直到页目录的第1022项
     ; 虚拟空间中3GB～4GB是操作系统专用，存放在0～255页表中
 
-    mov eax, (PAGE_DIR_ENTRY_ADDR + 0x2000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
-    mov ebx, PAGE_DIR_ENTRY_ADDR
-    mov ecx, 0xfe
-    mov esi, 0x301
-make_kernel_PDE:
-    mov [ebx + esi * 4], eax
-    inc esi
-    add eax, 0x1000
-    loop make_kernel_PDE
+;    mov eax, (PAGE_DIR_ENTRY_ADDR + 0x2000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
+;    mov ebx, PAGE_DIR_ENTRY_ADDR
+;    mov ecx, 0xfe
+;    mov esi, 0x301
+;make_kernel_PDE:
+;    mov [ebx + esi * 4], eax
+;    inc esi
+;    add eax, 0x1000
+;    loop make_kernel_PDE
     
     ret
 
