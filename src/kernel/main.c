@@ -1,5 +1,5 @@
-#include <print.h>
-#include <string.h>
+#include <kernel/print.h>
+#include <lib/string.h>
 
 void print(const char *str)
 {
@@ -15,7 +15,7 @@ int main(void)
     _set_cursor_pos(row_col >> 8, (row_col & 0xff) + 5);
 
     char intstr_buf[10];
-    _uint32_to_str(0, intstr_buf);
+    _uint32_to_str(3284589, intstr_buf);
     print(intstr_buf);
     print("\n");
 

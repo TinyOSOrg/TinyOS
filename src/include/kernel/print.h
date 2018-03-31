@@ -1,7 +1,7 @@
 #ifndef TINY_OS_PRINT_H
 #define TINY_OS_PRINT_H
 
-#include "integer.h"
+#include <lib/integer.h>
 
 // 设置光标位置
 // assert(row < 25 && col < 80);

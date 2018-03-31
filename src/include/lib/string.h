@@ -1,7 +1,7 @@
 #ifndef TINYOS_STRING_H
 #define TINYOS_STRING_H
 
-#include <integer.h>
+#include <lib/integer.h>
 
 size_t _strlen(const char *str);
 void _strcpy(char *dst, const char *src);

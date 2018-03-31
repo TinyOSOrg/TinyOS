@@ -1,5 +1,6 @@
 CC = gcc
-CC_FLAGS = -m32 -std=c99 -nostdinc -I src/include/
+CC_INCLUDE_FLAGS = -I src/include/
+CC_FLAGS = -m32 -std=c99 -nostdinc $(CC_INCLUDE_FLAGS)
 
 LD = ld
 LD_FLAGS = -m elf_i386
@@ -40,7 +41,7 @@ src/boot/kernel.bootbin : $(C_OBJ_FILES) $(S_BIN_FILES)
 
 # 头文件依赖
 %.d:%.c
-	@set -e; rm -f $@; $(CC) -MM $< -I src/include/ > $@.$$$$; \
+	@set -e; rm -f $@; $(CC) -MM $< $(CC_INCLUDE_FLAGS) > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 

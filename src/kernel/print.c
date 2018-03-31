@@ -1,5 +1,5 @@
-#include <io_port.h>
-#include <print.h>
+#include <kernel/io_port.h>
+#include <kernel/print.h>
 
 void _set_cursor_pos(uint8_t row, uint8_t col)
 {
