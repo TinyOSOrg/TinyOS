@@ -1,6 +1,6 @@
 CC = gcc
 CC_INCLUDE_FLAGS = -I src/include/
-CC_FLAGS = -m32 -std=c99 -nostdinc $(CC_INCLUDE_FLAGS)
+CC_FLAGS = -m32 -nostdinc $(CC_INCLUDE_FLAGS)
 
 LD = ld
 LD_FLAGS = -m elf_i386

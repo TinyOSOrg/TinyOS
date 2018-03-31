@@ -20,7 +20,7 @@ uint16_t _get_cursor_row_col(void);
 // 光标超出屏幕范围时会自动滚屏
 void _put_char(uint8_t ch);
 
-// 单纯地设置字符，不移动光标
+// 设置字符，不移动光标
 // 特殊字符不做处理
 void _set_char_at_cursor(uint8_t ch);
 
