@@ -1,6 +1,6 @@
 %include "src/boot/boot.s"
 
-SECTION BOOT_LOADER vstart=BOOTLOADER_START_ADDR
+section BOOT_LOADER vstart=BOOTLOADER_START_ADDR
 
     jmp bootloader_start
 

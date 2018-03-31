@@ -98,7 +98,7 @@ is_cr:
 
 roll_scr:
     cld
-    mov eax, 960
+    mov ecx, 960
     
     mov esi, 0xc00b80a0
     mov edi, 0xc00b8000

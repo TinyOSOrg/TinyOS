@@ -1,3 +1,4 @@
+#include <kernel/intr_entry.h>
 #include <kernel/print.h>
 #include <lib/string.h>
 
@@ -9,20 +10,11 @@ void print(const char *str)
 
 int main(void)
 {
-    _set_cursor_pos(2, 0);
-    print("minecraft\nsb\bs");
-    uint16_t row_col = _get_cursor_row_col();
-    _set_cursor_pos(row_col >> 8, (row_col & 0xff) + 5);
+    _set_cursor_pos(0, 0);
+    init_IDT();
+    asm volatile ("sti");
 
-    char intstr_buf[10];
-    _uint32_to_str(3284589, intstr_buf);
-    print(intstr_buf);
-    print("\n");
-
-    print("microsoft");
-
-    _set_char_at_cursor('&');
-
+    char c = 'A';
     while(1)
         ;
 }

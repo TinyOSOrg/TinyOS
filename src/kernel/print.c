@@ -1,4 +1,4 @@
-#include <kernel/io_port.h>
+#include <kernel/asm.h>
 #include <kernel/print.h>
 
 void _set_cursor_pos(uint8_t row, uint8_t col)
@@ -26,4 +26,10 @@ uint16_t _get_cursor_row_col(void)
     row = pos / 80;
     col = pos % 80;
     return (row << 8) | col;
+}
+
+void _put_str(const char *str)
+{
+    while(*str)
+        _put_char(*str++);
 }

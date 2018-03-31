@@ -1,6 +1,6 @@
 %include "src/boot/boot.s"
 
-SECTION MBR vstart=0x7c00
+section MBR vstart=0x7c00
 	mov ax, cs
 	mov ds, ax
 	mov es, ax
