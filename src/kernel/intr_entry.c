@@ -30,9 +30,9 @@ struct intr_gate_desc
     uint16_t offset_high16; // 偏移量高16位
 };
 
-#define IDT_DESC_COUNT 0x21
-
 extern uint32_t intr_entry_table[IDT_DESC_COUNT]; //在intr_entry.s中定义
+
+void (*intr_entry_function[IDT_DESC_COUNT])(uint8_t intr_number);
 
 static struct intr_gate_desc IDT[IDT_DESC_COUNT];
 

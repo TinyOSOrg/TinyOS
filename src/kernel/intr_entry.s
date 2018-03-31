@@ -14,6 +14,7 @@ output_str db "Hello, interrupt!", 0xa, 0
     intr_%1_entry:
         ; 统一错误码所占栈空间
         %2
+        
         ; 输出中断提示
         push output_str
         call put_str

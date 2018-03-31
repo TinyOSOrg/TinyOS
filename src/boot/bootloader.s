@@ -183,6 +183,11 @@ hello_kernel:
 ; PDE放在0x100000处，占据4096字节，其上是1024个PTE
 ; PDE + 0x1000就是第一个PTE入口
 
+;  通过虚拟地址访问：
+;       页目录所在页的首字节地址：0xfffff000
+;       页目录的第0xuvw项：     0xfffffuvw
+;       10位二进制值M作为页表索引，12位页表内偏移N，则页表中的项为：(0x3ff << 22) | (M << 12) | N
+
 init_page:
 
     ; 清空PDE
@@ -194,7 +199,7 @@ clear_PDE:
     loop clear_PDE
 
     ; 创建PDE
-    
+
     mov eax, (PAGE_DIR_ENTRY_ADDR + 0x1000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
     mov [PAGE_DIR_ENTRY_ADDR + 0xc00], eax
     mov [PAGE_DIR_ENTRY_ADDR], eax ; 页目录第0项指向首个页表

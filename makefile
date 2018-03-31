@@ -40,7 +40,7 @@ src/boot/kernel.bootbin : $(C_OBJ_FILES) $(S_BIN_FILES)
 	$(ASM) $(ASM_FLAGS) -f elf $< -o $@
 
 # 头文件依赖
-%.d:%.c
+%.d : %.c
 	@set -e; rm -f $@; $(CC) -MM $< $(CC_INCLUDE_FLAGS) > $@.$$$$; \
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
