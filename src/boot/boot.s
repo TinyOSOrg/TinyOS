@@ -19,7 +19,7 @@ KERNEL_SECTOR_COUNT equ 0xc8
 ; 总内存容量存放在哪
 ; 4个字节
 
-TOTAL_MEMORY_SIZE_ADDR equ 0x200
+TOTAL_MEMORY_SIZE_ADDR equ 0x500
 
 ;=====================================================
 ; 全局描述符表
