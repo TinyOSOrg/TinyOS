@@ -3,7 +3,7 @@
 %define WITH_ERR_CODE push 0
 %define WITHOUT_ERR_CODE nop
 
-extern _put_str
+extern put_str
 
 section INTR_ENTRY
 
@@ -16,7 +16,7 @@ output_str db "Hello, interrupt!", 0xa, 0
         %2
         ; 输出中断提示
         push output_str
-        call _put_str
+        call put_str
         add esp, 4
         
         mov al, 0x20

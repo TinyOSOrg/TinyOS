@@ -5,12 +5,12 @@
 void print(const char *str)
 {
     while(*str)
-        _put_char(*str++);
+        put_char(*str++);
 }
 
 int main(void)
 {
-    _set_cursor_pos(0, 0);
+    set_cursor_pos(0, 0);
     init_IDT();
     asm volatile ("sti");
 

@@ -7,31 +7,11 @@ SEGMENT_SELECTOR_VIDEO equ (0x3 << 3) + \
 [bits 32]
 section .text
 
-global _reset_cursor
-global _put_char
-global _set_char_at_cursor
+global reset_cursor
+global put_char
+global set_char_at_cursor
 
-_reset_cursor:
-    pushad
-
-    mov dx, 0x03d4
-    mov al, 0x0e
-    out dx, al
-    mov dx, 0x03d5
-    mov al, 0
-    out dx, al
-    
-    mov dx, 0x03d4
-    mov al, 0x0f
-    out dx, al
-    mov dx, 0x03d5
-    mov al, 0
-    out dx, al
-
-    popad
-    ret
-
-_put_char:
+put_char:
     pushad
     mov ax, SEGMENT_SELECTOR_VIDEO
     mov gs, ax
@@ -132,7 +112,7 @@ update_cursor:
     popad
     ret
 
-_set_char_at_cursor:
+set_char_at_cursor:
     pushad
     mov ax, SEGMENT_SELECTOR_VIDEO
     mov gs, ax

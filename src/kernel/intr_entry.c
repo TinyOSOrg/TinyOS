@@ -67,12 +67,12 @@ void init_IDT(void)
         desc->attrib        = INTR_DESC_ATTRIB(INTR_DESC_DPL_0);
         desc->offset_high16 = intr_entry_table[i] >> 16;
     }
-    _put_str("IDT desc initialized\n");
+    put_str("IDT desc initialized\n");
 
     init_8259A();
-    _put_str("8259A initialized\n");
+    put_str("8259A initialized\n");
 
     uint64_t IDTarg = (sizeof(IDT) - 1) | ((uint64_t)((uint32_t)IDT << 16));
     asm volatile ("lidt %0" : : "m" (IDTarg));
-    _put_str("IDT initialized\n");
+    put_str("IDT initialized\n");
 }
