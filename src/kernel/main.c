@@ -8,12 +8,20 @@ void print(const char *str)
         put_char(*str++);
 }
 
+void pretend_to_be_a_scheduler(void)
+{
+    put_str("clock!\n");
+}
+
 int main(void)
 {
     set_cursor_pos(0, 0);
     init_IDT();
-    asm volatile ("sti");
+
+    intr_function[INTR_NUMBER_CLOCK] = (void (*)(uint8_t))pretend_to_be_a_scheduler;
     
+    asm volatile ("sti");
+
     while(1)
         ;
 }

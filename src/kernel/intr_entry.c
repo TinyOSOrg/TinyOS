@@ -1,3 +1,4 @@
+#include <lib/string.h>
 #include <kernel/asm.h>
 #include <kernel/intr_entry.h>
 #include <kernel/print.h>
@@ -32,9 +33,20 @@ struct intr_gate_desc
 
 extern uint32_t intr_entry_table[IDT_DESC_COUNT]; //在intr_entry.s中定义
 
-void (*intr_entry_function[IDT_DESC_COUNT])(uint8_t intr_number);
+void (*intr_function[IDT_DESC_COUNT])(uint8_t intr_number);
 
 static struct intr_gate_desc IDT[IDT_DESC_COUNT];
+
+void default_intr_function(uint8_t intr_number)
+{
+    if(intr_number == 0x27 || intr_number == 0x2f)
+        return;
+    char intr_num_str[10];
+    _uint32_to_str(intr_number, intr_num_str);
+    put_str("int vec: ");
+    put_str(intr_num_str);
+    put_char('\n');
+}
 
 // 初始化8259A
 static void init_8259A(void)
@@ -66,6 +78,8 @@ void init_IDT(void)
         desc->zero_pad      = 0;
         desc->attrib        = INTR_DESC_ATTRIB(INTR_DESC_DPL_0);
         desc->offset_high16 = intr_entry_table[i] >> 16;
+
+        intr_function[i] = default_intr_function;
     }
     put_str("IDT desc initialized\n");
 

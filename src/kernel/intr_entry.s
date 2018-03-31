@@ -4,33 +4,45 @@
 %define WITHOUT_ERR_CODE nop
 
 extern put_str
+extern intr_function
 
 section INTR_ENTRY
-
-output_str db "Hello, interrupt!", 0xa, 0
 
 %macro INTR_VECTOR 2
     section INTR_VEC
     intr_%1_entry:
         ; 统一错误码所占栈空间
         %2
-        
-        ; 输出中断提示
-        push output_str
-        call put_str
-        add esp, 4
+
+        push ds
+        push es
+        push fs
+        push gs
+        pushad
         
         mov al, 0x20
         out 0xa0, al
         out 0x20, al
+
+        push %1 ; 中断号作为intr_function参数，不管对方用不用
+        call [intr_function + %1 * 4]
     
-        ; 弹出错误码
-        add esp, 4
-    
-        iret
+        jmp intr_proc_end
+
     section INTR_ENTRY
         dd intr_%1_entry
 %endmacro
+
+section INTR_ENTRY
+intr_proc_end:
+    add esp, 4 ; 弹出中断号
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    add esp, 4 ; 弹出错误码
+    iret
 
 global intr_entry_table
 intr_entry_table:

@@ -46,7 +46,7 @@ void _uint32_to_str(uint32_t intval, char *buf)
         intval = intval / 10;
     }
 
-    int end = (idx - 1) / 2;
+    int end = idx / 2;
     for(int i = 0;i < end; ++i)
     {
         int tmp = buf[i];
