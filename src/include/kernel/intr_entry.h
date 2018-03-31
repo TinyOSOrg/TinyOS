@@ -28,7 +28,12 @@
 
 #define INTR_NUMBER_CLOCK                32
 
-extern void (*intr_function[IDT_DESC_COUNT])(uint8_t intr_number);
+/*
+    合法的intr_function签名包括
+    void function(void);
+    void function(uint_t intr_number);
+*/
+extern void *intr_function[IDT_DESC_COUNT];
 
 void default_intr_function(uint8_t intr_number);
 

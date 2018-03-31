@@ -18,7 +18,7 @@ int main(void)
     set_cursor_pos(0, 0);
     init_IDT();
 
-    intr_function[INTR_NUMBER_CLOCK] = (void (*)(uint8_t))pretend_to_be_a_scheduler;
+    intr_function[INTR_NUMBER_CLOCK] = pretend_to_be_a_scheduler;
     
     asm volatile ("sti");
 

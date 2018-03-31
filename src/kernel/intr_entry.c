@@ -33,7 +33,7 @@ struct intr_gate_desc
 
 extern uint32_t intr_entry_table[IDT_DESC_COUNT]; //在intr_entry.s中定义
 
-void (*intr_function[IDT_DESC_COUNT])(uint8_t intr_number);
+void *intr_function[IDT_DESC_COUNT];
 
 static struct intr_gate_desc IDT[IDT_DESC_COUNT];
 
