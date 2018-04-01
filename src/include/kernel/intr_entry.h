@@ -1,7 +1,7 @@
 #ifndef TINY_OS_INTR_DESC_H
 #define TINY_OS_INTR_DESC_H
 
-#include <lib/integer.h>
+#include <lib/intdef.h>
 
 // 0x20~0x2f号中断为8259A所用
 
