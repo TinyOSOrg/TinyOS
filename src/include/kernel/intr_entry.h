@@ -3,6 +3,8 @@
 
 #include <lib/integer.h>
 
+// 0x20~0x2f号中断为8259A所用
+
 #define IDT_DESC_COUNT 0x21
 
 #define INTR_NUMBER_DIVIDE_ERROR         0
