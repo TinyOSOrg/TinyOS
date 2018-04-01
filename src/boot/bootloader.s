@@ -175,12 +175,12 @@ new_world_in_protection_mode:
 hello_kernel:
 
     call init_kernel
-    mov esp, 0xc009f000
+    mov esp, 0xc01fff00
     jmp [kernel_entry]
 
 ;-----------------------------------------------------
 ; 启用分页
-; PDE放在0x100000处，占据4096字节，其上是1024个PTE
+; PDE放在0x200000处，占据4096字节，其上是1024个PTE
 ; PDE + 0x1000就是第一个PTE入口
 
 ;  通过虚拟地址访问：
@@ -190,9 +190,9 @@ hello_kernel:
 
 init_page:
 
-    ; 清空PDE
+    ; 清空PDE和第一个页表
     mov esi, 0x0
-    mov ecx, 0x400
+    mov ecx, 0x800
 clear_PDE:
     mov dword [PAGE_DIR_ENTRY_ADDR + esi * 4], 0x0
     inc esi
@@ -201,8 +201,8 @@ clear_PDE:
     ; 创建PDE
 
     mov eax, (PAGE_DIR_ENTRY_ADDR + 0x1000) | PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
-    mov [PAGE_DIR_ENTRY_ADDR + 0xc00], eax
-    mov [PAGE_DIR_ENTRY_ADDR], eax ; 页目录第0项指向首个页表
+    mov [PAGE_DIR_ENTRY_ADDR + 0xc00], eax  ; 页目录第768项指向首个页表
+    mov [PAGE_DIR_ENTRY_ADDR], eax          ; 页目录第0项指向首个页表
 
     ; 页目录最后一项指向页目录本身所在页面
     ; 也就是说以后可以通过访问虚拟地址顶端的4KB来访问页目录
@@ -210,11 +210,11 @@ clear_PDE:
     sub eax, 0x1000
     mov [PAGE_DIR_ENTRY_ADDR + 0xffc], eax
 
-    ; 把首个页表的前256项指向物理地址的低1M空间
+    ; 把首个页表的前512项指向物理地址的低2M空间
     ; 保证开启分页后bootloader还能用
-    
+
     mov ebx, PAGE_DIR_ENTRY_ADDR + 0x1000
-    mov ecx, 0x100
+    mov ecx, 0x200
     mov esi, 0x0
     mov edx, PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
 make_PTE:
