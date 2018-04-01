@@ -2,7 +2,7 @@
 ; mbr如何加载bootloader
 
 ; loader被加载到内存中的位置
-BOOTLOADER_START_ADDR   equ 0x500
+BOOTLOADER_START_ADDR   equ 0x900
 ; loader从哪个扇区开始
 BOOTLOADER_START_SECTOR equ 0x1
 ; 加载loader的时候读多少个扇区
@@ -114,7 +114,7 @@ SEGMENT_SELECTOR_ATTRIB_USE_GDT equ 000b
 ;=====================================================
 ; 分页
 
-PAGE_DIR_ENTRY_ADDR equ 0x100000
+PAGE_DIR_ENTRY_ADDR equ 0x200000
 
 PAGE_PRESENT_TRUE  equ 1b
 PAGE_PRESENT_FALSE equ 0b
