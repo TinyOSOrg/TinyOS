@@ -175,7 +175,7 @@ new_world_in_protection_mode:
 hello_kernel:
 
     call init_kernel
-    mov esp, 0xc01fff00
+    mov esp, 0xc02fff00
     jmp [kernel_entry]
 
 ;-----------------------------------------------------
@@ -210,11 +210,11 @@ clear_PDE:
     sub eax, 0x1000
     mov [PAGE_DIR_ENTRY_ADDR + 0xffc], eax
 
-    ; 把首个页表的前512项指向物理地址的低2M空间
+    ; 把首个页表的前768项指向物理地址的低3M空间
     ; 保证开启分页后bootloader还能用
 
     mov ebx, PAGE_DIR_ENTRY_ADDR + 0x1000
-    mov ecx, 0x200
+    mov ecx, 0x300
     mov esi, 0x0
     mov edx, PAGE_USER_USER | PAGE_READ_WRITE_READ_WRITE | PAGE_PRESENT_TRUE
 make_PTE:

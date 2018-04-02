@@ -7,7 +7,7 @@ void *static_kernel_mem_top;
 
 static struct phy_mem_pool *usr_phy_mem_pool;
 
-void mem_man_init(void)
+void init_mem_man(void)
 {
     // 内存总量
     total_mem_bytes = *(size_t*)TOTAL_MEMORY_SIZE_ADDR;
@@ -15,6 +15,11 @@ void mem_man_init(void)
     static_kernel_mem_top = (void*)0xc0100000;
     
     //TODO：初始化usr_phy_mem_pool
+}
+
+size_t get_mem_total_bytes(void)
+{
+    return total_mem_bytes;
 }
 
 void *alloc_static_kernel_mem(size_t bytes)

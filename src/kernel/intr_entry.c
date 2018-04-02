@@ -81,12 +81,9 @@ void init_IDT(void)
 
         intr_function[i] = default_intr_function;
     }
-    put_str("IDT desc initialized\n");
 
     init_8259A();
-    put_str("8259A initialized\n");
 
     uint64_t IDTarg = (sizeof(IDT) - 1) | ((uint64_t)((uint32_t)IDT << 16));
     asm volatile ("lidt %0" : : "m" (IDTarg));
-    put_str("IDT initialized\n");
 }

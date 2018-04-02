@@ -47,7 +47,9 @@ struct phy_mem_pool
     uint32_t bitmap_data[0];
 };
 
-void mem_man_init(void);
+void init_mem_man(void);
+
+size_t get_mem_total_bytes(void);
 
 // 分配一块固定大小的、在整个系统运行期间常驻的内核内存区域
 void *alloc_static_kernel_mem(size_t bytes);

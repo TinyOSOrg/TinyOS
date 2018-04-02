@@ -1,4 +1,5 @@
 #include <kernel/intr_entry.h>
+#include <kernel/mem_man.h>
 #include <kernel/print.h>
 #include <lib/string.h>
 
@@ -17,13 +18,16 @@ void pretend_to_be_a_scheduler(void)
 
 int main(void)
 {
-    set_cursor_pos(0, 0);
     init_IDT();
+    init_mem_man();
+
+    set_cursor_pos(0, 0);
 
     intr_function[INTR_NUMBER_CLOCK] = pretend_to_be_a_scheduler;
 
     char output_str[20];
-    _uint32_to_str(_find_highest_nonzero_bit(0b00010101000000), output_str);
+    _uint32_to_str(get_mem_total_bytes() / 0x100000, output_str);
+    _strcat(output_str, "MB");
     put_str(output_str);
     
     //asm volatile ("sti");
