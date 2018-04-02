@@ -42,7 +42,7 @@ void default_intr_function(uint8_t intr_number)
     if(intr_number == 0x27 || intr_number == 0x2f)
         return;
     char intr_num_str[10];
-    _uint32_to_str(intr_number, intr_num_str);
+    uint32_to_str(intr_number, intr_num_str);
     put_str("int vec: ");
     put_str(intr_num_str);
     put_char('\n');

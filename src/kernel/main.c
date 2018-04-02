@@ -26,8 +26,8 @@ int main(void)
     intr_function[INTR_NUMBER_CLOCK] = pretend_to_be_a_scheduler;
 
     char output_str[20];
-    _uint32_to_str(get_mem_total_bytes() / 0x100000, output_str);
-    _strcat(output_str, "MB");
+    uint32_to_str(get_mem_total_bytes() / 0x100000, output_str);
+    strcat(output_str, "MB");
     put_str(output_str);
     
     //asm volatile ("sti");

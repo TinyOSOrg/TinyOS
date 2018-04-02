@@ -1,6 +1,6 @@
 #include <lib/string.h>
 
-size_t _strlen(const char *str)
+size_t strlen(const char *str)
 {
     size_t rt = 0;
     while(str[rt])
@@ -8,13 +8,13 @@ size_t _strlen(const char *str)
     return rt;
 }
 
-void _strcpy(char *dst, const char *src)
+void strcpy(char *dst, const char *src)
 {
     while(*dst++ = *src++)
         ;
 }
 
-int _strcmp(const char *lhs, const char *rhs)
+int strcmp(const char *lhs, const char *rhs)
 {
     char L, R;
     while((L = *lhs) && (R = *rhs))
@@ -29,14 +29,14 @@ int _strcmp(const char *lhs, const char *rhs)
     return L ? 1 : (R ? -1 : 0);
 }
 
-void _strcat(char *fst, const char *snd)
+void strcat(char *fst, const char *snd)
 {
     while(*fst)
         ++fst;
-    _strcpy(fst, snd);
+    strcpy(fst, snd);
 }
 
-void _uint32_to_str(uint32_t intval, char *buf)
+void uint32_to_str(uint32_t intval, char *buf)
 {
     size_t idx = 0;
 
