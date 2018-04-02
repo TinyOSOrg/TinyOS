@@ -13,4 +13,6 @@ typedef unsigned long long uint64_t;
 
 typedef uint32_t size_t;
 
+#define NULL ((void*)0)
+
 #endif //TINY_OS_INT_DEF_H
