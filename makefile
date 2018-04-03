@@ -41,14 +41,19 @@ src/boot/kernel.bootbin : $(C_OBJ_FILES) $(S_BIN_FILES)
 
 # 头文件依赖
 %.d : %.c
-	@set -e; rm -f $@; $(CC) -MM $< $(CC_INCLUDE_FLAGS) > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
-	rm -f $@.$$$$
+	@set -e; \
+	rm -f $@; \
+	$(CC) -MM $< $(CC_INCLUDE_FLAGS) > $@.$$$$.dtmp; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$.dtmp > $@;
 
 -include $(C_OBJ_FILES:.o=.d)
 
 clean :
-	rm -f $(BOOTBIN_FILE) $(C_OBJ_FILES) $(C_DPT_FILES) $(S_BIN_FILES)
+	rm -f $(BOOTBIN_FILE)
+	rm -f $(C_OBJ_FILES)
+	rm -f $(C_DPT_FILES)
+	rm -f $(S_BIN_FILES)
+	rm -f $(shell find ./src/ -name "*.dtmp")
 
 bochs :
 	make

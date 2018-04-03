@@ -1,7 +1,51 @@
 #include <kernel/asm.h>
+#include <kernel/assert.h>
 #include <kernel/boot.h>
 #include <kernel/mem_man.h>
 #include <kernel/print.h>
+
+/*
+    物理页管理：
+    设共有N个物理页
+    32-bit位图管理32个4K页面是否被占用，共N/32个32-bit位图，称为L3位图
+    每两个32-bit位图由一位来标志其是否被完全占用，构成32-bit位图，共需N/32^2个，称为L2位图
+    以此类推，定义出L1位图和L0位图来。即使是4GB的内存也就32个L1位图，一个L0位图。所以四级的位图方案绝对够用了。
+*/
+
+struct mem_page_pool
+{
+    // mem_page_pool是个变长结构体，所以大小记一下
+    size_t struct_size;
+
+    // 应满足begin < end，begin和end值的单位为4K
+    // 该内存池的范围为[begin, end)
+    // pool_pages = end - begin
+    size_t begin, end;
+    size_t pool_pages, unused_pages; //总页数和当前空余页数
+
+    // 一个L0位图就足以覆盖4GB内存
+    // 1表示尚可用，0表示已被占用
+    uint32_t bitmap_L0;
+    
+    // 应满足：
+    //    bitmap_count_L1 = ceil(bitmap_count_L2 / 32)
+    //    bitmap_count_L2 = ceil(bitmap_count_L3 / 32)
+    //    bitmap_count_L3 = ceil((end - begin) / 32)
+    size_t bitmap_count_L1;
+    size_t bitmap_count_L2;
+    size_t bitmap_count_L3;
+    
+    uint32_t *bitmap_L1;
+    uint32_t *bitmap_L2;
+    uint32_t *bitmap_L3;
+
+    // 页面是否应常驻内存所构成的位图
+    // 1表示常驻，0表示可换出
+    uint32_t *bitmap_resident;
+    
+    // gcc扩展：零长数组
+    uint32_t bitmap_data[0];
+};
 
 size_t total_mem_bytes;
 
@@ -44,16 +88,41 @@ static inline void clr_bitmap32(uint32_t *bms, size_t bm_count)
 
 static inline void set_bit(uint32_t *bms, size_t i)
 {
-    size_t arr_idx = i / 32;
-    size_t bmp_idx = i % 32;
+    size_t arr_idx = i >> 5;
+    size_t bmp_idx = i & 0x1f;
     bms[arr_idx] |= (1 << bmp_idx);
 }
 
 static inline void clr_bit(uint32_t *bms, size_t i)
 {
-    size_t arr_idx = i / 32;
-    size_t bmp_idx = i % 32;
+    size_t arr_idx = i >> 5;
+    size_t bmp_idx = i & 0x1f;
     bms[arr_idx] &= ~(1 << bmp_idx);
+}
+
+static inline bool get_bit(uint32_t *bms, size_t i)
+{
+    size_t arr_idx = i >> 5;
+    size_t bmp_idx = i & 0x1f;
+    return (bms[arr_idx] & (1 << bmp_idx)) != 0;
+}
+
+static inline void set_local_bit(uint32_t *bm, size_t i)
+{
+    ASSERT(i < 32, "invalid parameter i");
+    *bm |= (1 << i);
+}
+
+static inline void clr_local_bit(uint32_t *bm, size_t i)
+{
+    ASSERT(i < 32, "invalid parameter i");
+    *bm &= ~(1 << i);
+}
+
+static inline bool get_local_bit(uint32_t bm, size_t i)
+{
+    ASSERT(i < 32, "invalid parameter i");
+    return (bm & (1 << i)) != 0;
 }
 
 static bool init_ker_phy_mem_pool(void)
@@ -110,7 +179,7 @@ static bool init_ker_phy_mem_pool(void)
     set_bitmap32(pool->bitmap_L2, pool->bitmap_count_L2);
     set_bitmap32(pool->bitmap_L3, pool->bitmap_count_L3);
     
-    // resident位图其实初步初始化无所谓……
+    // resident位图其实初不初始化无所谓……
     clr_bitmap32(pool->bitmap_resident, pool->bitmap_count_L3);
 
     return true;
@@ -124,10 +193,7 @@ void init_mem_man(void)
     static_kernel_mem_top = (void*)0xc0100000;
     
     if(!init_ker_phy_mem_pool())
-    {
-        put_str("Fatal error: failed to initialize physical memory pool");
-        while(true);
-    }
+        FATAL_ERROR("failed to initialize physical memory pool");
 }
 
 uint32_t alloc_phy_page(bool resident)
@@ -135,10 +201,7 @@ uint32_t alloc_phy_page(bool resident)
     // 现在是没了物理页直接挂掉
     // 以后有了调页机制和swap分区，再考虑换出到磁盘
     if(phy_mem_page_pool->unused_pages == 0)
-    {
-        put_str("System out of memory");
-        while(1);
-    }
+        FATAL_ERROR("system out of memory");
 
     // 找到一个空闲物理页
     uint32_t idxL1          = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L0);
@@ -149,25 +212,55 @@ uint32_t alloc_phy_page(bool resident)
     uint32_t local_page_idx = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L3[idxL3]);
 
     // 设置L3位图中对应的标记位
-    clr_bit(&phy_mem_page_pool->bitmap_L3[idxL3], local_page_idx);
+    clr_local_bit(&phy_mem_page_pool->bitmap_L3[idxL3], local_page_idx);
     if(resident)
-        set_bit(&phy_mem_page_pool->bitmap_resident[idxL3], local_page_idx);
+        set_local_bit(&phy_mem_page_pool->bitmap_resident[idxL3], local_page_idx);
     else
-        clr_bit(&phy_mem_page_pool->bitmap_resident[idxL3], local_page_idx);
+        clr_local_bit(&phy_mem_page_pool->bitmap_resident[idxL3], local_page_idx);
 
     // 更新L2、L1以及L0位图
     if(phy_mem_page_pool->bitmap_L3[idxL3] == 0)
     {
-        clr_bit(&phy_mem_page_pool->bitmap_L2[idxL2], localL3);
+        clr_local_bit(&phy_mem_page_pool->bitmap_L2[idxL2], localL3);
         if(phy_mem_page_pool->bitmap_L2[idxL2] == 0)
         {
-            clr_bit(&phy_mem_page_pool->bitmap_L1[idxL1], localL2);
+            clr_local_bit(&phy_mem_page_pool->bitmap_L1[idxL1], localL2);
             if(phy_mem_page_pool->bitmap_L1[idxL1] == 0)
-                clr_bit(&phy_mem_page_pool->bitmap_L0, idxL1);
+                clr_local_bit(&phy_mem_page_pool->bitmap_L0, idxL1);
         }
     }
 
     --phy_mem_page_pool->unused_pages;
     
-    return (idxL3 << 17) + (local_page_idx << 12);
+    return (phy_mem_page_pool->begin + (idxL3 << 5) + local_page_idx) << 12;
+}
+
+void free_phy_page(uint32_t page_phy_addr)
+{
+    size_t page_idx = (page_phy_addr >> 12) - phy_mem_page_pool->begin;
+    ASSERT(page_idx < phy_mem_page_pool->end, "invalid page addr (page_idx >= phy_mem_page_pool->end)");
+
+    uint32_t idxL3          = page_idx >> 5;
+    uint32_t local_page_idx = page_idx & 0x1f;
+    uint32_t idxL2          = idxL3 >> 5;
+    uint32_t idxL1          = idxL2 >> 5;
+
+    // 尝试释放一个没被占用的物理页，fatal error之
+    if(get_local_bit(phy_mem_page_pool->bitmap_L3[idxL3], local_page_idx))
+        FATAL_ERROR("freeing unused phy mem page");
+
+    // 设置L3位图中的标记位
+    set_local_bit(&phy_mem_page_pool->bitmap_L3[idxL3], local_page_idx);
+    set_local_bit(&phy_mem_page_pool->bitmap_L2[idxL2], idxL3 & 0x1f);
+    set_local_bit(&phy_mem_page_pool->bitmap_L1[idxL1], idxL2 & 0x1f);
+    set_local_bit(&phy_mem_page_pool->bitmap_L0, idxL1);
+
+    //resident位图无需设置，因未被使用的物理页的resident位不具有任何含义
+
+    ++phy_mem_page_pool->unused_pages;
+}
+
+uint32_t get_free_phy_page_count(void)
+{
+    return phy_mem_page_pool->unused_pages;
 }

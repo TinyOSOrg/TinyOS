@@ -42,12 +42,12 @@ static inline uint32_t _find_highest_nonzero_bit(uint32_t bits)
     return rt;
 }
 
-static inline enable_intr(void)
+static inline void _enable_intr(void)
 {
     asm volatile ("sti");
 }
 
-static inline disable_intr(void)
+static inline void _disable_intr(void)
 {
     asm volatile ("cli");
 }
