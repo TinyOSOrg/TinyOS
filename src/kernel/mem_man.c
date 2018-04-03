@@ -1,12 +1,29 @@
+#include <kernel/asm.h>
 #include <kernel/boot.h>
 #include <kernel/mem_man.h>
 #include <kernel/print.h>
 
 size_t total_mem_bytes;
 
+/*
+    为alloc_static_kernel_mem所用，是静态内核存储区域已经使用部分的顶部
+*/
 void *static_kernel_mem_top;
 
 static struct mem_page_pool *phy_mem_page_pool;
+
+size_t get_mem_total_bytes(void)
+{
+    return total_mem_bytes;
+}
+
+void *alloc_static_kernel_mem(size_t bytes, size_t align_bytes)
+{
+    static_kernel_mem_top += (size_t)static_kernel_mem_top % align_bytes;
+    void *rt = static_kernel_mem_top;
+    static_kernel_mem_top = (char*)static_kernel_mem_top + bytes;
+    return rt;
+}
 
 // return ceil(a / b)
 static inline size_t ceil_int_div(size_t a, size_t b)
@@ -42,8 +59,10 @@ static inline void clr_bit(uint32_t *bms, size_t i)
 
 static bool init_ker_phy_mem_pool(void)
 {
-    //物理内存的低KERNEL_RESERVED_PHY_MEM_END字节由内核保留使用
-    //bootloader又花了两页，分别作为内核页目录和0号页表
+    /*
+        物理内存的低KERNEL_RESERVED_PHY_MEM_END字节由内核保留使用
+        bootloader又花了两页分别作为内核页目录和0号页表，所以begin要跳过这部分内存
+    */
     size_t pool_begin = (KERNEL_RESERVED_PHY_MEM_END / 4096 + 2);
     size_t pool_end   = get_mem_total_bytes() / 4096;
     
@@ -60,8 +79,7 @@ static bool init_ker_phy_mem_pool(void)
     size_t count_L2 = ceil_int_div(count_L3, 32);
     size_t count_L1 = ceil_int_div(count_L2, 32);
 
-    //需要的总bitmap32数量
-    // L1 + L2 + L3 + stay (stay与L3相同)
+    //需要的总bitmap32数量：L1 + L2 + L3 + stay (stay与L3相同)
     size_t total_bitmap32_count = count_L1 + count_L2 + (count_L3 << 1);
 
     //结构体字节数
@@ -71,25 +89,27 @@ static bool init_ker_phy_mem_pool(void)
     struct mem_page_pool *pool = phy_mem_page_pool =
                 alloc_static_kernel_mem(struct_size, 4);
     
-    pool->struct_size = struct_size;
-    pool->begin       = pool_begin;
-    pool->end         = pool_end;
-    pool->pool_pages  = pool_pages;
+    pool->struct_size  = struct_size;
+    pool->begin        = pool_begin;
+    pool->end          = pool_end;
+    pool->pool_pages   = pool_pages;
+    pool->unused_pages = pool_pages;
     
     pool->bitmap_count_L1 = count_L1;
     pool->bitmap_count_L2 = count_L2;
     pool->bitmap_count_L3 = count_L3;
 
-    //bitmap_data区域分割：
-    //    L1 L2 L3 stay
+    //bitmap_data区域分割：L1 L2 L3 stay
     pool->bitmap_L1       = pool->bitmap_data;
     pool->bitmap_L2       = pool->bitmap_L1 + count_L1;
     pool->bitmap_L3       = pool->bitmap_L2 + count_L2;
     pool->bitmap_resident = pool->bitmap_L3 + count_L3;
 
-    //初始化物理页分配情况
-    //之前bootloader用了的都已经被排除在这个池子外了
-    //所以都初始化成未使用就行
+    /*
+        初始化物理页分配情况
+        之前bootloader用了的都已经被排除在这个池子外了
+        所以都初始化成未使用就行
+    */
     set_bitmap32(&pool->bitmap_L0, 1);
     set_bitmap32(pool->bitmap_L1, pool->bitmap_count_L1);
     set_bitmap32(pool->bitmap_L2, pool->bitmap_count_L2);
@@ -115,15 +135,46 @@ void init_mem_man(void)
     }
 }
 
-size_t get_mem_total_bytes(void)
+uint32_t alloc_phy_page(bool resident)
 {
-    return total_mem_bytes;
-}
+    /*
+        现在是没了物理页直接挂掉
+        以后有了调页机制和swap分区，再考虑换出到磁盘
+    */
+    if(phy_mem_page_pool->unused_pages == 0)
+    {
+        put_str("System out of memory");
+        while(1);
+    }
 
-void *alloc_static_kernel_mem(size_t bytes, size_t align_bytes)
-{
-    static_kernel_mem_top += (size_t)static_kernel_mem_top % align_bytes;
-    void *rt = static_kernel_mem_top;
-    static_kernel_mem_top = (char*)static_kernel_mem_top + bytes;
-    return rt;
+    //找到一个空闲物理页
+    uint32_t idxL1          = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L0);
+    uint32_t localL2        = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L1[idxL1]);
+    uint32_t idxL2          = (idxL1 << 5) + localL2;
+    uint32_t localL3        = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L2[idxL2]);
+    uint32_t idxL3          = (idxL2 << 5) + localL3;
+    uint32_t local_page_idx = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L3[idxL3]);
+
+    //设置L3位图中对应的标记位
+    clr_bit(&phy_mem_page_pool->bitmap_L3[idxL3], local_page_idx);
+    if(resident)
+        set_bit(&phy_mem_page_pool->bitmap_resident[idxL3], local_page_idx);
+    else
+        clr_bit(&phy_mem_page_pool->bitmap_resident[idxL3], local_page_idx);
+
+    //更新L2、L1以及L0位图
+    if(phy_mem_page_pool->bitmap_L3[idxL3] == 0)
+    {
+        clr_bit(&phy_mem_page_pool->bitmap_L2[idxL2], localL3);
+        if(phy_mem_page_pool->bitmap_L2[idxL2] == 0)
+        {
+            clr_bit(&phy_mem_page_pool->bitmap_L1[idxL1], localL2);
+            if(phy_mem_page_pool->bitmap_L1[idxL1] == 0)
+                clr_bit(&phy_mem_page_pool->bitmap_L0, idxL1);
+        }
+    }
+
+    --phy_mem_page_pool->unused_pages;
+    
+    return (idxL3 << 17) + (local_page_idx << 12);
 }

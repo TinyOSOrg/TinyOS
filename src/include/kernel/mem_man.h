@@ -26,7 +26,8 @@ struct mem_page_pool
         该内存池的范围为[begin, end)
         pool_pages = end - begin
     */
-    size_t begin, end, pool_pages;
+    size_t begin, end;
+    size_t pool_pages, unused_pages; //总页数和当前空余页数
 
     // 一个L0位图就足以覆盖4GB内存
     // 1表示尚可用，0表示已被占用
@@ -54,11 +55,20 @@ struct mem_page_pool
     uint32_t bitmap_data[0];
 };
 
-void init_mem_man(void);
-
 size_t get_mem_total_bytes(void);
 
 // 分配一块固定大小的、在整个系统运行期间常驻的内核内存区域
 void *alloc_static_kernel_mem(size_t bytes, size_t align_bytes);
+
+/*
+    初始化整个页内存管理器
+*/
+void init_mem_man(void);
+
+/*
+    分配一个物理页，返回值为物理地址
+    resident为false表示非常驻，反之表示常驻内存（不会被换出）
+*/
+uint32_t alloc_phy_page(bool resident);
 
 #endif // TINY_OS_MEM_MAN_H

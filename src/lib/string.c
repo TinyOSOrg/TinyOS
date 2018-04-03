@@ -10,14 +10,14 @@ size_t strlen(const char *str)
 
 void strcpy(char *dst, const char *src)
 {
-    while(*dst++ = *src++)
+    while((*dst++ = *src++))
         ;
 }
 
 int strcmp(const char *lhs, const char *rhs)
 {
     char L, R;
-    while((L = *lhs) && (R = *rhs))
+    while(((L = *lhs) != '\0') & ((R = *rhs) != '\0'))
     {
         if(L < R)
             return -1;
