@@ -36,4 +36,19 @@ void put_str(const char *str);
 */
 void set_char_at_cursor(uint8_t ch);
 
+/*
+    格式化输出
+    %u: uint32_t
+    %s: string
+    %%: %
+    \b: backspace
+    \n: crlf
+    \\: backslash
+    \": double quote
+    其他字母、数字及符号原样输出
+
+    不合法fmt将导致未定义行为
+*/
+void print_format(const char *fmt, ...);
+
 #endif /* TINY_OS_PRINT_H */

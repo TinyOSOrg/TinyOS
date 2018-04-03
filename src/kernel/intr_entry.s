@@ -19,14 +19,14 @@ section INTR_ENTRY
         push fs
         push gs
         pushad
-        
+
         mov al, 0x20
         out 0xa0, al
         out 0x20, al
 
         push %1 ; 中断号作为intr_function参数，不管对方用不用
         call [intr_function + %1 * 4]
-    
+
         jmp intr_proc_end
 
     section INTR_ENTRY
