@@ -20,14 +20,20 @@ int main(void)
     intr_function[INTR_NUMBER_CLOCK] = pretend_to_be_a_scheduler;
     
     char intbuf[50];
+    uint32_t pages[80];
+    
     uint32_to_str(get_free_phy_page_count(), intbuf);
     put_str(intbuf); put_char('\n');
 
-    uint32_t page = alloc_phy_page(true);
+    for(int i = 0;i != 80; ++i)
+        pages[i] = alloc_phy_page(true);
+
     uint32_to_str(get_free_phy_page_count(), intbuf);
     put_str(intbuf); put_char('\n');
 
-    free_phy_page(page);
+    for(int i = 0;i != 80; ++i)
+        free_phy_page(pages[i]);
+
     uint32_to_str(get_free_phy_page_count(), intbuf);
     put_str(intbuf); put_char('\n');
 
