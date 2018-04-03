@@ -20,8 +20,10 @@ static inline void _out_double_byte_to_port(uint16_t port, uint16_t data)
     asm volatile ("out %0, %1" : : "a" (data), "d" (port));
 }
 
-// 返回从低往高第一个不为0的位的位置
-// bits不得为0
+/*
+    返回从低往高第一个不为0的位的位置
+    bits不得为0
+*/
 static inline uint32_t _find_lowest_nonzero_bit(uint32_t bits)
 {
     uint32_t rt;
@@ -29,8 +31,10 @@ static inline uint32_t _find_lowest_nonzero_bit(uint32_t bits)
     return rt;
 }
 
-// 返回从低往高最后一个不为0的位的位置
-// bits不得为0
+/*
+    返回从低往高最后一个不为0的位的位置
+    bits不得为0
+*/
 static inline uint32_t _find_highest_nonzero_bit(uint32_t bits)
 {
     uint32_t rt;
@@ -38,4 +42,4 @@ static inline uint32_t _find_highest_nonzero_bit(uint32_t bits)
     return rt;
 }
 
-#endif //TINY_OS_IO_PORT
+#endif /* TINY_OS_IO_PORT */

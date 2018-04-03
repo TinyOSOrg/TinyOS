@@ -1,9 +1,7 @@
 #ifndef TINY_OS_MEM_MAN_H
 #define TINY_OS_MEM_MAN_H
 
-/*
-    页级存储管理
-*/
+/* 页级存储管理 */
 
 /*
     物理页管理：
@@ -18,14 +16,12 @@
 
 struct mem_page_pool
 {
-    //mem_page_pool是个变长结构体，所以大小记一下
+    // mem_page_pool是个变长结构体，所以大小记一下
     size_t struct_size;
 
-    /*
-        应满足begin < end，begin和end值的单位为4K
-        该内存池的范围为[begin, end)
-        pool_pages = end - begin
-    */
+    // 应满足begin < end，begin和end值的单位为4K
+    // 该内存池的范围为[begin, end)
+    // pool_pages = end - begin
     size_t begin, end;
     size_t pool_pages, unused_pages; //总页数和当前空余页数
 
@@ -33,12 +29,10 @@ struct mem_page_pool
     // 1表示尚可用，0表示已被占用
     uint32_t bitmap_L0;
     
-    /*
-        应满足：
-            bitmap_count_L1 = ceil(bitmap_count_L2 / 32)
-            bitmap_count_L2 = ceil(bitmap_count_L3 / 32)
-            bitmap_count_L3 = ceil((end - begin) / 32)
-    */
+    // 应满足：
+    //    bitmap_count_L1 = ceil(bitmap_count_L2 / 32)
+    //    bitmap_count_L2 = ceil(bitmap_count_L3 / 32)
+    //    bitmap_count_L3 = ceil((end - begin) / 32)
     size_t bitmap_count_L1;
     size_t bitmap_count_L2;
     size_t bitmap_count_L3;
@@ -57,12 +51,10 @@ struct mem_page_pool
 
 size_t get_mem_total_bytes(void);
 
-// 分配一块固定大小的、在整个系统运行期间常驻的内核内存区域
+/* 分配一块固定大小的、在整个系统运行期间常驻的内核内存区域 */
 void *alloc_static_kernel_mem(size_t bytes, size_t align_bytes);
 
-/*
-    初始化整个页内存管理器
-*/
+/* 初始化整个页内存管理器 */
 void init_mem_man(void);
 
 /*
@@ -71,4 +63,4 @@ void init_mem_man(void);
 */
 uint32_t alloc_phy_page(bool resident);
 
-#endif // TINY_OS_MEM_MAN_H
+#endif /* TINY_OS_MEM_MAN_H */

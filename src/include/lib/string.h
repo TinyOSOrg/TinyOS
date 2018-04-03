@@ -13,4 +13,4 @@ void strcat(char *fst, const char *snd);
 
 void uint32_to_str(uint32_t intval, char *buf);
 
-#endif //TINYOS_STRING_H
+#endif /* TINYOS_STRING_H */

@@ -4,7 +4,7 @@
 #include <kernel/print.h>
 #include <kernel/seg_desc.h>
 
-// 中断描述符构成
+/* 中断描述符构成 */
 
 #define INTR_DESC_PRESENT (1 << 7)
 
@@ -17,10 +17,10 @@
 
 #define INTR_DESC_ATTRIB(DPL) (INTR_DESC_PRESENT | DPL | INTR_DESC_TYPE)
 
-#define PIC_M_CTRL 0x20 // 主片控制端口
-#define PIC_M_DATA 0x21 // 主片数据端口
-#define PIC_S_CTRL 0xa0 // 从片控制端口
-#define PIC_S_DATA 0xa1 // 从片数据端口
+#define PIC_M_CTRL 0x20 /* 主片控制端口 */
+#define PIC_M_DATA 0x21 /* 主片数据端口 */
+#define PIC_S_CTRL 0xa0 /* 从片控制端口 */
+#define PIC_S_DATA 0xa1 /* 从片数据端口 */
 
 struct intr_gate_desc
 {
@@ -31,7 +31,8 @@ struct intr_gate_desc
     uint16_t offset_high16; // 偏移量高16位
 };
 
-extern uint32_t intr_entry_table[IDT_DESC_COUNT]; //在intr_entry.s中定义
+/* 在intr_entry.s中定义 */
+extern uint32_t intr_entry_table[IDT_DESC_COUNT];
 
 void *intr_function[IDT_DESC_COUNT];
 
@@ -48,7 +49,7 @@ void default_intr_function(uint8_t intr_number)
     put_char('\n');
 }
 
-// 初始化8259A
+/* 初始化8259A */
 static void init_8259A(void)
 {
    // 主片

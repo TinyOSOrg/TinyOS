@@ -7,4 +7,4 @@
     #define false 0
 #endif
 
-#endif //TINY_OS_H
+#endif /* TINY_OS_H */

@@ -3,7 +3,7 @@
 
 #include <lib/intdef.h>
 
-// 0x20~0x2f号中断为8259A所用
+/* 0x20~0x2f号中断为8259A所用 */
 
 #define IDT_DESC_COUNT 0x21
 
@@ -22,7 +22,7 @@
 #define INTR_NUMBER_STK_SEG_FAULT        12
 #define INTR_NUMBER_GENERAL_PROTECTION   13
 #define INTR_NUMBER_PAGE_FAULT           14
-// 15 reserved
+/* 15 reserved */
 #define INTR_NUMBER_FLOAT_ERROR          16
 #define INTR_NUMBER_ALIGNMENT_CHECK      17
 #define INTR_NUMBER_MACHINE_CHECK        18
@@ -41,4 +41,4 @@ void default_intr_function(uint8_t intr_number);
 
 void init_IDT(void);
 
-#endif //TINY_OS_INTR_DESC_H
+#endif /* TINY_OS_INTR_DESC_H */
