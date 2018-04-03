@@ -42,4 +42,14 @@ static inline uint32_t _find_highest_nonzero_bit(uint32_t bits)
     return rt;
 }
 
+static inline enable_intr(void)
+{
+    asm volatile ("sti");
+}
+
+static inline disable_intr(void)
+{
+    asm volatile ("cli");
+}
+
 #endif /* TINY_OS_IO_PORT */
