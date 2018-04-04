@@ -1,6 +1,6 @@
 #include <kernel/asm.h>
 #include <kernel/intr_entry.h>
-#include <kernel/mem_man.h>
+#include <kernel/phy_mem_man.h>
 #include <kernel/print.h>
 
 #include <lib/string.h>

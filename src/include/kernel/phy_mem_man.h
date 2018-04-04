@@ -1,5 +1,5 @@
-#ifndef TINY_OS_MEM_MAN_H
-#define TINY_OS_MEM_MAN_H
+#ifndef TINY_OS_PHY_MEM_MAN_H
+#define TINY_OS_PHY_MEM_MAN_H
 
 /* 页级存储管理 */
 
@@ -26,9 +26,7 @@ uint32_t alloc_phy_page(bool resident);
 */
 void free_phy_page(uint32_t page_phy_addr);
 
-/*
-    还剩多少物理页空闲
-*/
+/* 还剩多少个物理页空闲 */
 uint32_t get_free_phy_page_count(void);
 
-#endif /* TINY_OS_MEM_MAN_H */
+#endif /* TINY_OS_PHY_MEM_MAN_H */
