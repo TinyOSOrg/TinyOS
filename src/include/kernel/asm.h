@@ -57,4 +57,16 @@ static inline void _load_cr3(uint32_t val)
     asm volatile ("movl %0, %%cr3" : : "r" (val) : "memory");
 }
 
+static inline void _refresh_vir_addr_in_TLB(uint32_t vir_addr)
+{
+    asm volatile ("invlpg %0" : : "m" (vir_addr) : "memory");
+}
+
+static inline uint32_t _get_cr2(void)
+{
+    uint32_t rt;
+    asm volatile ("movl %%cr2, %0" : "=r" (rt));
+    return rt;
+}
+
 #endif /* TINY_OS_IO_PORT */

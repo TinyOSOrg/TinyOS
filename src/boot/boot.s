@@ -114,7 +114,7 @@ SEGMENT_SELECTOR_ATTRIB_USE_GDT equ 000b
 ;=====================================================
 ; 分页
 
-PAGE_DIR_ENTRY_ADDR equ 0x200000
+PAGE_DIR_ENTRY_ADDR equ 0x300000
 
 PAGE_PRESENT_TRUE  equ 1b
 PAGE_PRESENT_FALSE equ 0b

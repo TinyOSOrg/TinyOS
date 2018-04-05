@@ -12,7 +12,7 @@ void init_vir_mem_man(void);
     虚拟地址空间句柄
     <del>实质是某个页目录的物理地址</del>
 */
-typedef uint32_t vir_addr_space;
+typedef struct PDE_struct *vir_addr_space;
 
 /*
     创建一个虚拟地址空间并返回其句柄
@@ -44,8 +44,5 @@ void destroy_vir_addr_space(vir_addr_space addr_space);
     虽然这玩意儿并没有什么卵用
 */
 vir_addr_space get_ker_vir_addr_space(void);
-
-/* 刷新整个TLB */
-void refresh_TLB(void);
 
 #endif /* TINY_OS_VIR_MEM_MAN_H */
