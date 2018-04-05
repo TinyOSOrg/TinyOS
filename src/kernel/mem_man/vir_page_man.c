@@ -1,5 +1,6 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
+#include <kernel/print.h>
 #include <kernel/vir_page_man.h>
 
 #include <lib/bool.h>
@@ -19,7 +20,7 @@ size_t get_vir_page_man_byte_size(size_t pool_begin, size_t pool_end)
 {
     ASSERT_S(pool_begin < pool_end);
     
-    return (pool_end - pool_begin) * sizeof(uint32_t)
+    return ((pool_end - pool_begin) / 32) * sizeof(uint32_t)
          + sizeof(struct vir_page_man);
 }
 
@@ -31,10 +32,10 @@ void init_vir_page_man(struct vir_page_man *page_man,
 
     page_man->begin  = pool_begin;
     page_man->end    = pool_end;
-    page_man->total  = pool_begin - pool_end;
+    page_man->total  = pool_end - pool_begin;
     page_man->unused = page_man->total;
 
-    memset((char*)page_man->bitmap, 0xff, page_man->total * sizeof(uint32_t));
+    memset((char*)page_man->bitmap, 0xff, page_man->total / 32 * sizeof(uint32_t));
 }
 
 uint32_t alloc_page_in_vir_addr_space(struct vir_page_man *page_man)
@@ -49,6 +50,7 @@ uint32_t alloc_page_in_vir_addr_space(struct vir_page_man *page_man)
         {
             uint32_t loc_idx = _find_lowest_nonzero_bit(page_man->bitmap[bmp_idx]);
             page_man->bitmap[bmp_idx] &= ~(1 << loc_idx);
+            --page_man->unused;
             return (((bmp_idx << 5) + loc_idx) + page_man->begin) << 12;
         }
     }

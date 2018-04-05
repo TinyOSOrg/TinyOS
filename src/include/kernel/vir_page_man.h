@@ -21,6 +21,7 @@ void init_vir_page_man(struct vir_page_man *page_man,
 
 /*
     在虚拟地址空间管理器中分配一个页
+    返回页的首字节地址
     虚拟地址空间不足时返回0
 */
 uint32_t alloc_page_in_vir_addr_space(struct vir_page_man *page_man);
