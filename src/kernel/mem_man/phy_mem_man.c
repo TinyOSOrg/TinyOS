@@ -4,6 +4,8 @@
 #include <kernel/phy_mem_man.h>
 #include <kernel/print.h>
 
+#include <common.h>
+
 /*
     物理页管理：
     设共有N个物理页
@@ -125,17 +127,12 @@ static inline bool get_local_bit(uint32_t bm, size_t i)
     return (bm & (1 << i)) != 0;
 }
 
-static bool init_ker_phy_mem_pool(void)
+static bool init_ker_phy_mem_pool(struct mem_page_pool **p_pool, size_t pool_begin, size_t pool_end)
 {
-    // 物理内存的低KERNEL_RESERVED_PHY_MEM_END字节由内核保留使用
-    // bootloader又花了两页分别作为内核页目录和0号页表，所以begin要跳过这部分内存
-    size_t pool_begin = (KERNEL_RESERVED_PHY_MEM_END / 4096 + 2);
-    size_t pool_end   = get_mem_total_bytes() / 4096;
-    
     // 没有空闲物理页，这时候是不是应该assert挂掉……
     if(pool_begin >= pool_end)
     {
-        phy_mem_page_pool = NULL;
+        *p_pool = NULL;
         return false;
     }
 
@@ -152,7 +149,7 @@ static bool init_ker_phy_mem_pool(void)
     size_t struct_size = sizeof(struct mem_page_pool)
                        + sizeof(uint32_t) * total_bitmap32_count;
     
-    struct mem_page_pool *pool = phy_mem_page_pool =
+    struct mem_page_pool *pool = *p_pool =
                 alloc_static_kernel_mem(struct_size, 4);
     
     pool->struct_size  = struct_size;
@@ -185,14 +182,18 @@ static bool init_ker_phy_mem_pool(void)
     return true;
 }
 
-void init_mem_man(void)
+void init_phy_mem_man(void)
 {
     // 内存总量
     total_mem_bytes = *(size_t*)TOTAL_MEMORY_SIZE_ADDR;
 
-    static_kernel_mem_top = (void*)0xc0100000;
+    static_kernel_mem_top = (void*)0xc0200000;
     
-    if(!init_ker_phy_mem_pool())
+    // 物理内存的低KERNEL_RESERVED_PHY_MEM_END字节由内核保留使用
+    // bootloader又花了内核页目录和255个页表，所以begin要跳过这部分内存
+    if(!init_ker_phy_mem_pool(&phy_mem_page_pool,
+                              (KERNEL_RESERVED_PHY_MEM_END / 4096 + 255 + 1),
+                              get_mem_total_bytes() / 4096))
         FATAL_ERROR("failed to initialize physical memory pool");
 }
 

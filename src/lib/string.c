@@ -63,3 +63,15 @@ void uint32_to_str(uint32_t intval, char *buf)
 
     buf[idx] = '\0';
 }
+
+void memset(char *dst, uint8_t val, size_t byte_size)
+{
+    for(size_t i = 0;i != byte_size; ++i)
+        dst[i] = val;
+}
+
+void memcpy(char *dst, const char *src, size_t byte_size)
+{
+    for(size_t i = 0;i != byte_size; ++i)
+        dst[i] = src[i];
+}

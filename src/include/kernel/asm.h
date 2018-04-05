@@ -52,4 +52,9 @@ static inline void _disable_intr(void)
     asm volatile ("cli");
 }
 
+static inline void _load_cr3(uint32_t val)
+{
+    asm volatile ("movl %0, %%cr3" : : "r" (val) : "memory");
+}
+
 #endif /* TINY_OS_IO_PORT */

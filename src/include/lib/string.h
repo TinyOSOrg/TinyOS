@@ -13,4 +13,8 @@ void strcat(char *fst, const char *snd);
 
 void uint32_to_str(uint32_t intval, char *buf);
 
+void memset(char *dst, uint8_t val, size_t byte_size);
+
+void memcpy(char *dst, const char *src, size_t byte_size);
+
 #endif /* TINYOS_STRING_H */
