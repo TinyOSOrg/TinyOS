@@ -187,12 +187,13 @@ void init_phy_mem_man(void)
     // 内存总量
     total_mem_bytes = *(size_t*)TOTAL_MEMORY_SIZE_ADDR;
 
-    static_kernel_mem_top = (void*)KER_STACK_PHY_END;
+    static_kernel_mem_top = (void*)(KER_PDE_PHY_ADDR + 0x100000);
     
     // 物理内存的低KER_PDE_PHY_ADDR字节由内核保留使用
     // bootloader又花了内核页目录和255个页表，所以begin要跳过这部分内存
+    // 然后留给static_kernel_mem_top一些空间
     if(!init_ker_phy_mem_pool(&phy_mem_page_pool,
-                              (KER_PDE_PHY_ADDR / 4096 + 1 + 255),
+                              (KER_PDE_PHY_ADDR / 4096 + 1 + 255 + STATIC_KERNEL_MEM / 4096),
                               get_mem_total_bytes() / 4096))
         FATAL_ERROR("failed to initialize physical memory pool");
 }

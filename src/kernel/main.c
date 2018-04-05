@@ -40,9 +40,9 @@ int main(void)
 
     print_format("free pages = %u\n", get_free_phy_page_count());
 
-    *(char*)(0xc0000000 + 0x400001) = 'A';
+    *(char*)(0xc0000000 + 0x500001) = 'A';
 
-    put_char(*(char*)(0xc0000000 + 0x400001));
+    put_char(*(char*)(0xc0000000 + 0x500001));
 
     while(1)
         ;

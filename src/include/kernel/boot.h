@@ -8,8 +8,14 @@
 #define KER_STACK_PHY_END 0x200000
 
 /* 内核页目录开头（物理） */
-#define KER_PDE_PHY_ADDR 0x300000
+#define KER_PDE_PHY_ADDR 0x200000
 
 #define KER_PDE_VIR_ADDR (0xc0000000 + KER_PDE_PHY_ADDR)
+
+/*
+    静态内核存储区大小
+    应是0x1000的整数倍
+*/
+#define STATIC_KERNEL_MEM 0x100000
 
 #endif /* TINY_OS_BOOT_H */
