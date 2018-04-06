@@ -40,6 +40,7 @@ void set_char_at_cursor(uint8_t ch);
     格式化输出
     %u: uint32_t
     %s: string
+    %c: char
     %%: %
     \b: backspace
     \n: crlf

@@ -58,6 +58,10 @@ void print_format(const char *fmt, ...)
             case '%':
                 put_char('%');
                 break;
+            case 'c':
+                put_char((char)*(uint32_t*)next_param);
+                next_param += 4;
+                break;
             }
             ++fmt;
         }

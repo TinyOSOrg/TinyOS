@@ -32,12 +32,12 @@ int main(void)
     set_current_vir_addr_space(usr_addr);
     
     *(char*)0x500000 = 'B';
-    put_char(*(char*)0x500000);
+    print_format("char output: %c\n", *(char*)0x500000);
 
     set_current_vir_addr_space(get_ker_vir_addr_space());
     destroy_vir_addr_space(usr_addr);
     
-    put_char(*(char*)0x500000);
+    print_format("char output: %c\n", *(char*)0x500000);
 
     while(1)
         ;
