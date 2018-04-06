@@ -20,7 +20,3 @@ makefile仅对在bochs虚拟机上的运行有所支持。要使用bochs运行�
 2. 跟据bochs所附带的显示插件，修改`bochsrc.txt`中的`display_library`项。
 3. 在项目根目录下运行命令`bximage`，创建一个大小为60MB、名为`hd60M.img`、模式为`flat`的硬盘映像文件。
 4. 运行命令`make bochs`以构建项目并启动虚拟机。
-
-## 系统概述
-
-系统设计在[README_DESIGN](README_DESIGN.md)中有简要介绍。
