@@ -235,7 +235,7 @@ void init_vir_mem_man(void)
     cur_addr_space = &ker_addr_space;
 
     // 缺页中断初始化
-    intr_function[INTR_NUMBER_PAGE_FAULT] = page_fault_handler;
+    set_intr_function(INTR_NUMBER_PAGE_FAULT, page_fault_handler);
 
     // 内核虚拟页管理器初始化
     init_ker_page_man();

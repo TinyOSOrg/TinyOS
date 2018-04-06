@@ -1,4 +1,5 @@
 #include <kernel/asm.h>
+#include <kernel/assert.h>
 #include <kernel/intr_entry.h>
 #include <kernel/print.h>
 #include <kernel/seg_desc.h>
@@ -43,11 +44,7 @@ void default_intr_function(uint8_t intr_number)
 {
     if(intr_number == 0x27 || intr_number == 0x2f)
         return;
-    char intr_num_str[10];
-    uint32_to_str(intr_number, intr_num_str);
-    put_str("int vec: ");
-    put_str(intr_num_str);
-    put_char('\n');
+    print_format("int vec: %u\n", intr_number);
 }
 
 /* 初始化8259A */
@@ -88,4 +85,13 @@ void init_IDT(void)
 
     uint64_t IDTarg = (sizeof(IDT) - 1) | ((uint64_t)((uint64_t)((uint32_t)IDT) << 16));
     _load_IDT(IDTarg);
+}
+
+void set_intr_function(uint8_t intr_number, void *func)
+{
+    ASSERT_S(intr_number < IDT_DESC_COUNT);
+    if(!func)
+        intr_function[intr_number] = default_intr_function;
+    else
+        intr_function[intr_number] = func;
 }

@@ -30,15 +30,15 @@
 
 #define INTR_NUMBER_CLOCK                32
 
+void default_intr_function(uint8_t intr_number);
+
+void init_IDT(void);
+
 /*
     合法的intr_function签名包括
     void function(void);
     void function(uint_t intr_number);
 */
-extern void *intr_function[IDT_DESC_COUNT];
-
-void default_intr_function(uint8_t intr_number);
-
-void init_IDT(void);
+void set_intr_function(uint8_t intr_number, void *func);
 
 #endif /* TINY_OS_INTR_DESC_H */

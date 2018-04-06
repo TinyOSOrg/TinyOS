@@ -24,7 +24,7 @@ int main(void)
     init_phy_mem_man();
     init_vir_mem_man();
 
-    intr_function[INTR_NUMBER_CLOCK] = pretend_to_be_a_scheduler;
+    set_intr_function(INTR_NUMBER_CLOCK, pretend_to_be_a_scheduler);
 
     *(char*)0x500000 = 'A';
 
