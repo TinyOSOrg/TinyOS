@@ -19,7 +19,7 @@ void page_fault(void)
 int main(void)
 {
     set_cursor_pos(0, 0);
-    
+
     init_IDT();
     init_phy_mem_man();
     init_vir_mem_man();
