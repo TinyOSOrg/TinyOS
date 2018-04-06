@@ -1,8 +1,9 @@
-#include <lib/string.h>
 #include <kernel/asm.h>
 #include <kernel/intr_entry.h>
 #include <kernel/print.h>
 #include <kernel/seg_desc.h>
+
+#include <lib/string.h>
 
 /* 中断描述符构成 */
 
@@ -86,5 +87,5 @@ void init_IDT(void)
     init_8259A();
 
     uint64_t IDTarg = (sizeof(IDT) - 1) | ((uint64_t)((uint32_t)IDT << 16));
-    asm volatile ("lidt %0" : : "m" (IDTarg));
+    _load_IDT(IDTarg);
 }

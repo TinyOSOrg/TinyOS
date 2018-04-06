@@ -43,15 +43,15 @@ void set_current_vir_addr_space(vir_addr_space *addr_space);
 vir_addr_space *get_current_vir_addr_space(void);
 
 /*
-    销毁某个虚拟地址空间
-    其占用的所有物理页均将被释放
-*/
-void destroy_vir_addr_space(vir_addr_space *addr_space);
-
-/*
     取得自bootloader开始内核所使用的虚拟地址空间句柄
     虽然这玩意儿并没有什么卵用
 */
 vir_addr_space *get_ker_vir_addr_space(void);
+
+/*
+    销毁某个虚拟地址空间
+    其占用的所有物理页均将被释放
+*/
+void destroy_vir_addr_space(vir_addr_space *addr_space);
 
 #endif /* TINY_OS_VIR_MEM_MAN_H */

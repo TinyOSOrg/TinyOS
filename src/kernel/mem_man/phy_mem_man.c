@@ -111,19 +111,19 @@ static inline bool get_bit(uint32_t *bms, size_t i)
 
 static inline void set_local_bit(uint32_t *bm, size_t i)
 {
-    ASSERT(i < 32, "invalid parameter i");
+    ASSERT_S(i < 32);
     *bm |= (1 << i);
 }
 
 static inline void clr_local_bit(uint32_t *bm, size_t i)
 {
-    ASSERT(i < 32, "invalid parameter i");
+    ASSERT_S(i < 32);
     *bm &= ~(1 << i);
 }
 
 static inline bool get_local_bit(uint32_t bm, size_t i)
 {
-    ASSERT(i < 32, "invalid parameter i");
+    ASSERT_S(i < 32);
     return (bm & (1 << i)) != 0;
 }
 

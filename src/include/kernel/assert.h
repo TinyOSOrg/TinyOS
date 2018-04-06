@@ -7,7 +7,7 @@
 
 #ifdef NO_ASSERT
     #define ASSERT(EXPR, MSG) ((void)0)
-    #define ASSERT(EXPR) ((void)0)
+    #define ASSERT_S(EXPR) ((void)0)
 #else
     #define ASSERT(EXPR, MSG) do { if(!(EXPR)) _fatal_error_impl("Assert failed in ", __FILE__, __FUNCTION__, __LINE__, MSG); } while(0)
     #define ASSERT_S(EXPR) do { if(!(EXPR)) _fatal_error_impl("Assert failed in ", __FILE__, __FUNCTION__, __LINE__, "\b\b"); } while(0)
