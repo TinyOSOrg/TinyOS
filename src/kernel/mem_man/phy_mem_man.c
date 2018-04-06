@@ -28,7 +28,7 @@ struct mem_page_pool
     // 一个L0位图就足以覆盖4GB内存
     // 1表示尚可用，0表示已被占用
     uint32_t bitmap_L0;
-    
+
     // 应满足：
     //    bitmap_count_L1 = ceil(bitmap_count_L2 / 32)
     //    bitmap_count_L2 = ceil(bitmap_count_L3 / 32)
@@ -36,7 +36,7 @@ struct mem_page_pool
     size_t bitmap_count_L1;
     size_t bitmap_count_L2;
     size_t bitmap_count_L3;
-    
+
     uint32_t *bitmap_L1;
     uint32_t *bitmap_L2;
     uint32_t *bitmap_L3;
@@ -44,18 +44,17 @@ struct mem_page_pool
     // 页面是否应常驻内存所构成的位图
     // 1表示常驻，0表示可换出
     uint32_t *bitmap_resident;
-    
+
     // gcc扩展：零长数组
     uint32_t bitmap_data[0];
 };
 
 size_t total_mem_bytes;
 
-/*
-    为alloc_static_kernel_mem所用，是静态内核存储区域已经使用部分的顶部
-*/
+/* 为alloc_static_kernel_mem所用，是静态内核存储区域已经使用部分的顶部 */
 void *static_kernel_mem_top;
 
+/* 全局物理内存池 */
 static struct mem_page_pool *phy_mem_page_pool;
 
 size_t get_mem_total_bytes(void)
@@ -86,27 +85,6 @@ static inline void clr_bitmap32(uint32_t *bms, size_t bm_count)
 {
     for(size_t i = 0;i != bm_count; ++i)
         bms[i] = 0x00000000;
-}
-
-static inline void set_bit(uint32_t *bms, size_t i)
-{
-    size_t arr_idx = i >> 5;
-    size_t bmp_idx = i & 0x1f;
-    bms[arr_idx] |= (1 << bmp_idx);
-}
-
-static inline void clr_bit(uint32_t *bms, size_t i)
-{
-    size_t arr_idx = i >> 5;
-    size_t bmp_idx = i & 0x1f;
-    bms[arr_idx] &= ~(1 << bmp_idx);
-}
-
-static inline bool get_bit(uint32_t *bms, size_t i)
-{
-    size_t arr_idx = i >> 5;
-    size_t bmp_idx = i & 0x1f;
-    return (bms[arr_idx] & (1 << bmp_idx)) != 0;
 }
 
 static inline void set_local_bit(uint32_t *bm, size_t i)

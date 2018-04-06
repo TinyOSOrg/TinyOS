@@ -12,10 +12,6 @@
 
 #include <common.h>
 
-/*
-    虚拟页目录的空间一开始就要在内核地址空间中准备好
-*/
-
 struct PDE_struct
 {
     uint32_t PTE[1024];
@@ -26,13 +22,21 @@ struct PTE_struct
     uint32_t page[1024];
 };
 
+/*
+    虚拟地址空间记录
+    完整地描述了一个用户虚拟地址空间
+*/
 struct _vir_addr_space
 {
     struct PDE_struct *vir_PDE;
     uint32_t phy_PDE;
 };
 
-/* 以自由链表管理用户虚拟地址空间记录 */
+/*
+    以自由链表管理用户虚拟地址空间记录
+    sizeof(struct _vir_addr_space_freelist_node)
+        <= sizeof(struct _vir_addr_space)
+*/
 struct _vir_addr_space_freelist_node
 {
     struct _vir_addr_space_freelist_node *last;
@@ -42,7 +46,7 @@ struct _vir_addr_space_freelist_node
 /* 最多支持多少个虚拟地址空间（除ker_addr_space） */
 #define MAX_VIR_ADDR_SPACE_COUNT 64
 
-/* 指向用户虚拟地址空间记录 */
+/* 指向用户虚拟地址空间记录数组 */
 vir_addr_space *usr_addr_spaces_arr;
 
 /*
@@ -93,6 +97,12 @@ static inline uint32_t vir_to_phy(uint32_t vir)
           + (vir & 0xfff);
 }
 
+/* 取得当前虚拟地址空间的第PTE_idx个页表的虚拟地址 */
+static inline struct PTE_struct *make_PTE_vir_addr(size_t PTE_idx)
+{
+    return (struct PTE_struct*)((0x3ff << 22) | (PTE_idx << 12));
+}
+
 /* 缺页中断处理 */
 void page_fault_handler(void)
 {
@@ -105,14 +115,14 @@ void page_fault_handler(void)
     uint32_t cr2 = _get_cr2();
 
     // 计算页表索引和物理页索引
-    uint32_t PTEidx = cr2 >> 22;
+    uint32_t PTE_idx = cr2 >> 22;
     uint32_t page_idx = (cr2 >> 12) & 0x3ff;
 
     // 若页表不存在，就分配一个
-    struct PTE_struct *PTEaddr = (struct PTE_struct*)((0x3ff << 22) | (PTEidx << 12));
-    if(!(cur_addr_space->vir_PDE->PTE[PTEidx] & PAGE_PRESENT_TRUE))
+    struct PTE_struct *PTEaddr = make_PTE_vir_addr(PTE_idx);
+    if(!(cur_addr_space->vir_PDE->PTE[PTE_idx] & PAGE_PRESENT_TRUE))
     {
-        cur_addr_space->vir_PDE->PTE[PTEidx] = iPDE(
+        cur_addr_space->vir_PDE->PTE[PTE_idx] = iPDE(
                         alloc_phy_page(true),
                         PAGE_PRESENT_TRUE,
                         PAGE_RW_READ_WRITE,
@@ -245,12 +255,12 @@ void *alloc_ker_page(bool resident)
     // 将虚拟页和物理页关联起来
 
     // 计算页表索引和页索引
-    uint32_t PTEidx = vir_page >> 22;
+    uint32_t PTE_idx = vir_page >> 22;
     uint32_t page_idx = (vir_page >> 12) & 0x3ff;
 
     // 页表一定存在，因为高255个页目录项在bootloader那里就填上了
-    struct PTE_struct *PTEaddr = (struct PTE_struct*)((0x3ff << 22) | (PTEidx << 12));
-    ASSERT_S(cur_addr_space->vir_PDE->PTE[PTEidx] & PAGE_PRESENT_TRUE);
+    struct PTE_struct *PTEaddr = make_PTE_vir_addr(PTE_idx);
+    ASSERT_S(cur_addr_space->vir_PDE->PTE[PTE_idx] & PAGE_PRESENT_TRUE);
 
     // 把物理页填入页表
     PTEaddr->page[page_idx] = iPTE(
@@ -271,10 +281,10 @@ void free_ker_page(void *page)
     uint32_t phy_page = vir_to_phy(vir_page);
 
     // 计算页表索引和页索引
-    uint32_t PTEidx = vir_page >> 22;
+    uint32_t PTE_idx = vir_page >> 22;
     uint32_t page_idx = (vir_page >> 12) & 0x3ff;
 
-    struct PTE_struct *PTEaddr = (struct PTE_struct*)((0x3ff << 22) | (PTEidx << 12));
+    struct PTE_struct *PTEaddr = make_PTE_vir_addr(PTE_idx);
     PTEaddr->page[page_idx] = 0;
 
     _refresh_vir_addr_in_TLB(vir_page);
@@ -339,8 +349,7 @@ void destroy_vir_addr_space(vir_addr_space *addr_space)
         if(!(addr_space->vir_PDE->PTE[i] & PAGE_PRESENT_TRUE))
             continue;
         
-        struct PTE_struct *PTE =
-            (struct PTE_struct*)((0x3ff << 22) | (i << 12));
+        struct PTE_struct *PTE = make_PTE_vir_addr(i);
         
         // 对页表中的每一项，free_phy_page之
         for(size_t j = 0;j != 1024; ++j)
