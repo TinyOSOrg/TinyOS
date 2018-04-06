@@ -41,6 +41,4 @@ void default_intr_function(uint8_t intr_number);
 
 void init_IDT(void);
 
-void reload_IDT(void);
-
 #endif /* TINY_OS_INTR_DESC_H */
