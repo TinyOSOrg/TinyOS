@@ -290,7 +290,7 @@ vir_addr_space *create_vir_addr_space(void)
     if(!rec)
         return NULL;
     
-    // 取得对应的页目录
+    // 取得对应的页目录虚拟地址
     rec->vir_PDE = get_page_of_usr_addr_space(rec);
     // 取得对应的页目录物理地址
     rec->phy_PDE = vir_to_phy((uint32_t)rec->vir_PDE);

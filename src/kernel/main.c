@@ -26,6 +26,19 @@ int main(void)
 
     intr_function[INTR_NUMBER_CLOCK] = pretend_to_be_a_scheduler;
 
+    *(char*)0x500000 = 'A';
+
+    vir_addr_space *usr_addr = create_vir_addr_space();
+    set_current_vir_addr_space(usr_addr);
+    
+    *(char*)0x500000 = 'B';
+    put_char(*(char*)0x500000);
+
+    set_current_vir_addr_space(get_ker_vir_addr_space());
+    destroy_vir_addr_space(usr_addr);
+    
+    put_char(*(char*)0x500000);
+
     while(1)
         ;
 }

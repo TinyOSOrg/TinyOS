@@ -16,9 +16,6 @@ void free_ker_page(void *page);
 
 /*
     虚拟地址空间句柄
-    实质是某个页目录记录的虚拟地址
-    因页目录记录在高1GB地址空间中，为任何虚拟地址空间所共享
-    故在哪都能访问和使用
 */
 typedef struct _vir_addr_space vir_addr_space;
 

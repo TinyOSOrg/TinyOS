@@ -86,6 +86,6 @@ void init_IDT(void)
 
     init_8259A();
 
-    uint64_t IDTarg = (sizeof(IDT) - 1) | ((uint64_t)((uint32_t)IDT << 16));
+    uint64_t IDTarg = (sizeof(IDT) - 1) | ((uint64_t)((uint64_t)((uint32_t)IDT) << 16));
     _load_IDT(IDTarg);
 }

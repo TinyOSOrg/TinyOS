@@ -74,4 +74,11 @@ static inline uint32_t _get_cr2(void)
     return rt;
 }
 
+static inline uint32_t _get_cr3(void)
+{
+    uint32_t rt;
+    asm volatile ("movl %%cr3, %0" : "=r" (rt));
+    return rt;
+}
+
 #endif /* TINY_OS_IO_PORT */
