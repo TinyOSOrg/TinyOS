@@ -53,7 +53,7 @@ struct mem_page_pool
 size_t total_mem_bytes;
 
 /* 为alloc_static_kernel_mem所用，是静态内核存储区域已经使用部分的顶部 */
-void *static_kernel_mem_top;
+static void *static_kernel_mem_top;
 
 /* 全局物理内存池 */
 static struct mem_page_pool *phy_mem_page_pool;

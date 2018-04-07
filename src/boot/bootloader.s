@@ -16,9 +16,6 @@ GDT_CODE_DESC:
 GDT_DATA_DESC:
     dd 0xffff
     dd SEGMENT_DESC_DATA_HIGH
-GDT_VIDEO_DESC:
-    dd 0x80000007
-    dd SEGMENT_DESC_VIDEO_HIGH
 
 GDT_BYTE_SIZE equ $ - GDT_START
 
@@ -33,9 +30,6 @@ SEGMENT_SELECTOR_CODE  equ (0x1 << 3) + \
                            SEGMENT_SELECTOR_ATTRIB_RPL_0 + \
                            SEGMENT_SELECTOR_ATTRIB_USE_GDT
 SEGMENT_SELECTOR_DATA  equ (0x2 << 3) + \
-                           SEGMENT_SELECTOR_ATTRIB_RPL_0 + \
-                           SEGMENT_SELECTOR_ATTRIB_USE_GDT
-SEGMENT_SELECTOR_VIDEO equ (0x3 << 3) + \
                            SEGMENT_SELECTOR_ATTRIB_RPL_0 + \
                            SEGMENT_SELECTOR_ATTRIB_USE_GDT
 
@@ -122,8 +116,6 @@ new_world_in_protection_mode:
     mov ds, ax
     mov es, ax
     mov ss, ax
-
-    mov ax, SEGMENT_SELECTOR_VIDEO
     mov gs, ax
 
     mov esp, BOOTLOADER_START_ADDR
