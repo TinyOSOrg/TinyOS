@@ -1,8 +1,7 @@
 #include <kernel/asm.h>
 #include <kernel/intr_entry.h>
-#include <kernel/phy_mem_man.h>
+#include <kernel/memory.h>
 #include <kernel/print.h>
-#include <kernel/vir_mem_man.h>
 
 #include <lib/string.h>
 

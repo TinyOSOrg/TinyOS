@@ -36,7 +36,8 @@ struct intr_gate_desc
 /* 在intr_entry.s中定义 */
 extern uint32_t intr_entry_table[IDT_DESC_COUNT];
 
-void *intr_function[IDT_DESC_COUNT];
+/* 可注册的中断处理函数 */
+void (*volatile intr_function[IDT_DESC_COUNT])(void);
 
 static struct intr_gate_desc IDT[IDT_DESC_COUNT];
 
@@ -78,7 +79,7 @@ void init_IDT(void)
         desc->attrib        = INTR_DESC_ATTRIB(INTR_DESC_DPL_0);
         desc->offset_high16 = intr_entry_table[i] >> 16;
 
-        intr_function[i] = default_intr_function;
+        intr_function[i] = (void(*)(void))default_intr_function;
     }
 
     init_8259A();
@@ -87,11 +88,11 @@ void init_IDT(void)
     _load_IDT(IDTarg);
 }
 
-void set_intr_function(uint8_t intr_number, void *func)
+void set_intr_function(uint8_t intr_number, void (*func)(void))
 {
     ASSERT_S(intr_number < IDT_DESC_COUNT);
     if(!func)
-        intr_function[intr_number] = default_intr_function;
+        intr_function[intr_number] = (void(*)(void))default_intr_function;
     else
         intr_function[intr_number] = func;
 }

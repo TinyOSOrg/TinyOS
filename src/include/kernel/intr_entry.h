@@ -39,6 +39,6 @@ void init_IDT(void);
     void function(void);
     void function(uint_t intr_number);
 */
-void set_intr_function(uint8_t intr_number, void *func);
+void set_intr_function(uint8_t intr_number, void (*func)(void));
 
 #endif /* TINY_OS_INTR_DESC_H */
