@@ -2,11 +2,12 @@
 #include <kernel/assert.h>
 #include <kernel/boot.h>
 #include <kernel/intr_entry.h>
-#include <kernel/page_desc.h>
 #include <kernel/print.h>
-#include <kernel/phy_mem_man.h>
-#include <kernel/vir_mem_man.h>
-#include <kernel/vir_page_man.h>
+
+#include <kernel/mem_man/page_desc.h>
+#include <kernel/mem_man/phy_mem_man.h>
+#include <kernel/mem_man/vir_mem_man.h>
+#include <kernel/mem_man/vir_page_man.h>
 
 #include <lib/string.h>
 
