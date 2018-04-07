@@ -12,7 +12,7 @@ void pretend_to_be_a_scheduler(void)
 
 int main(void)
 {
-    set_cursor_pos(0, 0);
+    set_cursor_pos(0);
 
     init_IDT();
     init_phy_mem_man();

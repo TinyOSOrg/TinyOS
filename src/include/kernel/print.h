@@ -5,9 +5,15 @@
 
 /*
     设置光标位置
+    assert(pos < 2000);
+*/
+void set_cursor_pos(uint16_t pos);
+
+/*
+    设置光标位置
     assert(row < 25 && col < 80);
 */
-void set_cursor_pos(uint8_t row, uint8_t col);
+void set_cursor_row_col(uint8_t row, uint8_t col);
 
 /*
     取得光标位置
@@ -23,7 +29,7 @@ uint16_t get_cursor_row_col(void);
 
 /*
     在光标位置处输出字符并自动调整光标
-    对特殊字符，仅支持换行(\n)，退格(backspace)
+    对特殊字符，仅支持换行(\n)，退格(backspace)，水平制表(\t)
     光标超出屏幕范围时会自动滚屏
 */
 void put_char(char ch);
@@ -37,7 +43,8 @@ void put_str(const char *str);
     %c: char
     %%: %
     \b: backspace
-    \n: crlf
+    \n: nextline
+    \t: tab
     \\: backslash
     \": double quote
     其他字母、数字及符号原样输出
