@@ -26,15 +26,9 @@ uint16_t get_cursor_row_col(void);
     对特殊字符，仅支持换行(\n)，退格(backspace)
     光标超出屏幕范围时会自动滚屏
 */
-void put_char(uint8_t ch);
+void put_char(char ch);
 
 void put_str(const char *str);
-
-/*
-    设置字符，不移动光标
-    特殊字符不做处理
-*/
-void set_char_at_cursor(uint8_t ch);
 
 /*
     格式化输出

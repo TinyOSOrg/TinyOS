@@ -60,8 +60,6 @@ SEGMENT_DESC_S_NONSYS equ 1_00_00000_00000b
 SEGMENT_DESC_TYPE_CODE  equ 1000_00000000b
 ; 数据段，不可执行，扩展方向向上，可写，accessed为false
 SEGMENT_DESC_TYPE_DATA  equ 0010_00000000b
-; 显存段
-SEGMENT_DESC_TYPE_VIDEO equ 0010_00000000b
 
 SEGMENT_DESC_CODE_HIGH equ (0x00 << 24) + \
                            SEGMENT_DESC_G_4K + \
@@ -86,18 +84,6 @@ SEGMENT_DESC_DATA_HIGH equ (0x00 << 24) + \
                            SEGMENT_DESC_S_NONSYS + \
                            SEGMENT_DESC_TYPE_DATA + \
                            0X00
-
-SEGMENT_DESC_VIDEO_HIGH equ (0x00 << 24) + \
-                            SEGMENT_DESC_G_4K + \
-                            SEGMENT_DESC_D_32 + \
-                            SEGMENT_DESC_L_32 + \
-                            SEGMENT_DESC_AVL + \
-                            SEGMENT_DESC_LIMIT_VIDEO + \
-                            SEGMENT_DESC_P + \
-                            SEGMENT_DESC_DPL_0 + \
-                            SEGMENT_DESC_S_NONSYS + \
-                            SEGMENT_DESC_TYPE_VIDEO + \
-                            0X0b
 
 ;-----------------------------------------------------
 ; 段选择子

@@ -1,6 +1,7 @@
 #include <kernel/asm.h>
 #include <kernel/print.h>
 
+#include <lib/bool.h>
 #include <lib/string.h>
 
 void set_cursor_pos(uint8_t row, uint8_t col)
@@ -28,6 +29,47 @@ uint16_t get_cursor_row_col(void)
     row = pos / 80;
     col = pos % 80;
     return (row << 8) | col;
+}
+
+static inline void set_word(uint16_t cursor, uint8_t fst, uint8_t snd)
+{
+    char* addr = (char*)0xc00b8000 + (cursor << 1);
+    *addr       = fst;
+    *(addr + 1) = snd;
+}
+
+void put_char(char ch)
+{
+    // 取得光标位置
+    uint16_t cursor_pos = get_cursor_pos();
+    
+    if(ch == '\n' || ch == '\r') // 换行
+    {
+        cursor_pos += (80 - cursor_pos % 80);
+    }
+    else if(ch == '\b') // 退格
+    {
+        if(cursor_pos != 0)
+            set_word(--cursor_pos, (uint8_t)' ', 0x07);
+    }
+    else //普通字符
+    {
+        set_word(cursor_pos++, (uint8_t)ch, 0x07);
+    }
+
+    // 滚屏
+    if(cursor_pos >= 2000)
+    {
+        memcpy((char*)0xc00b8000, (char*)0xc00b80a0, 3840);
+        memset((char*)(0xc00b8000 + 3840), 0x0, 160);
+        cursor_pos = 1920;
+    }
+
+    // 更新光标位置
+    _out_byte_to_port(0x03d4, 0x0e);
+    _out_byte_to_port(0x03d5, cursor_pos >> 8);
+    _out_byte_to_port(0x03d4, 0x0f);
+    _out_byte_to_port(0x03d5, cursor_pos & 0xff);
 }
 
 void put_str(const char *str)
