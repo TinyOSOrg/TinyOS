@@ -1,7 +1,8 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
 #include <kernel/print.h>
-#include <kernel/vir_page_man.h>
+
+#include <kernel/mem_man/vir_page_man.h>
 
 #include <lib/bool.h>
 #include <lib/string.h>

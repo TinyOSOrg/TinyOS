@@ -10,11 +10,6 @@ void pretend_to_be_a_scheduler(void)
     put_str("clock!\n");
 }
 
-void page_fault(void)
-{
-    put_str("page fault!");
-}
-
 int main(void)
 {
     set_cursor_pos(0, 0);
@@ -37,6 +32,8 @@ int main(void)
     destroy_vir_addr_space(usr_addr);
     
     print_format("char output: %c\n", *(char*)0x500000);
+
+    //_enable_intr();
 
     while(1)
         ;
