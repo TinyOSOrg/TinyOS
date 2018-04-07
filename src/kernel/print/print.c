@@ -4,13 +4,17 @@
 #include <lib/bool.h>
 #include <lib/string.h>
 
-void set_cursor_pos(uint8_t row, uint8_t col)
+void set_cursor_pos(uint16_t pos)
 {
-    uint16_t pos = 80 * row + col;
     _out_byte_to_port(0x03d4, 0x0e);
     _out_byte_to_port(0x03d5, pos >> 8);
     _out_byte_to_port(0x03d4, 0x0f);
     _out_byte_to_port(0x03d5, pos & 0xff);
+}
+
+void set_cursor_row_col(uint8_t row, uint8_t col)
+{
+    set_cursor_pos(80 * row + col);
 }
 
 uint16_t get_cursor_pos(void)
@@ -33,7 +37,7 @@ uint16_t get_cursor_row_col(void)
 
 static inline void set_word(uint16_t cursor, uint8_t fst, uint8_t snd)
 {
-    char* addr = (char*)0xc00b8000 + (cursor << 1);
+    char* addr  = (char*)0xc00b8000 + (cursor << 1);
     *addr       = fst;
     *(addr + 1) = snd;
 }
@@ -52,7 +56,11 @@ void put_char(char ch)
         if(cursor_pos != 0)
             set_word(--cursor_pos, (uint8_t)' ', 0x07);
     }
-    else //普通字符
+    else if(ch == '\t') // 水平制表四空格，不服憋着
+    {
+        cursor_pos += (4 - (cursor_pos + 1) % 4);
+    }
+    else // 普通字符
     {
         set_word(cursor_pos++, (uint8_t)ch, 0x07);
     }
@@ -66,10 +74,7 @@ void put_char(char ch)
     }
 
     // 更新光标位置
-    _out_byte_to_port(0x03d4, 0x0e);
-    _out_byte_to_port(0x03d5, cursor_pos >> 8);
-    _out_byte_to_port(0x03d4, 0x0f);
-    _out_byte_to_port(0x03d5, cursor_pos & 0xff);
+    set_cursor_pos(cursor_pos);
 }
 
 void put_str(const char *str)
