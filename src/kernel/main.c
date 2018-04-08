@@ -1,4 +1,5 @@
 #include <kernel/asm.h>
+#include <kernel/clock_intr.h>
 #include <kernel/intr_entry.h>
 #include <kernel/memory.h>
 #include <kernel/print.h>
@@ -7,7 +8,7 @@
 
 void pretend_to_be_a_scheduler(void)
 {
-    put_str("clock!\n");
+    put_str("c");
 }
 
 int main(void)
@@ -17,6 +18,7 @@ int main(void)
     init_IDT();
     init_phy_mem_man();
     init_vir_mem_man();
+    set_8253_freq(100);
 
     set_intr_function(INTR_NUMBER_CLOCK, pretend_to_be_a_scheduler);
 
