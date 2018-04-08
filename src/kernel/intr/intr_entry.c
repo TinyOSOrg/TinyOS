@@ -46,6 +46,7 @@ void default_intr_function(uint8_t intr_number)
     if(intr_number == 0x27 || intr_number == 0x2f)
         return;
     print_format("int vec: %u\n", intr_number);
+    while(1);
 }
 
 /* 初始化8259A */
