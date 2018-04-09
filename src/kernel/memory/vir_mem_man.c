@@ -4,10 +4,10 @@
 #include <kernel/interrupt.h>
 #include <kernel/print.h>
 
-#include <kernel/mem_man/page_desc.h>
-#include <kernel/mem_man/phy_mem_man.h>
-#include <kernel/mem_man/vir_mem_man.h>
-#include <kernel/mem_man/vir_page_man.h>
+#include <kernel/memory/page_desc.h>
+#include <kernel/memory/phy_mem_man.h>
+#include <kernel/memory/vir_mem_man.h>
+#include <kernel/memory/vir_page_man.h>
 
 #include <lib/string.h>
 

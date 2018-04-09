@@ -3,7 +3,7 @@
 #include <kernel/boot.h>
 #include <kernel/print.h>
 
-#include <kernel/mem_man/phy_mem_man.h>
+#include <kernel/memory/phy_mem_man.h>
 
 #include <common.h>
 
