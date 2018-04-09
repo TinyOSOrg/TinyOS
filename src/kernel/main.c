@@ -1,6 +1,5 @@
 #include <kernel/asm.h>
-#include <kernel/clock_intr.h>
-#include <kernel/intr_entry.h>
+#include <kernel/interrupt.h>
 #include <kernel/memory.h>
 #include <kernel/print.h>
 

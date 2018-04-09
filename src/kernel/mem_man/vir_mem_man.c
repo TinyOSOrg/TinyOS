@@ -1,7 +1,7 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
 #include <kernel/boot.h>
-#include <kernel/intr_entry.h>
+#include <kernel/interrupt.h>
 #include <kernel/print.h>
 
 #include <kernel/mem_man/page_desc.h>
