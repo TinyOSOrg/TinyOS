@@ -1,5 +1,5 @@
-#ifndef TINY_OS_INTR_DESC_H
-#define TINY_OS_INTR_DESC_H
+#ifndef TINY_OS_INTERRUPT_H
+#define TINY_OS_INTERRUPT_H
 
 #include <lib/intdef.h>
 
@@ -41,4 +41,9 @@ void init_IDT(void);
 */
 void set_intr_function(uint8_t intr_number, void (*func)(void));
 
-#endif /* TINY_OS_INTR_DESC_H */
+/*
+    设置时钟中断频率
+*/
+void set_8253_freq(uint16_t freq);
+
+#endif /* TINY_OS_INTERRUPT_H */

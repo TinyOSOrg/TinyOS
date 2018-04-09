@@ -1,6 +1,6 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
-#include <kernel/intr_entry.h>
+#include <kernel/interrupt.h>
 #include <kernel/print.h>
 #include <kernel/seg_desc.h>
 
@@ -97,3 +97,13 @@ void set_intr_function(uint8_t intr_number, void (*func)(void))
     else
         intr_function[intr_number] = func;
 }
+
+void set_8253_freq(uint16_t freq)
+{
+    uint16_t value = 1193180 / freq;
+
+    _out_byte_to_port(0x43, (3 << 4) | (2 << 1));
+    _out_byte_to_port(0x40, (uint8_t)value);
+    _out_byte_to_port(0x40, (uint8_t)(value >> 8));
+}
+
