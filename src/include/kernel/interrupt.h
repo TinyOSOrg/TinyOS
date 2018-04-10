@@ -1,6 +1,7 @@
 #ifndef TINY_OS_INTERRUPT_H
 #define TINY_OS_INTERRUPT_H
 
+#include <lib/bool.h>
 #include <lib/intdef.h>
 
 /* 0x20~0x2f号中断为8259A所用 */
@@ -45,5 +46,17 @@ void set_intr_function(uint8_t intr_number, void (*func)(void));
     设置时钟中断频率
 */
 void set_8253_freq(uint16_t freq);
+
+/* 关于中断的状态标志 */
+typedef uint32_t intr_state;
+
+/* 标志中的中断是否打开 */
+bool is_intr_on(intr_state state);
+
+/* 取得当前计算机所处的中断状态 */
+intr_state get_intr_state(void);
+
+/* 设置中断状态 */
+void set_intr_state(intr_state state);
 
 #endif /* TINY_OS_INTERRUPT_H */

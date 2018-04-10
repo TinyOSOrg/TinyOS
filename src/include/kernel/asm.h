@@ -81,4 +81,11 @@ static inline uint32_t _get_cr3(void)
     return rt;
 }
 
+static inline uint32_t _get_eflag(void)
+{
+    uint32_t rt;
+    asm volatile ("pushfl; popl %0" : "=g" (rt));
+    return rt;
+}
+
 #endif /* TINY_OS_IO_PORT */
