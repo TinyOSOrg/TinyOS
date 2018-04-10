@@ -1,6 +1,6 @@
 [bits 32]
 
-SECTION .text
+section .text
 
 global switch_to_thread
 

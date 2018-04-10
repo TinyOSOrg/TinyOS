@@ -6,10 +6,8 @@
 extern put_str
 extern intr_function
 
-section INTR_ENTRY
-
 %macro INTR_VECTOR 2
-    section INTR_VEC
+    section .intr_vec_text
     intr_%1_entry:
         ; 统一错误码所占栈空间
         %2
@@ -29,11 +27,11 @@ section INTR_ENTRY
 
         jmp intr_proc_end
 
-    section INTR_ENTRY
+    section .intr_vec_data
         dd intr_%1_entry
 %endmacro
 
-section INTR_ENTRY
+section .intr_vec_text
 intr_proc_end:
     add esp, 4 ; 弹出中断号
     popad
@@ -43,6 +41,8 @@ intr_proc_end:
     pop ds
     add esp, 4 ; 弹出错误码
     iret
+
+section .intr_vec_data
 
 global intr_entry_table
 intr_entry_table:
