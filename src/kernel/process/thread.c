@@ -60,6 +60,7 @@ struct thread_intr_bak
 /*
     线程栈初始化时栈顶的内容
     这个结构参考了真像还原一书
+    利用ret指令及其参数在栈中分布的特点来实现控制流跨线程跳转
 */
 struct thread_init_stack
 {
@@ -107,7 +108,10 @@ static struct TCB *alloc_TCB(void)
 */
 static void kernel_thread_entry(thread_exec_func func, void *params)
 {
+    // 线程的第一次进入也是通过调度器进来的
+    // 此时中断为关闭状态，所以刚进入线程时开一下中断
     _enable_intr();
+
     func(params);
 }
 
@@ -127,7 +131,7 @@ static void init_bootloader_thread(void)
 static void thread_scheduler(void)
 {
     // 从src线程切换至dst线程
-    // implemented in thread.s
+    // 在thread.s中实现
     extern void switch_to_thread(
             struct TCB *src, struct TCB *dst);
 
