@@ -6,6 +6,9 @@
 /* 前向声明：thread control block */
 struct TCB;
 
+/* 前向声明：process control block */
+struct PCB;
+
 /*
     用来创建新内核线程时的函数入口
     void*用于参数传递

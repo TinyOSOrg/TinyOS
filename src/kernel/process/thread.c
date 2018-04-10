@@ -23,6 +23,21 @@ struct TCB
     // 每个线程都持有一个内核栈
     // 在“低特权级 -> 高特权级”以及刚进入线程时会用到
     void *ker_stack;
+
+    // 所属进程
+    struct PCB *pcb;
+
+    // 同属一个进程的线程用链表串起来
+    struct TCB *next_TCB;
+};
+
+/*
+    process control block
+*/
+struct PCB
+{
+    vir_addr_space *addr_space;
+    struct TCB *tcbs;
 };
 
 /*
@@ -51,7 +66,10 @@ struct thread_intr_bak
     uint32_t ss;
 };
 
-/* 线程栈初始化时栈顶的内容 */
+/*
+    线程栈初始化时栈顶的内容
+    这个结构参考了真像还原一书
+*/
 struct thread_init_stack
 {
     // 由callee保持的寄存器
@@ -87,7 +105,7 @@ static struct TCB *alloc_TCB(void)
 
 /*
     进入一个线程的前导操作
-    有什么初始化啥的以后就在这儿做
+    有什么初始化啥的就在这儿做
 */
 static void kernel_thread_entry(thread_exec_func func, void *params)
 {
@@ -110,6 +128,7 @@ struct TCB *create_thread(thread_exec_func func, void *params)
     memset((char*)tcb->ker_stack, 0x0, 4096);
     tcb->ker_stack = (char*)tcb->ker_stack + 4096 - sizeof(struct thread_intr_bak)
                                                   - sizeof(struct thread_init_stack);
+    tcb->next_TCB = NULL;
 
     // 初始化内核栈顶端信息
 
@@ -117,11 +136,15 @@ struct TCB *create_thread(thread_exec_func func, void *params)
     init_stack->eip = (uint32_t)&kernel_thread_entry;
     init_stack->func = func;
     init_stack->func_param = params;
-    init_stack->ebp = init_stack->ebx =
+    init_stack->ebp = init_stack->ebx = 0;
     init_stack->esi = init_stack->edi = 0;
 
     // 控制流转移
+    
+    //(void)kernel_thread_entry;
+    //asm volatile ("jmp kernel_thread_entry");
 
+    //之所以用ret来进入kernel_thread_entry，是为了和以后调度器返回时的栈结构统一
     asm volatile
     (
         "movl %0, %%esp;"
