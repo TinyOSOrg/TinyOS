@@ -107,3 +107,22 @@ void set_8253_freq(uint16_t freq)
     _out_byte_to_port(0x40, (uint8_t)(value >> 8));
 }
 
+#define INTR_STATE_ON 0x1
+
+bool is_intr_on(intr_state state)
+{
+    return state & INTR_STATE_ON != 0;
+}
+
+intr_state get_intr_state(void)
+{
+    return _get_eflag() & 0x00000200 ? INTR_STATE_ON : 0;
+}
+
+void set_intr_state(intr_state state)
+{
+    if(state & INTR_STATE_ON)
+        _enable_intr();
+    else
+        _disable_intr();
+}
