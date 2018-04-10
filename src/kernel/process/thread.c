@@ -4,6 +4,7 @@
 #include <kernel/memory.h>
 #include <kernel/print.h>
 #include <kernel/process/thread.h>
+#include <kernel/rlist_node_alloc.h>
 
 #include <lib/freelist.h>
 #include <lib/ptrlist.h>
@@ -85,9 +86,6 @@ static struct TCB *cur_running_TCB;
 /* ready线程队列 */
 static rlist ready_threads;
 
-/* 空闲rlist node自由链表 */
-static freelist_handle rlist_node_freelist;
-
 /* 分配一个空TCB块 */
 static struct TCB *alloc_TCB(void)
 {
@@ -101,26 +99,6 @@ static struct TCB *alloc_TCB(void)
     }
 
     return fetch_freelist(&TCB_freelist);
-}
-
-/* 分配一个rlist node */
-static struct rlist_node *alloc_rlist_node(void)
-{
-    if(is_freelist_empty(&rlist_node_freelist))
-    {
-        struct rlist_node *new_nodes = (struct rlist_node*)alloc_ker_page(true);
-        size_t end = 4096 / sizeof(struct rlist_node);
-        for(size_t i = 0;i != end; ++i)
-            add_freelist(&rlist_node_freelist, &new_nodes[i]);
-    }
-    
-    return fetch_freelist(&rlist_node_freelist);
-}
-
-/* 释放一个rlist node */
-static void dealloc_rlist_node(struct rlist_node *node)
-{
-    add_freelist(&rlist_node_freelist, node);
 }
 
 /*
@@ -150,15 +128,18 @@ static void thread_scheduler(void)
 {
     // 从src线程切换至dst线程
     // implemented in thread.s
-    extern void switch_to_thread(struct TCB *src, struct TCB *dst);
+    extern void switch_to_thread(
+            struct TCB *src, struct TCB *dst);
 
-    push_back_rlist(&ready_threads, cur_running_TCB, alloc_rlist_node);
+    push_back_rlist(&ready_threads, cur_running_TCB,
+                    kernel_resident_rlist_node_alloc);
     cur_running_TCB->state = thread_state_ready;
 
     struct TCB *last = cur_running_TCB;
-    cur_running_TCB = pop_front_rlist(&ready_threads, dealloc_rlist_node);
+    cur_running_TCB = pop_front_rlist(&ready_threads,
+                        kernel_resident_rlist_node_dealloc);
     cur_running_TCB->state = thread_state_running;
-    //print_format("%u\n", cur_running_TCB);
+    
     switch_to_thread(last, cur_running_TCB);
 }
 
@@ -166,7 +147,6 @@ void init_thread_man(void)
 {
     init_freelist(&TCB_freelist);
 
-    init_freelist(&rlist_node_freelist);
     init_rlist(&ready_threads);
 
     init_bootloader_thread();
@@ -186,12 +166,14 @@ struct TCB *create_thread(thread_exec_func func, void *params)
     
     tcb->ker_stack = alloc_ker_page(true);
     memset((char*)tcb->ker_stack, 0x0, 4096);
-    tcb->ker_stack = (char*)tcb->ker_stack + 4096 - sizeof(struct thread_intr_bak)
-                                                  - sizeof(struct thread_init_stack);
+    tcb->ker_stack = (char*)tcb->ker_stack + 4096
+                   - sizeof(struct thread_intr_bak)
+                   - sizeof(struct thread_init_stack);
 
     // 初始化内核栈顶端信息
 
-    struct thread_init_stack *init_stack = (struct thread_init_stack*)tcb->ker_stack;
+    struct thread_init_stack *init_stack =
+        (struct thread_init_stack*)tcb->ker_stack;
     init_stack->eip = (uint32_t)kernel_thread_entry;
     init_stack->func = func;
     init_stack->func_param = params;
@@ -199,29 +181,11 @@ struct TCB *create_thread(thread_exec_func func, void *params)
     init_stack->esi = init_stack->edi = 0;
 
     // 加入ready队列
+    push_back_rlist(&ready_threads, tcb,
+        kernel_resident_rlist_node_alloc);
 
-    push_back_rlist(&ready_threads, tcb, alloc_rlist_node);
-
+    // 还原中断状态
     set_intr_state(intr_s);
-
-    /*// 控制流转移
-    
-    //(void)kernel_thread_entry;
-    //asm volatile ("jmp kernel_thread_entry");
-
-    //之所以用ret来进入kernel_thread_entry，是为了和以后调度器返回时的栈结构统一
-    asm volatile
-    (
-        "movl %0, %%esp;"
-        "pop %%ebp;"
-        "pop %%ebx;"
-        "pop %%edi;"
-        "pop %%esi;"
-        "ret"
-        :
-        : "g" (tcb->ker_stack)
-        : "memory"
-    );*/
 
     return tcb;
 }
