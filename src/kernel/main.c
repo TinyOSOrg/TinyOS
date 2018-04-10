@@ -3,6 +3,7 @@
 #include <kernel/memory.h>
 #include <kernel/print.h>
 #include <kernel/process/thread.h>
+#include <kernel/rlist_node_alloc.h>
 
 #include <lib/string.h>
 
@@ -19,6 +20,7 @@ int main(void)
     init_IDT();
     init_phy_mem_man();
     init_vir_mem_man();
+    init_kernel_rlist_node_alloc();
     init_thread_man();
 
     set_8253_freq(10);
