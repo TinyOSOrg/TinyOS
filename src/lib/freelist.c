@@ -22,12 +22,12 @@ void add_freelist(freelist_handle *handle, void *mem_zone)
 
 bool is_freelist_empty(freelist_handle *handle)
 {
-    return FL->next != NULL;
+    return FL->next == NULL;
 }
 
 void *fetch_freelist(freelist_handle *handle)
 {
-    if(!FL->next)
+    if(is_freelist_empty(handle))
         return NULL;
     void *rt = FL->next;
     FL->next = FL->next->next;

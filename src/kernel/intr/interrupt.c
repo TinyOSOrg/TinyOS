@@ -111,7 +111,7 @@ void set_8253_freq(uint16_t freq)
 
 bool is_intr_on(intr_state state)
 {
-    return state & INTR_STATE_ON != 0;
+    return (state & INTR_STATE_ON) != 0;
 }
 
 intr_state get_intr_state(void)

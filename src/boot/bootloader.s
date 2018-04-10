@@ -167,7 +167,7 @@ new_world_in_protection_mode:
 hello_kernel:
 
     call init_kernel
-    mov esp, 0xc01fff00
+    mov esp, 0xc01ff000
     jmp [kernel_entry]
 
 ;-----------------------------------------------------

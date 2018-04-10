@@ -6,11 +6,6 @@
 
 #include <lib/string.h>
 
-void pretend_to_be_a_scheduler(void)
-{
-    put_str("c");
-}
-
 void thread_test(void *arg)
 {
     while(true)
@@ -28,11 +23,9 @@ int main(void)
 
     set_8253_freq(10);
 
-    set_intr_function(INTR_NUMBER_CLOCK, pretend_to_be_a_scheduler);
-
     create_thread(thread_test, "test");
 
-    //_enable_intr();
+    _enable_intr();
 
     while(1)
         ;
