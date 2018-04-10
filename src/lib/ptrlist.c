@@ -1,6 +1,8 @@
 #include <lib/intdef.h>
 #include <lib/ptrlist.h>
 
+#include <kernel/print.h>
+
 void init_rlist(rlist *L)
 {
     L->last = L->next = (struct rlist_node*)L;
@@ -16,6 +18,8 @@ void push_back_rlist(rlist *L, void *ptr, rlist_node_allocator node_alloc)
 
     L->last->next = new_node;
     L->last = new_node;
+
+    //print_format("%u\n", ptr);
 }
 
 void *pop_back_rlist(rlist *L, rlist_node_deallocator node_dealloc)
@@ -55,6 +59,7 @@ void *pop_front_rlist(rlist *L, rlist_node_deallocator node_dealloc)
     node_dealloc(L->next);
     L->next = front_next;
 
+    //print_format("%u\n", rt);
     return rt;
 }
 

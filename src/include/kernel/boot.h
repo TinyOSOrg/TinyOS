@@ -7,6 +7,9 @@
 /* 内核栈末尾（物理） */
 #define KER_STACK_PHY_END 0x200000
 
+/* 内核栈的起始值（虚拟） */
+#define KER_STACK_INIT_VAL 0xc01ff000
+
 /* 内核页目录开头（物理） */
 #define KER_PDE_PHY_ADDR 0x200000
 
