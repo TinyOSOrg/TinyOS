@@ -1,7 +1,4 @@
-# 虚拟机日志
 bochs.out
-# 磁盘映像
-hd60M.img
 
 .vscode/
 
@@ -9,3 +6,4 @@ hd60M.img
 *.d
 *.bin
 *.bootbin
+*.img
