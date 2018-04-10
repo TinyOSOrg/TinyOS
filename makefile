@@ -17,10 +17,12 @@ C_DPT_FILES = $(patsubst %.c, %.d, $(C_SRC_FILES))
 S_SRC_FILES = $(shell find ./src/kernel/ -name "*.s")
 S_BIN_FILES = $(patsubst %.s, %.bin, $(S_SRC_FILES))
 
-hd60M.img : $(BOOTBIN_FILE)
-	dd if=src/boot/mbr.bootbin of=hd60M.img bs=512 count=1 conv=notrunc
-	dd if=src/boot/bootloader.bootbin of=hd60M.img bs=512 count=4 seek=1 conv=notrunc
-	dd if=src/boot/kernel.bootbin of=hd60M.img bs=512 count=200 seek=9 conv=notrunc
+HD = hd.img
+
+$(HD) : $(BOOTBIN_FILE)
+	dd if=src/boot/mbr.bootbin of=$(HD) bs=512 count=1 conv=notrunc
+	dd if=src/boot/bootloader.bootbin of=$(HD) bs=512 count=4 seek=1 conv=notrunc
+	dd if=src/boot/kernel.bootbin of=$(HD) bs=512 count=200 seek=9 conv=notrunc
 
 # MBR编译
 src/boot/mbr.bootbin : src/boot/mbr.s src/boot/boot.s
