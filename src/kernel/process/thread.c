@@ -19,7 +19,7 @@ enum thread_state
 };
 
 /*
-    thread control blocl
+    thread control block
     并不是task control block
 */
 struct TCB
@@ -56,6 +56,8 @@ struct thread_intr_bak
     uint32_t esp;
     uint32_t ss;
 };
+
+#define INTR_BAK_DATA_SIZE 76
 
 /*
     线程栈初始化时栈顶的内容
@@ -171,7 +173,7 @@ struct TCB *create_thread(thread_exec_func func, void *params)
     tcb->ker_stack = alloc_ker_page(true);
     memset((char*)tcb->ker_stack, 0x0, 4096);
     tcb->ker_stack = (char*)tcb->ker_stack + 4096
-                   - sizeof(struct thread_intr_bak)
+                   - INTR_BAK_DATA_SIZE
                    - sizeof(struct thread_init_stack);
 
     // 初始化内核栈顶端信息
