@@ -32,11 +32,9 @@ struct TCB
 };
 
 /*
-    线程被中断时，压入栈中的内容布局
-    该结构体高度依赖于interrupt.s中的压栈操作
-*/
-struct thread_intr_bak
-{
+    中断发生时压入栈中的东西得占多少字节
+    事实上有这么些东西：
+
     // 最后压入的是中断向量号
     uint32_t intr_number;
 
@@ -55,8 +53,7 @@ struct thread_intr_bak
     uint32_t eflags;   // 标志寄存器
     uint32_t esp;
     uint32_t ss;
-};
-
+*/
 #define INTR_BAK_DATA_SIZE 76
 
 /*

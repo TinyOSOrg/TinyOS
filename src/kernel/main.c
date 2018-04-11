@@ -7,10 +7,12 @@
 
 #include <lib/string.h>
 
+volatile uint32_t x;
+
 void thread_test(void *arg)
 {
     while(true)
-        put_str((char*)arg);
+        print_format("%u ", x);
 }
 
 int main(void)
@@ -25,10 +27,11 @@ int main(void)
 
     set_8253_freq(10);
 
-    create_thread(thread_test, "test");
+    x = 0;
+    create_thread(thread_test, NULL);
 
     _enable_intr();
 
     while(1)
-        ;
+        ++x;
 }
