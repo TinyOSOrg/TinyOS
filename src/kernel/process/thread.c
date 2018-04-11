@@ -1,4 +1,5 @@
 #include <kernel/asm.h>
+#include <kernel/assert.h>
 #include <kernel/boot.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
@@ -134,9 +135,14 @@ static void thread_scheduler(void)
     extern void switch_to_thread(
             struct TCB *src, struct TCB *dst);
 
-    push_back_rlist(&ready_threads, cur_running_TCB,
-                    kernel_resident_rlist_node_alloc);
-    cur_running_TCB->state = thread_state_ready;
+    if(cur_running_TCB->state == thread_state_running)
+    {
+        push_back_rlist(&ready_threads, cur_running_TCB,
+                        kernel_resident_rlist_node_alloc);
+        cur_running_TCB->state = thread_state_ready;
+    }
+
+    ASSERT_S(!is_rlist_empty(&ready_threads));
 
     struct TCB *last = cur_running_TCB;
     cur_running_TCB = pop_front_rlist(&ready_threads,
@@ -159,8 +165,7 @@ void init_thread_man(void)
 
 struct TCB *create_thread(thread_exec_func func, void *params)
 {
-    intr_state intr_s = get_intr_state();
-    _disable_intr();
+    intr_state intr_s = fetch_and_disable_intr();
 
     // 分配TCB和内核栈空间
     
@@ -191,4 +196,30 @@ struct TCB *create_thread(thread_exec_func func, void *params)
     set_intr_state(intr_s);
 
     return tcb;
+}
+
+struct TCB *get_cur_TCB(void)
+{
+    return cur_running_TCB;
+}
+
+void block_cur_thread(void)
+{
+    intr_state intr_s = fetch_and_disable_intr();
+
+    cur_running_TCB->state = thread_state_blocked;
+    thread_scheduler();
+    
+    set_intr_state(intr_s);
+}
+
+void awake_thread(struct TCB *tcb)
+{
+    intr_state intr_s = fetch_and_disable_intr();
+
+    ASSERT_S(tcb->state == thread_state_blocked);
+    tcb->state = thread_state_ready;
+    push_back_rlist(&ready_threads, tcb, kernel_resident_rlist_node_alloc);
+
+    set_intr_state(intr_s);
 }

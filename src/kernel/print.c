@@ -116,3 +116,8 @@ void print_format(const char *fmt, ...)
             put_char(*fmt++);
     }
 }
+
+void set_char(uint16_t pos, char ch)
+{
+    set_word(pos, (uint8_t)ch, 0x07);
+}

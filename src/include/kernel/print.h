@@ -34,6 +34,7 @@ uint16_t get_cursor_row_col(void);
 */
 void put_char(char ch);
 
+/* 等价于挨个put_char */
 void put_str(const char *str);
 
 /*
@@ -52,5 +53,8 @@ void put_str(const char *str);
     不合法fmt将导致未定义行为
 */
 void print_format(const char *fmt, ...);
+
+/* ch就得是普通字符，控制字符一律UB */
+void set_char(uint16_t pos, char ch);
 
 #endif /* TINY_OS_PRINT_H */
