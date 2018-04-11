@@ -88,4 +88,15 @@ static inline uint32_t _get_eflag(void)
     return rt;
 }
 
+static inline void _load_GDT(uint32_t base, uint32_t size)
+{
+    uint64_t opr = ((uint64_t)base << 16) | size;
+    asm volatile ("lgdt %0" : : "m" (opr));
+}
+
+static inline void _ltr(uint16_t sel)
+{
+    asm volatile ("ltr %w0" : : "r" (sel));
+}
+
 #endif /* TINY_OS_IO_PORT */

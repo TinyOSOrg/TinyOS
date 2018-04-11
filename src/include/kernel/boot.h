@@ -25,4 +25,10 @@
 */
 #define STATIC_KERNEL_MEM_SIZE 0x100000
 
+/* bootloader在虚拟内存中的位置 */
+#define BOOTLOADER_START_ADDR 0xc0000900
+
+/* 全局描述符表在虚存中的位置 */
+#define GDT_START (BOOTLOADER_START_ADDR + 3)
+
 #endif /* TINY_OS_BOOT_H */

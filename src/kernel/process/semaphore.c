@@ -1,4 +1,3 @@
-#include <kernel/asm.h>
 #include <kernel/assert.h>
 #include <kernel/interrupt.h>
 #include <kernel/process/semaphore.h>

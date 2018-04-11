@@ -2,7 +2,7 @@
 
 section BOOT_LOADER vstart=BOOTLOADER_START_ADDR
 
-    jmp bootloader_start
+    jmp bootloader_start ; jmp near占3字节，故GDT开头在BOOTLOADER_START_ADDR + 3
 
 ;-----------------------------------------------------
 ; GDT数据
