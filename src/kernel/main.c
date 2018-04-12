@@ -10,7 +10,7 @@
 
 struct semaphore sph;
 
-int x;
+volatile int x;
 
 void thread_test(void)
 {
