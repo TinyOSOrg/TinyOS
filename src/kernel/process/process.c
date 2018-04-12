@@ -147,7 +147,7 @@ static void *alloc_thread_user_stack(void)
             continue;
         uint32_t local_idx = _find_lowest_nonzero_bit(usr_bmps[i]);
         usr_bmps[i] &= ~(1 << local_idx);
-        return (void*)((uint32_t)0xc0000000 -
+        return (void*)((uint32_t)0xc0000000 - 4 -
             (uint32_t)(((i << 5) + local_idx) * (uint32_t)USER_STACK_SIZE));
     }
     return NULL;
@@ -183,7 +183,7 @@ static void process_thread_entry(process_exec_func func)
     intr_stack->eip = (uint32_t)func;
     intr_stack->cs = SEG_SEL_USER_CODE;
     intr_stack->eflags = (1 << 1) | (1 << 9);
-    intr_stack->esp = (uint32_t)alloc_thread_user_stack() - 200;
+    intr_stack->esp = (uint32_t)alloc_thread_user_stack();
     intr_stack->ss = SEG_SEL_USER_STACK;
 
     extern void intr_proc_end(void); // defined in interrupt.s
