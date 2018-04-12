@@ -1,12 +1,24 @@
 #include <kernel/asm.h>
 #include <kernel/boot.h>
+#include <kernel/interrupt.h>
+#include <kernel/memory.h>
 #include <kernel/process/process.h>
 #include <kernel/process/thread.h>
+#include <kernel/rlist_node_alloc.h>
 #include <kernel/seg_desc.h>
 
+#include <kernel/print.h>
+
+#include <lib/freelist.h>
 #include <lib/intdef.h>
+#include <lib/ptrlist.h>
 #include <lib/string.h>
 
+/*=====================================================================
+    用户段相关
+=====================================================================*/
+
+/* TSS段结构 */
 struct TSS
 {
     uint32_t BL;
@@ -24,6 +36,10 @@ struct TSS
     uint32_t IO;
 };
 
+/*
+    TSS段内容
+    跟linux类似，整个系统就这一个
+*/
 static struct TSS tss;
 
 /* 初始化TSS描述符 */
@@ -48,6 +64,149 @@ static void init_user_segments(void)
               GDT_ATTRIB_LOW_DATA, GDT_ATTRIB_HIGH);
 }
 
+/*=====================================================================
+    进程本体相关
+=====================================================================*/
+
+struct intr_stack_bak
+{
+    // 最后压入的是中断向量号
+    uint32_t intr_number;
+
+    // 通用寄存器
+    uint32_t edi, esi, ebp, esp_dummy;
+    uint32_t ebx, edx, ecx, eax;
+
+    // 段选择子
+    // 虽然应该是16位的，但压栈的结果是32位，只用低16位即可
+    uint32_t gs, fs, es, ds;
+
+    // 中断恢复相关，由CPU自动压栈的内容
+    uint32_t err_code; // 有的中断有错误码而有的没有，interrupt.s中将其统一为有
+    uint32_t eip;      // C标准不保证函数指针能放到uint32_t中，但x86下没问题
+    uint32_t cs;
+    uint32_t eflags;   // 标志寄存器
+    uint32_t esp;
+    uint32_t ss;
+};
+
+/* 进程列表 */
+static rlist processes;
+
+/* PCB空间自由链表 */
+static freelist_handle PCB_freelist;
+
+/* 申请一块PCB空间 */
+static struct PCB *alloc_PCB(void)
+{
+    if(is_freelist_empty(&PCB_freelist))
+    {
+        struct PCB *new_PCBs = (struct PCB*)alloc_ker_page(true);
+        size_t end = 4096 / sizeof(struct PCB);
+        for(size_t i = 0;i != end; ++i)
+            add_freelist(&PCB_freelist, &new_PCBs[i]);
+    }
+    return fetch_freelist(&PCB_freelist);
+}
+
+/* 有多少个用户栈位图 */
+#define USER_THREAD_STACK_BITMAP_COUNT (MAX_PROCESS_THREADS >> 5)
+
+/* 创建一个进程，但是不包含任何线程（ */
+static struct PCB *create_empty_process(const char *name)
+{
+    struct PCB *pcb = alloc_PCB();
+
+    // 虚拟地址空间初始化
+
+    pcb->addr_space = create_vir_addr_space();
+
+    init_rlist(&pcb->threads_list);
+
+    // 名字复制，超出长度限制的部分都丢掉
+    size_t i_name = 0;
+    for(;i_name != PROCESS_NAME_MAX_LENGTH && name[i_name]; ++i_name)
+        pcb->name[i_name] = name[i_name];
+    pcb->name[i_name] = '\0';
+
+    push_back_rlist(&processes, pcb, kernel_resident_rlist_node_alloc);
+    
+    return pcb;
+}
+
+/*
+    此函数被调用时一定在用户虚拟地址空间中
+    在最低地址的位图中查找一个空闲的用户栈空间
+*/
+static void *alloc_thread_user_stack(void)
+{
+    uint32_t *usr_bmps = (uint32_t*)USER_STACK_BITMAP_ADDR;
+    for(size_t i = 0;i != USER_THREAD_STACK_BITMAP_COUNT; ++i)
+    {
+        if(!usr_bmps[i])
+            continue;
+        uint32_t local_idx = _find_lowest_nonzero_bit(usr_bmps[i]);
+        usr_bmps[i] &= ~(1 << local_idx);
+        return (void*)((uint32_t)0xc0000000 -
+            (uint32_t)(((i << 5) + local_idx) * (uint32_t)USER_STACK_SIZE));
+    }
+    return NULL;
+}
+
+static void process_thread_entry(process_exec_func func)
+{
+    // 这里直接关中断
+    // 等会儿伪装的中断退出函数那里，eflags中IF是打开的
+    _disable_intr();
+
+    for(size_t i = 0;i != USER_THREAD_STACK_BITMAP_COUNT; ++i)
+        ((uint32_t*)USER_STACK_BITMAP_ADDR)[i] = 0xffffffff;
+
+    // 填充内核栈最高处的intr_stack，为降低特权级做准备
+
+    struct TCB *tcb = get_cur_TCB();
+    tcb->ker_stack += sizeof(struct thread_init_stack);
+    struct intr_stack_bak *intr_stack =
+        (struct intr_stack_bak*)tcb->ker_stack;
+    intr_stack->edi = 0;
+    intr_stack->esi = 0;
+    intr_stack->ebp = 0;
+    intr_stack->esp_dummy = 0;
+    intr_stack->ebx = 0;
+    intr_stack->edx = 0;
+    intr_stack->ecx = 0;
+    intr_stack->eax = 0;
+    intr_stack->gs = SEG_SEL_USER_DATA;
+    intr_stack->ds = SEG_SEL_USER_DATA;
+    intr_stack->es = SEG_SEL_USER_DATA;
+    intr_stack->fs = SEG_SEL_USER_DATA;
+    intr_stack->eip = (uint32_t)func;
+    intr_stack->cs = SEG_SEL_USER_CODE;
+    intr_stack->eflags = (1 << 1) | (1 << 9);
+    intr_stack->esp = (uint32_t)alloc_thread_user_stack() - 200;
+    intr_stack->ss = SEG_SEL_USER_STACK;
+
+    extern void intr_proc_end(void); // defined in interrupt.s
+
+    asm volatile ("movl %0, %%esp;"
+                  "jmp intr_proc_end"
+                  :
+                  : "g" (intr_stack)
+                  : "memory");
+}
+
+/* 把bootloader以来一直在跑的东西封装成进程 */
+static void init_bootloader_process(void)
+{
+    struct PCB *pcb = alloc_PCB();
+    strcpy(pcb->name, "kernel process");
+    pcb->addr_space = get_ker_vir_addr_space();
+    init_rlist(&pcb->threads_list);
+    push_back_rlist(&pcb->threads_list, get_cur_TCB(),
+        kernel_resident_rlist_node_alloc);
+    get_cur_TCB()->pcb = pcb;
+}
+
 void init_process_man(void)
 {
     init_TSS();
@@ -55,4 +214,26 @@ void init_process_man(void)
 
     _load_GDT((uint32_t)GDT_START, 8 * 6 - 1);
     _ltr(TSS_SEL);
+
+    init_rlist(&processes);
+    init_freelist(&PCB_freelist);
+
+    init_bootloader_process();
+}
+
+void set_tss_esp0(uint32_t esp0)
+{
+    tss.esp0 = esp0;
+}
+
+void create_process(const char *name, process_exec_func func)
+{
+    intr_state intr_s = fetch_and_disable_intr();
+
+    struct PCB *pcb = create_empty_process(name);
+    struct TCB *tcb = create_thread(
+        (thread_exec_func)process_thread_entry, func, pcb);
+    push_back_rlist(&pcb->threads_list, tcb, kernel_resident_rlist_node_alloc);
+
+    set_intr_state(intr_s);
 }

@@ -4,33 +4,13 @@
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
 #include <kernel/print.h>
+#include <kernel/process/process.h>
 #include <kernel/process/thread.h>
 #include <kernel/rlist_node_alloc.h>
 
 #include <lib/freelist.h>
 #include <lib/ptrlist.h>
 #include <lib/string.h>
-
-/* 线程状态：运行，就绪，阻塞 */
-enum thread_state
-{
-    thread_state_running,
-    thread_state_ready,
-    thread_state_blocked
-};
-
-/*
-    thread control block
-    并不是task control block
-*/
-struct TCB
-{
-    // 每个线程都持有一个内核栈
-    // 在“低特权级 -> 高特权级”以及刚进入线程时会用到
-    void *ker_stack;
-
-    enum thread_state state;
-};
 
 /*
     中断发生时压入栈中的东西得占多少字节
@@ -56,28 +36,6 @@ struct TCB
     uint32_t ss;
 */
 #define INTR_BAK_DATA_SIZE 76
-
-/*
-    线程栈初始化时栈顶的内容
-    这个结构参考了真像还原一书
-    利用ret指令及其参数在栈中分布的特点来实现控制流跨线程跳转
-    可以统一第一次进入线程以及以后调度该线程时的操作
-*/
-struct thread_init_stack
-{
-    // 由callee保持的寄存器
-    uint32_t ebp, ebx, edi, esi;
-
-    // 函数入口
-    uint32_t eip;
-
-    // 占位，因为需要一个返回地址的空间
-    uint32_t dummy_addr;
-
-    // 线程入口及参数
-    thread_exec_func func;
-    void *func_param;
-};
 
 /* 空闲TCB自由链表 */
 static freelist_handle TCB_freelist;
@@ -122,6 +80,8 @@ static void init_bootloader_thread(void)
     struct TCB *tcb = alloc_TCB();
     tcb->state = thread_state_running;
     tcb->ker_stack = (void*)KER_STACK_INIT_VAL;
+    tcb->init_ker_stack = tcb->ker_stack;
+    tcb->pcb = NULL;
     cur_running_TCB = tcb;
 }
 
@@ -135,7 +95,7 @@ static void thread_scheduler(void)
     // 在thread.s中实现
     extern void switch_to_thread(
             struct TCB *src, struct TCB *dst);
-
+    
     if(cur_running_TCB->state == thread_state_running)
     {
         push_back_rlist(&ready_threads, cur_running_TCB,
@@ -149,6 +109,13 @@ static void thread_scheduler(void)
     cur_running_TCB = pop_front_rlist(&ready_threads,
                         kernel_resident_rlist_node_dealloc);
     cur_running_TCB->state = thread_state_running;
+
+    if(last->pcb != cur_running_TCB->pcb)
+    {
+        set_current_vir_addr_space(cur_running_TCB->pcb->addr_space);
+        if(cur_running_TCB->pcb->addr_space != get_ker_vir_addr_space())
+            set_tss_esp0((uint32_t)(cur_running_TCB->init_ker_stack));
+    }
     
     switch_to_thread(last, cur_running_TCB);
 }
@@ -164,13 +131,15 @@ void init_thread_man(void)
     set_intr_function(INTR_NUMBER_CLOCK, thread_scheduler);
 }
 
-struct TCB *create_thread(thread_exec_func func, void *params)
+struct TCB *create_thread(thread_exec_func func, void *params,
+                          struct PCB *pcb)
 {
     intr_state intr_s = fetch_and_disable_intr();
 
     // 分配TCB和内核栈空间
     
     struct TCB *tcb = alloc_TCB();
+    tcb->pcb = pcb;
     tcb->state = thread_state_ready;
     
     tcb->ker_stack = alloc_ker_page(true);
@@ -178,6 +147,7 @@ struct TCB *create_thread(thread_exec_func func, void *params)
     tcb->ker_stack = (char*)tcb->ker_stack + 4096
                    - INTR_BAK_DATA_SIZE
                    - sizeof(struct thread_init_stack);
+    tcb->init_ker_stack = tcb->ker_stack;
 
     // 初始化内核栈顶端信息
 

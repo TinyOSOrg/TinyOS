@@ -32,6 +32,7 @@ extern intr_function
 %endmacro
 
 section .intr_vec_text
+global intr_proc_end
 intr_proc_end:
     add esp, 4 ; 弹出中断号
     popad

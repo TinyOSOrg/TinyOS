@@ -8,34 +8,38 @@
 
 #include <lib/string.h>
 
-struct semaphore scr_sph;
+struct semaphore sph;
 
-void thread_test(void *arg)
+int x;
+
+void thread_test(void)
 {
     while(1)
-    {
-        semaphore_wait(&scr_sph);
-        put_str(arg);
-        semaphore_signal(&scr_sph);
-    }
+        ++x;
 }
 
 void init_kernel(void)
 {
     /* 中断向量表 */
     init_IDT();
+
     /* 物理内存管理 */
     init_phy_mem_man();
+
     /* 虚拟内存管理 */
     init_vir_mem_man();
+
     /* 内核链表分配器 */
     init_kernel_rlist_node_alloc();
+
     /* 内核线程管理 */
     init_thread_man();
+
     /* 进程管理 */
     init_process_man();
+
     /* 时钟中断频率 */
-    set_8253_freq(10);
+    set_8253_freq(50);
 }
 
 int main(void)
@@ -44,16 +48,16 @@ int main(void)
 
     init_kernel();
 
-    init_semaphore(&scr_sph, 1);
-    create_thread(thread_test, "test thread 1\n");
-    create_thread(thread_test, "test thread 2\n");
+    init_semaphore(&sph, 1);
+    x = 0;
+    create_process("test thread", thread_test);
 
     _enable_intr();
 
     while(1)
     {
-        semaphore_wait(&scr_sph);
-        put_str("main thread\n");
-        semaphore_signal(&scr_sph);
+        semaphore_wait(&sph);
+        print_format("%u\n", x);
+        semaphore_signal(&sph);
     }
 }
