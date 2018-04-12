@@ -172,7 +172,8 @@ static void process_thread_entry(process_exec_func func,
     // 等会儿伪装的中断退出函数那里，eflags中IF是打开的
     _disable_intr();
 
-    struct PCB *pcb = get_cur_TCB()->pcb;
+    struct TCB *tcb = get_cur_TCB();
+    struct PCB *pcb = tcb->pcb;
 
     // 初始化进程地址空间
     if(!pcb->addr_space_inited)
@@ -183,7 +184,6 @@ static void process_thread_entry(process_exec_func func,
 
     // 填充内核栈最高处的intr_stack，为降低特权级做准备
 
-    struct TCB *tcb = get_cur_TCB();
     tcb->ker_stack += sizeof(struct thread_init_stack);
     struct intr_stack_bak *intr_stack =
         (struct intr_stack_bak*)tcb->ker_stack;
@@ -230,14 +230,19 @@ static void process_thread_entry_PL_3(process_exec_func func)
 static void init_bootloader_process(void)
 {
     struct PCB *pcb = alloc_PCB();
+
     strcpy(pcb->name, "kernel process");
+
     pcb->addr_space = get_ker_vir_addr_space();
+    pcb->addr_space_inited = true;
+
     pcb->pid = 0;
     pcb->is_PL_0 = true;
-    pcb->addr_space_inited = true;
+
     init_rlist(&pcb->threads_list);
     push_back_rlist(&pcb->threads_list, get_cur_TCB(),
         kernel_resident_rlist_node_alloc);
+        
     get_cur_TCB()->pcb = pcb;
 }
 
