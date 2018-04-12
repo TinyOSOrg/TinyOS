@@ -37,6 +37,15 @@ struct PCB
 
     // 包含哪些线程
     rlist threads_list;
+
+    // 进程空间是否已经初始化
+    bool addr_space_inited;
+
+    // 进程编号，初始为0，其他从1开始计
+    uint32_t pid;
+
+    // 是否是内核进程，即特权级是否是0
+    bool is_PL_0;
 };
 
 /* 进程入口函数签名 */
@@ -52,6 +61,6 @@ void init_process_man(void);
 void set_tss_esp0(uint32_t esp0);
 
 /* 创建进程，不解释 */
-void create_process(const char *name, process_exec_func func);
+void create_process(const char *name, process_exec_func func, bool is_PL_0);
 
 #endif /* TINY_OS_PROCESS_H */

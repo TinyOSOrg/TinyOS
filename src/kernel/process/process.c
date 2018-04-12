@@ -113,13 +113,16 @@ static struct PCB *alloc_PCB(void)
 #define USER_THREAD_STACK_BITMAP_COUNT (MAX_PROCESS_THREADS >> 5)
 
 /* 创建一个进程，但是不包含任何线程（ */
-static struct PCB *create_empty_process(const char *name)
+static struct PCB *create_empty_process(const char *name, bool is_PL_0)
 {
     struct PCB *pcb = alloc_PCB();
 
     // 虚拟地址空间初始化
 
     pcb->addr_space = create_vir_addr_space();
+    pcb->pid = get_usr_vir_addr_idx(pcb->addr_space) + 1;
+    pcb->is_PL_0 = is_PL_0;
+    pcb->addr_space_inited = false;
 
     init_rlist(&pcb->threads_list);
 
@@ -153,14 +156,30 @@ static void *alloc_thread_user_stack(void)
     return NULL;
 }
 
-static void process_thread_entry(process_exec_func func)
+/* 初始化进程地址空间 */
+static void init_process_addr_space(void)
+{
+    // 填充线程栈位图
+    for(size_t i = 0;i != USER_THREAD_STACK_BITMAP_COUNT; ++i)
+        ((uint32_t*)USER_STACK_BITMAP_ADDR)[i] = 0xffffffff;
+}
+
+/* 进程入口 */
+static void process_thread_entry(process_exec_func func,
+    uint32_t data_seg_sel, uint32_t code_seg_sel, uint32_t stack_seg_sel)
 {
     // 这里直接关中断
     // 等会儿伪装的中断退出函数那里，eflags中IF是打开的
     _disable_intr();
 
-    for(size_t i = 0;i != USER_THREAD_STACK_BITMAP_COUNT; ++i)
-        ((uint32_t*)USER_STACK_BITMAP_ADDR)[i] = 0xffffffff;
+    struct PCB *pcb = get_cur_TCB()->pcb;
+
+    // 初始化进程地址空间
+    if(!pcb->addr_space_inited)
+    {
+        init_process_addr_space();
+        pcb->addr_space_inited = true;
+    }
 
     // 填充内核栈最高处的intr_stack，为降低特权级做准备
 
@@ -176,15 +195,15 @@ static void process_thread_entry(process_exec_func func)
     intr_stack->edx = 0;
     intr_stack->ecx = 0;
     intr_stack->eax = 0;
-    intr_stack->gs = SEG_SEL_USER_DATA;
-    intr_stack->ds = SEG_SEL_USER_DATA;
-    intr_stack->es = SEG_SEL_USER_DATA;
-    intr_stack->fs = SEG_SEL_USER_DATA;
+    intr_stack->gs = data_seg_sel;
+    intr_stack->ds = data_seg_sel;
+    intr_stack->es = data_seg_sel;
+    intr_stack->fs = data_seg_sel;
     intr_stack->eip = (uint32_t)func;
-    intr_stack->cs = SEG_SEL_USER_CODE;
+    intr_stack->cs = code_seg_sel;
     intr_stack->eflags = (1 << 1) | (1 << 9);
     intr_stack->esp = (uint32_t)alloc_thread_user_stack();
-    intr_stack->ss = SEG_SEL_USER_STACK;
+    intr_stack->ss = stack_seg_sel;
 
     extern void intr_proc_end(void); // defined in interrupt.s
 
@@ -195,12 +214,27 @@ static void process_thread_entry(process_exec_func func)
                   : "memory");
 }
 
+static void process_thread_entry_PL_0(process_exec_func func)
+{
+    process_thread_entry(func,
+        SEG_SEL_KERNEL_DATA, SEG_SEL_KERNEL_CODE, SEG_SEL_KERNEL_STACK);
+}
+
+static void process_thread_entry_PL_3(process_exec_func func)
+{
+    process_thread_entry(func,
+        SEG_SEL_USER_DATA, SEG_SEL_USER_CODE, SEG_SEL_USER_STACK);
+}
+
 /* 把bootloader以来一直在跑的东西封装成进程 */
 static void init_bootloader_process(void)
 {
     struct PCB *pcb = alloc_PCB();
     strcpy(pcb->name, "kernel process");
     pcb->addr_space = get_ker_vir_addr_space();
+    pcb->pid = 0;
+    pcb->is_PL_0 = true;
+    pcb->addr_space_inited = true;
     init_rlist(&pcb->threads_list);
     push_back_rlist(&pcb->threads_list, get_cur_TCB(),
         kernel_resident_rlist_node_alloc);
@@ -226,13 +260,16 @@ void set_tss_esp0(uint32_t esp0)
     tss.esp0 = esp0;
 }
 
-void create_process(const char *name, process_exec_func func)
+void create_process(const char *name, process_exec_func func, bool is_PL_0)
 {
     intr_state intr_s = fetch_and_disable_intr();
 
-    struct PCB *pcb = create_empty_process(name);
-    struct TCB *tcb = create_thread(
-        (thread_exec_func)process_thread_entry, func, pcb);
+    struct PCB *pcb = create_empty_process(name, is_PL_0);
+
+    thread_exec_func thread_entry = (thread_exec_func)(is_PL_0 ? process_thread_entry_PL_0 :
+                                                                 process_thread_entry_PL_3);
+
+    struct TCB *tcb = create_thread(thread_entry, func, pcb);
     push_back_rlist(&pcb->threads_list, tcb, kernel_resident_rlist_node_alloc);
 
     set_intr_state(intr_s);

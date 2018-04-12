@@ -113,7 +113,7 @@ static void thread_scheduler(void)
     if(last->pcb != cur_running_TCB->pcb)
     {
         set_current_vir_addr_space(cur_running_TCB->pcb->addr_space);
-        if(cur_running_TCB->pcb->addr_space != get_ker_vir_addr_space())
+        if(!cur_running_TCB->pcb->is_PL_0)
             set_tss_esp0((uint32_t)(cur_running_TCB->init_ker_stack));
     }
     

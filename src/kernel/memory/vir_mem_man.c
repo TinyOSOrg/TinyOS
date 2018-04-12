@@ -164,7 +164,7 @@ static void init_ker_page_man(void)
     给定一个用户虚拟地址空间记录，返回其唯一的下标
     虚拟地址空间记录的下标和对应虚拟页下标是相同的
 */
-static size_t get_usr_vir_addr_idx(void *rec)
+size_t get_usr_vir_addr_idx(vir_addr_space *rec)
 {
     return ((char*)rec - (char*)usr_addr_spaces_arr) / sizeof(vir_addr_space);
 }

@@ -50,4 +50,7 @@ vir_addr_space *get_ker_vir_addr_space(void);
 */
 void destroy_vir_addr_space(vir_addr_space *addr_space);
 
+/* 返回一个虚拟空间标号 */
+size_t get_usr_vir_addr_idx(vir_addr_space *rec);
+
 #endif /* TINY_OS_VIR_MEM_MAN_H */

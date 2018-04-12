@@ -18,6 +18,16 @@ void thread_test(void)
         ++x;
 }
 
+void PL0_thread(void)
+{
+    while(1)
+    {
+        semaphore_wait(&sph);
+        print_format("another process\n");
+        semaphore_signal(&sph);
+    }
+}
+
 void init_kernel(void)
 {
     /* 中断向量表 */
@@ -50,7 +60,8 @@ int main(void)
 
     init_semaphore(&sph, 1);
     x = 0;
-    create_process("test thread", thread_test);
+    create_process("test thread", thread_test, false);
+    create_process("another thread", PL0_thread, true);
 
     _enable_intr();
 
