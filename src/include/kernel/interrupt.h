@@ -6,7 +6,7 @@
 
 /* 0x20~0x2f号中断为8259A所用 */
 
-#define IDT_DESC_COUNT 0x21
+#define IDT_DESC_COUNT 0x81
 
 #define INTR_NUMBER_DIVIDE_ERROR         0
 #define INTR_NUMBER_DEBUG                1
@@ -31,14 +31,16 @@
 
 #define INTR_NUMBER_CLOCK                32
 
-void default_intr_function(uint8_t intr_number);
+/* 和linux一样，0x80号中断用作系统调用 */
+#define INTR_NUMBER_SYSCALL              128
 
 void init_IDT(void);
 
 /*
     合法的intr_function签名包括
     void function(void);
-    void function(uint_t intr_number);
+    void function(uint32_t intr_number);
+    void function(uint32_t intr_number, uint32_t err_code);
 */
 void set_intr_function(uint8_t intr_number, void (*func)(void));
 

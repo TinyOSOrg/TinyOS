@@ -5,25 +5,27 @@
 #include <kernel/process/semaphore.h>
 #include <kernel/process/process.h>
 #include <kernel/rlist_node_alloc.h>
+#include <kernel/syscall.h>
 
 #include <lib/string.h>
 
+#define syscall_param0(N) \
+    ({ int r; \
+       asm volatile ("int $0x80;" \
+                     : "=a" (r) \
+                     : "a" (N) \
+                     : "memory"); \
+       r; })
+
 struct semaphore sph;
-
-volatile int x;
-
-void thread_test(void)
-{
-    while(1)
-        ++x;
-}
 
 void PL0_thread(void)
 {
     while(1)
     {
         semaphore_wait(&sph);
-        print_format("another process\n");
+        print_format("another process, pid = %u\n",
+            syscall_param0(SYSCALL_GET_PROCESS_ID));
         semaphore_signal(&sph);
     }
 }
@@ -48,6 +50,9 @@ void init_kernel(void)
     /* 进程管理 */
     init_process_man();
 
+    /* 系统调用 */
+    init_syscall();
+
     /* 时钟中断频率 */
     set_8253_freq(50);
 }
@@ -59,16 +64,16 @@ int main(void)
     init_kernel();
 
     init_semaphore(&sph, 1);
-    x = 0;
-    create_process("test thread", thread_test, false);
-    create_process("another thread", PL0_thread, true);
+    
+    create_process("another process", PL0_thread, true);
 
     _enable_intr();
 
     while(1)
     {
         semaphore_wait(&sph);
-        print_format("%u\n", x);
+        uint32_t pid = syscall_param0(SYSCALL_GET_PROCESS_ID);
+        print_format("main process, pid = %u\n", pid);
         semaphore_signal(&sph);
     }
 }

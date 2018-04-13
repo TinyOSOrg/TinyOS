@@ -68,6 +68,9 @@ static void init_user_segments(void)
     进程本体相关
 =====================================================================*/
 
+/* 有多少个用户栈位图 */
+#define USER_THREAD_STACK_BITMAP_COUNT (MAX_PROCESS_THREADS >> 5)
+
 struct intr_stack_bak
 {
     // 最后压入的是中断向量号
@@ -108,9 +111,6 @@ static struct PCB *alloc_PCB(void)
     }
     return fetch_freelist(&PCB_freelist);
 }
-
-/* 有多少个用户栈位图 */
-#define USER_THREAD_STACK_BITMAP_COUNT (MAX_PROCESS_THREADS >> 5)
 
 /* 创建一个进程，但是不包含任何线程（ */
 static struct PCB *create_empty_process(const char *name, bool is_PL_0)
@@ -278,4 +278,9 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0)
     push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
 
     set_intr_state(intr_s);
+}
+
+uint32_t syscall_get_cur_PID_impl(void)
+{
+    return get_cur_TCB()->pcb->pid;
 }

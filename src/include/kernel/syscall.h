@@ -4,18 +4,41 @@
 #include <lib/intdef.h>
 
 /*
-    公用系统调用接口
-    合格的签名包括：
-        void func(uint32_t number);
-        void func(uint32_t number, uint32_t arg0);
-        void func(uint32_t number, uint32_t arg0, uint32_t arg1);
-        void func(uint32_t number, uint32_t arg0, uint32_t arg1, uint32_t arg2);
+    系统调用设计：
+        仿照linux，以0x80号中断作为系统调用入口
+        以寄存器传参：
+            eax为系统调用编号
+            ebx为第一个实参
+            ecx为第二个实参
+            edx为第三个实参
+
+    以下是3个参数的系统调用的参考实现
+    对用户进程而言，相关代码当然应该在用户代码段中了，所以在这里没有定义成函数
+
+    // 不妨设系统调用号为N
+    uint32_t syscall_with_3_params_in_user_program(uint32_t arg1, uint32_t arg2, uint32_t arg3)
+    {
+        uint32_t rt;
+        asm volatile ("int $0x80;"
+                      : "=a" (rt)
+                      : "a" (N), "b" (arg1), "c" (arg2), "d" (arg3)
+                      : "memory");
+        return rt;
+    }
 */
-void syscall(uint32_t number, uint32_t arg0, uint32_t arg1, uint32_t arg2);
 
-typedef void (*syscall_impl)(void);
+/* 系统调用入口数量 */
+#define SYSCALL_COUNT 1
 
-/* 注册系统调用实现函数 */
-void register_syscall(uint32_t number, syscall_impl func);
+/* 一个合法的系统调用应返回void或uint32_t，有0~3个uint32_t大小的参数 */
+
+/*
+    取得当前进程ID
+    uint32_t impl(void);
+*/
+#define SYSCALL_GET_PROCESS_ID 0
+
+/* 系统调用初始化，至少在中断初始化后调用 */
+void init_syscall(void);
 
 #endif /* TINY_OS_SYSCALL_H */

@@ -41,7 +41,7 @@ void (*volatile intr_function[IDT_DESC_COUNT])(void);
 
 static struct intr_gate_desc IDT[IDT_DESC_COUNT];
 
-void default_intr_function(uint8_t intr_number)
+void default_intr_function(uint32_t intr_number)
 {
     if(intr_number == 0x27 || intr_number == 0x2f)
         return;
@@ -83,9 +83,19 @@ void init_IDT(void)
         intr_function[i] = (void(*)(void))default_intr_function;
     }
 
+    // 初始化系统调用对应的IDT
+
+    extern uint32_t global_syscall_entry(void);
+    struct intr_gate_desc *syscall_desc = &IDT[INTR_NUMBER_SYSCALL];
+    syscall_desc->offset_low16  = (uint32_t)&global_syscall_entry & 0xffff;
+    syscall_desc->seg_sel       = SEG_SEL_KERNEL_CODE;
+    syscall_desc->zero_pad      = 0;
+    syscall_desc->attrib        = INTR_DESC_ATTRIB(INTR_DESC_DPL_3);
+    syscall_desc->offset_high16 = (uint32_t)&global_syscall_entry >> 16;
+
     init_8259A();
 
-    uint64_t IDTarg = (sizeof(IDT) - 1) | ((uint64_t)((uint64_t)((uint32_t)IDT) << 16));
+    uint64_t IDTarg = (sizeof(IDT) - 1) | (((uint64_t)(uint32_t)IDT) << 16);
     _load_IDT(IDTarg);
 }
 

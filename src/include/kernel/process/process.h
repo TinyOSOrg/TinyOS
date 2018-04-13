@@ -1,6 +1,7 @@
 #ifndef TINY_OS_PROCESS_H
 #define TINY_OS_PROCESS_H
 
+#include <kernel/memory/vir_mem_man.h>
 #include <kernel/process/thread.h>
 
 #include <lib/ptrlist.h>
@@ -66,5 +67,8 @@ void set_tss_esp0(uint32_t esp0);
 
 /* 创建进程，不解释 */
 void create_process(const char *name, process_exec_func func, bool is_PL_0);
+
+/* 进程相关系统调用实现 */
+uint32_t syscall_get_cur_PID_impl(void);
 
 #endif /* TINY_OS_PROCESS_H */

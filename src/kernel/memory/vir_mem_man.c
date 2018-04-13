@@ -212,7 +212,7 @@ static void init_usr_vir_addr_space_man(void)
     
     // 构造自由链表
     empty_usr_addr_space_rec = NULL;
-    for(size_t i = 0;i != MAX_VIR_ADDR_SPACE_COUNT; ++i)
+    for(int32_t i = MAX_VIR_ADDR_SPACE_COUNT - 1;i >= 0; --i)
         insert_to_empty_usr_addr_space_rec(&usr_addr_spaces_arr[i]);
     
     // 用户虚拟页空间分配

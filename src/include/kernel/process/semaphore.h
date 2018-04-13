@@ -16,7 +16,7 @@
 
 struct semaphore
 {
-    int32_t val;
+    volatile int32_t val;
     rlist blocked_threads;
 };
 

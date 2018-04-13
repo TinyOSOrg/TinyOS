@@ -3,6 +3,7 @@
 
 /* 虚拟地址空间的创建、启用和销毁 */
 
+#include <lib/bool.h>
 #include <lib/intdef.h>
 
 /* 初始化整个虚拟地址空间管理系统，在init_phy_mem_man()之后即可调用 */
