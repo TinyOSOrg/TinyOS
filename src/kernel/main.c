@@ -23,10 +23,10 @@ void PL0_thread(void)
 {
     while(1)
     {
-        semaphore_wait(&sph);
+        /*semaphore_wait(&sph);
         print_format("another process, pid = %u\n",
             syscall_param0(SYSCALL_GET_PROCESS_ID));
-        semaphore_signal(&sph);
+        semaphore_signal(&sph);*/
     }
 }
 
@@ -65,7 +65,7 @@ int main(void)
 
     init_semaphore(&sph, 1);
     
-    create_process("another process", PL0_thread, true);
+    create_process("another process", PL0_thread, false);
 
     _enable_intr();
 

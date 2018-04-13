@@ -19,6 +19,9 @@
 /* 用户栈位图起始地址 */
 #define USER_STACK_BITMAP_ADDR 0x100000
 
+/* 用户栈最高地址 */
+#define USER_STACK_TOP_ADDR ((uint32_t)0xbffff * (uint32_t)0x1000)
+
 /*
     一个进程最多包含多少线程
     应是32的整数倍

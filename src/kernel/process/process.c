@@ -57,10 +57,10 @@ static void init_TSS(void)
 static void init_user_segments(void)
 {
     make_iGDT((struct iGDT*)((char*)GDT_START + 4 * 8),
-              0, 0xfffff,
+              0, 0xbffff,
               GDT_ATTRIB_LOW_CODE, GDT_ATTRIB_HIGH);
     make_iGDT((struct iGDT*)((char*)GDT_START + 5 * 8),
-              0, 0xfffff,
+              0, 0xbffff,
               GDT_ATTRIB_LOW_DATA, GDT_ATTRIB_HIGH);
 }
 
@@ -150,8 +150,8 @@ static void *alloc_thread_user_stack(void)
             continue;
         uint32_t local_idx = _find_lowest_nonzero_bit(usr_bmps[i]);
         usr_bmps[i] &= ~(1 << local_idx);
-        return (void*)((uint32_t)0xc0000000 - 4 -
-            (uint32_t)(((i << 5) + local_idx) * (uint32_t)USER_STACK_SIZE));
+        return (void*)((uint32_t)USER_STACK_TOP_ADDR -
+            (uint32_t)(((i << 5) + local_idx) * ((uint32_t)USER_STACK_SIZE) + 4));
     }
     return NULL;
 }
@@ -206,7 +206,7 @@ static void process_thread_entry(process_exec_func func,
     intr_stack->ss = stack_seg_sel;
 
     extern void intr_proc_end(void); // defined in interrupt.s
-
+    
     asm volatile ("movl %0, %%esp;"
                   "jmp intr_proc_end"
                   :

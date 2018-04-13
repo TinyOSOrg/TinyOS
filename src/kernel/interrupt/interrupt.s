@@ -18,6 +18,14 @@ extern intr_function
         push gs
         pushad
 
+        push eax
+        mov ax, 0x10
+        mov ds, ax
+        mov es, ax
+        mov fs, ax
+        mov gs, ax
+        pop eax
+
         mov al, 0x20
         out 0xa0, al
         out 0x20, al
@@ -110,6 +118,14 @@ global_syscall_entry:
     push fs
     push gs
     pushad
+
+    push eax
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    pop eax
 
     push 0x80
 
