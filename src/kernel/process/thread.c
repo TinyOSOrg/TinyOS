@@ -44,7 +44,7 @@ static freelist_handle TCB_freelist;
 static struct TCB *cur_running_TCB;
 
 /* ready线程队列 */
-static rlist ready_threads;
+static ilist ready_threads;
 
 /* 分配一个空TCB块 */
 static struct TCB *alloc_TCB(void)
@@ -98,16 +98,15 @@ static void thread_scheduler(void)
     
     if(cur_running_TCB->state == thread_state_running)
     {
-        push_back_rlist(&ready_threads, cur_running_TCB,
-                        kernel_resident_rlist_node_alloc);
+        push_back_ilist(&ready_threads, &cur_running_TCB->ready_block_threads_node);
         cur_running_TCB->state = thread_state_ready;
     }
 
-    ASSERT_S(!is_rlist_empty(&ready_threads));
+    ASSERT_S(!is_ilist_empty(&ready_threads));
 
     struct TCB *last = cur_running_TCB;
-    cur_running_TCB = pop_front_rlist(&ready_threads,
-                        kernel_resident_rlist_node_dealloc);
+    cur_running_TCB = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
+                                             pop_front_ilist(&ready_threads));
     cur_running_TCB->state = thread_state_running;
 
     if(last->pcb != cur_running_TCB->pcb)
@@ -124,7 +123,7 @@ void init_thread_man(void)
 {
     init_freelist(&TCB_freelist);
 
-    init_rlist(&ready_threads);
+    init_ilist(&ready_threads);
 
     init_bootloader_thread();
 
@@ -160,8 +159,7 @@ struct TCB *create_thread(thread_exec_func func, void *params,
     init_stack->esi = init_stack->edi = 0;
 
     // 加入ready队列
-    push_back_rlist(&ready_threads, tcb,
-        kernel_resident_rlist_node_alloc);
+    push_back_ilist(&ready_threads, &tcb->ready_block_threads_node);
 
     // 还原中断状态
     set_intr_state(intr_s);
@@ -190,7 +188,7 @@ void awake_thread(struct TCB *tcb)
 
     ASSERT_S(tcb->state == thread_state_blocked);
     tcb->state = thread_state_ready;
-    push_back_rlist(&ready_threads, tcb, kernel_resident_rlist_node_alloc);
+    push_back_ilist(&ready_threads, &tcb->ready_block_threads_node);
 
     set_intr_state(intr_s);
 }

@@ -74,3 +74,37 @@ bool is_rlist_empty(rlist *L)
 {
     return L->last == (struct rlist_node*)L;
 }
+
+void init_ilist(ilist *L)
+{
+    L->last = L->next = L;
+}
+
+void push_back_ilist(ilist *L, struct ilist_node *node)
+{
+    node->last = L->last;
+    node->next = L;
+    L->last->next = node;
+    L->last = node;
+}
+
+struct ilist_node *pop_front_ilist(ilist *L)
+{
+    if(is_ilist_empty(L))
+        return NULL;
+    struct ilist_node *rt = L->next;
+    rt->next->last = L;
+    L->next = rt->next;
+    return rt;
+}
+
+bool is_ilist_empty(ilist *L)
+{
+    return L->next == L;
+}
+
+void erase_from_ilist(struct ilist_node *node)
+{
+    node->last->next = node->next;
+    node->next->last = node->last;
+}

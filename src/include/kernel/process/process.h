@@ -36,7 +36,7 @@ struct PCB
     vir_addr_space *addr_space;
 
     // 包含哪些线程
-    rlist threads_list;
+    ilist threads_list;
 
     // 进程空间是否已经初始化
     bool addr_space_inited;
@@ -46,6 +46,10 @@ struct PCB
 
     // 是否是内核进程，即特权级是否是0
     bool is_PL_0;
+
+    // 各种侵入式链表节点
+
+    struct ilist_node processes_node; // 所有进程的链表
 };
 
 /* 进程入口函数签名 */

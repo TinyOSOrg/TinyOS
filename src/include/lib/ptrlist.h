@@ -3,6 +3,10 @@
 
 #include <lib/bool.h>
 
+/*=====================================================================
+    非侵入双向循环链表
+=====================================================================*/
+
 /* 循环链表节点 */
 struct rlist_node
 {
@@ -37,5 +41,31 @@ void *back_rlist(rlist *L);
 void *front_rlist(rlist *L);
 
 bool is_rlist_empty(rlist *L);
+
+/*=====================================================================
+    侵入式双向循环链表
+=====================================================================*/
+
+/* 跟据成员地址取得包含它的结构体地址 */
+#define GET_STRUCT_FROM_MEMBER(STU, MEM, p_mem) \
+    ((STU*)((char*)(p_mem) - (char*)(&((STU*)0)->MEM)))
+
+struct ilist_node
+{
+    struct ilist_node *last;
+    struct ilist_node *next;
+};
+
+/* 链表句柄 */
+typedef struct ilist_node ilist;
+
+void init_ilist(ilist *L);
+
+void push_back_ilist(ilist *L, struct ilist_node *node);
+struct ilist_node *pop_front_ilist(ilist *L);
+
+bool is_ilist_empty(ilist *L);
+
+void erase_from_ilist(struct ilist_node *node);
 
 #endif /* TINY_OS_PTRLIST_H */

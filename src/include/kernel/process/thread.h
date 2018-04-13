@@ -2,6 +2,7 @@
 #define TINY_OS_THREAD_H
 
 #include <lib/intdef.h>
+#include <lib/ptrlist.h>
 
 /* 前向声明：process control block */
 struct PCB;
@@ -30,6 +31,11 @@ struct TCB
     enum thread_state state;
 
     struct PCB *pcb;
+
+    // 各种侵入式链表的节点
+
+    struct ilist_node ready_block_threads_node;   //就绪线程队列、信号量阻塞队列
+    struct ilist_node threads_in_proc_node;       // 每个进程的线程表
 };
 
 /*

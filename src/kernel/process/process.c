@@ -91,7 +91,7 @@ struct intr_stack_bak
 };
 
 /* 进程列表 */
-static rlist processes;
+static ilist processes;
 
 /* PCB空间自由链表 */
 static freelist_handle PCB_freelist;
@@ -124,7 +124,7 @@ static struct PCB *create_empty_process(const char *name, bool is_PL_0)
     pcb->is_PL_0 = is_PL_0;
     pcb->addr_space_inited = false;
 
-    init_rlist(&pcb->threads_list);
+    init_ilist(&pcb->threads_list);
 
     // 名字复制，超出长度限制的部分都丢掉
     size_t i_name = 0;
@@ -132,7 +132,7 @@ static struct PCB *create_empty_process(const char *name, bool is_PL_0)
         pcb->name[i_name] = name[i_name];
     pcb->name[i_name] = '\0';
 
-    push_back_rlist(&processes, pcb, kernel_resident_rlist_node_alloc);
+    push_back_ilist(&processes, &pcb->processes_node);
     
     return pcb;
 }
@@ -230,6 +230,7 @@ static void process_thread_entry_PL_3(process_exec_func func)
 static void init_bootloader_process(void)
 {
     struct PCB *pcb = alloc_PCB();
+    struct TCB *tcb = get_cur_TCB();
 
     strcpy(pcb->name, "kernel process");
 
@@ -239,11 +240,10 @@ static void init_bootloader_process(void)
     pcb->pid = 0;
     pcb->is_PL_0 = true;
 
-    init_rlist(&pcb->threads_list);
-    push_back_rlist(&pcb->threads_list, get_cur_TCB(),
-        kernel_resident_rlist_node_alloc);
+    init_ilist(&pcb->threads_list);
+    push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
         
-    get_cur_TCB()->pcb = pcb;
+    tcb->pcb = pcb;
 }
 
 void init_process_man(void)
@@ -254,7 +254,7 @@ void init_process_man(void)
     _load_GDT((uint32_t)GDT_START, 8 * 6 - 1);
     _ltr(TSS_SEL);
 
-    init_rlist(&processes);
+    init_ilist(&processes);
     init_freelist(&PCB_freelist);
 
     init_bootloader_process();
@@ -275,7 +275,7 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0)
                                                                  process_thread_entry_PL_3);
 
     struct TCB *tcb = create_thread(thread_entry, func, pcb);
-    push_back_rlist(&pcb->threads_list, tcb, kernel_resident_rlist_node_alloc);
+    push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
 
     set_intr_state(intr_s);
 }
