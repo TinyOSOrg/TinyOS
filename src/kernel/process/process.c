@@ -284,3 +284,18 @@ uint32_t syscall_get_cur_PID_impl(void)
 {
     return get_cur_TCB()->pcb->pid;
 }
+
+void _add_PCB_mem(struct PCB *pcb)
+{
+    add_freelist(&PCB_freelist, pcb);
+}
+
+void kill_process(struct PCB *pcb)
+{
+    while(!is_ilist_empty(&pcb->threads_list))
+    {
+        struct TCB *tcb = GET_STRUCT_FROM_MEMBER(
+            struct TCB, threads_in_proc_node, pop_front_ilist(&pcb->threads_list));
+        kill_thread(tcb);
+    }
+}

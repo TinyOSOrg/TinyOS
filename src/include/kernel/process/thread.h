@@ -7,12 +7,15 @@
 /* 前向声明：process control block */
 struct PCB;
 
+struct semaphore;
+
 /* 线程状态：运行，就绪，阻塞 */
 enum thread_state
 {
     thread_state_running,
     thread_state_ready,
-    thread_state_blocked
+    thread_state_blocked,
+    thread_state_killed
 };
 
 /*
@@ -31,6 +34,9 @@ struct TCB
     enum thread_state state;
 
     struct PCB *pcb;
+
+    // 一个线程可能被阻塞在某个信号量上
+    struct semaphore *blocked_sph;
 
     // 各种侵入式链表的节点
 
@@ -81,5 +87,25 @@ void block_cur_thread(void);
 
 /* 唤醒一个blocked线程，将其变为ready */
 void awake_thread(struct TCB *tcb);
+
+/* 干掉一个线程 */
+void kill_thread(struct TCB *tcb);
+
+/*
+    每个线程结束的时候自己调用
+    不然触发GP把自己干掉了，系统是不负责任的
+*/
+void exit_thread(void);
+
+/*
+    清理待释放的线程和进程资源
+*/
+void do_releasing_thds_procs(void);
+
+/*
+    让出CPU，让自己进入ready队列
+    好人才会做的事
+*/
+void yield_CPU(void);
 
 #endif /* TINY_OS_THREAD_H */

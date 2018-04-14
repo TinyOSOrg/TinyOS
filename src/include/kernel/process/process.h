@@ -74,4 +74,10 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0);
 /* 进程相关系统调用实现 */
 uint32_t syscall_get_cur_PID_impl(void);
 
+/* PCB自由链表 */
+void _add_PCB_mem(struct PCB *pcb);
+
+/* 干掉一个进程 */
+void kill_process(struct PCB *pcb);
+
 #endif /* TINY_OS_PROCESS_H */

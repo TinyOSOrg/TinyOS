@@ -5,6 +5,7 @@
 #include <kernel/memory.h>
 #include <kernel/print.h>
 #include <kernel/process/process.h>
+#include <kernel/process/semaphore.h>
 #include <kernel/process/thread.h>
 #include <kernel/rlist_node_alloc.h>
 
@@ -46,6 +47,12 @@ static struct TCB *cur_running_TCB;
 /* ready线程队列 */
 static ilist ready_threads;
 
+/* 待释放的tcb */
+static rlist waiting_release_threads;
+
+/* 待释放的pcb */
+static rlist waiting_release_processes;
+
 /* 分配一个空TCB块 */
 static struct TCB *alloc_TCB(void)
 {
@@ -61,10 +68,7 @@ static struct TCB *alloc_TCB(void)
     return fetch_freelist(&TCB_freelist);
 }
 
-/*
-    进入一个线程的前导操作
-    有什么初始化啥的就在这儿做
-*/
+/* 进入一个线程的前导操作 */
 static void kernel_thread_entry(thread_exec_func func, void *params)
 {
     // 线程的第一次进入也是通过调度器进来的
@@ -82,7 +86,34 @@ static void init_bootloader_thread(void)
     tcb->ker_stack = (void*)KER_STACK_INIT_VAL;
     tcb->init_ker_stack = tcb->ker_stack;
     tcb->pcb = NULL;
+    tcb->blocked_sph = NULL;
     cur_running_TCB = tcb;
+}
+
+/*
+    从进程的线程表中干掉一个线程
+    如果是该进程的唯一一个线程，那么这个进程要干掉
+    必须要保证：tcb不是running，也不在任何ready队列中
+*/
+static void erase_thread_in_process(struct TCB *tcb)
+{
+    struct PCB *pcb = tcb->pcb;
+    
+    // 从进程的线程表中删除该线程
+    // 并检查是否需要干掉进程
+    // 因为虚拟地址空间现在还用着呢，所以先不去掉它，而是放入队列等会儿再做
+    erase_from_ilist(&tcb->threads_in_proc_node);
+    if(is_ilist_empty(&pcb->threads_list))
+    {
+        erase_from_ilist(&pcb->processes_node);
+        push_back_rlist(&waiting_release_processes,
+            pcb, kernel_resident_rlist_node_alloc);
+    }
+
+    // tcb本身占的资源也要释放了，但现在不太合适，这个内核栈还在用呢……
+    // 所以延迟到之后进行
+    push_back_rlist(&waiting_release_threads,
+        tcb, kernel_resident_rlist_node_alloc);
 }
 
 /*
@@ -93,8 +124,8 @@ static void thread_scheduler(void)
 {
     // 从src线程切换至dst线程
     // 在thread.s中实现
-    extern void switch_to_thread(
-            struct TCB *src, struct TCB *dst);
+    extern void switch_to_thread(struct TCB *src, struct TCB *dst);
+    extern void jmp_to_thread(struct TCB *dst);
     
     if(cur_running_TCB->state == thread_state_running)
     {
@@ -115,8 +146,16 @@ static void thread_scheduler(void)
         if(!cur_running_TCB->pcb->is_PL_0)
             set_tss_esp0((uint32_t)(cur_running_TCB->init_ker_stack));
     }
-    
-    switch_to_thread(last, cur_running_TCB);
+
+    if(last->state == thread_state_killed)
+    {
+        erase_thread_in_process(last);
+        jmp_to_thread(cur_running_TCB);
+    }
+    else
+    {
+        switch_to_thread(last, cur_running_TCB);
+    }
 }
 
 void init_thread_man(void)
@@ -124,6 +163,9 @@ void init_thread_man(void)
     init_freelist(&TCB_freelist);
 
     init_ilist(&ready_threads);
+
+    init_rlist(&waiting_release_threads);
+    init_rlist(&waiting_release_processes);
 
     init_bootloader_thread();
 
@@ -140,6 +182,7 @@ struct TCB *create_thread(thread_exec_func func, void *params,
     struct TCB *tcb = alloc_TCB();
     tcb->pcb = pcb;
     tcb->state = thread_state_ready;
+    tcb->blocked_sph = NULL;
     
     tcb->ker_stack = alloc_ker_page(true);
     memset((char*)tcb->ker_stack, 0x0, 4096);
@@ -191,4 +234,67 @@ void awake_thread(struct TCB *tcb)
     push_back_ilist(&ready_threads, &tcb->ready_block_threads_node);
 
     set_intr_state(intr_s);
+}
+
+void kill_thread(struct TCB *tcb)
+{
+    intr_state intr_s = fetch_and_disable_intr();
+
+    ASSERT_S(tcb->state != thread_state_killed);
+
+    if(tcb == cur_running_TCB)
+    {
+        // 如果被干掉的线程是当前正在跑的，那么需要调度器
+        tcb->state = thread_state_killed;
+        thread_scheduler();
+    }
+    else // 在ready队列中或被阻塞
+    {
+        erase_from_ilist(&tcb->ready_block_threads_node);
+        erase_thread_in_process(tcb);
+    }
+
+    set_intr_state(intr_s);
+}
+
+void exit_thread(void)
+{
+    kill_thread(cur_running_TCB);
+}
+
+void do_releasing_thds_procs(void)
+{
+    // 线程
+    while(!is_rlist_empty(&waiting_release_threads))
+    {
+        struct TCB *tcb = pop_front_rlist(&waiting_release_threads,
+            kernel_resident_rlist_node_dealloc);
+        // 内核栈
+        free_ker_page((char*)tcb->init_ker_stack
+                        + INTR_BAK_DATA_SIZE
+                        + sizeof(struct thread_init_stack)
+                        - 4096);
+        // 信号量
+        if(tcb->blocked_sph)
+            tcb->blocked_sph->val++;
+
+        // tcb空间
+        add_freelist(&TCB_freelist, tcb);
+    }
+
+    // 进程
+    while(!is_rlist_empty(&waiting_release_processes))
+    {
+        struct PCB *pcb = pop_front_rlist(&waiting_release_processes,
+            kernel_resident_rlist_node_dealloc);
+        // 虚拟地址空间
+        destroy_vir_addr_space(pcb->addr_space);
+        // pcb空间
+        _add_PCB_mem(pcb);
+    }
+}
+
+void yield_CPU(void)
+{
+    thread_scheduler();
 }

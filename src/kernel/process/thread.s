@@ -3,6 +3,7 @@
 section .text
 
 global switch_to_thread
+global jmp_to_thread
 
 ; void switch_to_thread(struct TCB *src, struct TCB *dst);
 switch_to_thread:
@@ -20,6 +21,19 @@ switch_to_thread:
     ; 取得dst指针值
     mov eax, [esp + 24]
     ; dst->ker_stack -> 栈指针
+    mov esp, [eax]
+
+    pop ebp
+    pop ebx
+    pop edi
+    pop esi
+
+    ret
+
+; void jmp_to_thread(struct TCB *dst);
+jmp_to_thread:
+
+    mov eax, [esp + 4]
     mov esp, [eax]
 
     pop ebp

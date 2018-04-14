@@ -22,8 +22,10 @@ void semaphore_wait(struct semaphore *s)
 
     if(--s->val < 0)
     {
-        push_back_rlist(&s->blocked_threads, get_cur_TCB(),
+        struct TCB *tcb = get_cur_TCB();
+        push_back_rlist(&s->blocked_threads, tcb,
                         kernel_resident_rlist_node_alloc);
+        tcb->blocked_sph = s;
         block_cur_thread();
     }
 
@@ -34,11 +36,11 @@ void semaphore_signal(struct semaphore *s)
 {
     intr_state intr_s = fetch_and_disable_intr();
 
-    if(++s->val <= 0)
+    if(++s->val <= 0 && !is_rlist_empty(&s->blocked_threads))
     {
-        ASSERT_S(!is_rlist_empty(&s->blocked_threads));
         struct TCB *th = pop_front_rlist(&s->blocked_threads,
                 kernel_resident_rlist_node_dealloc);
+        th->blocked_sph = NULL;
         awake_thread(th);
     }
 

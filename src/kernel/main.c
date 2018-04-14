@@ -19,15 +19,51 @@
 
 struct semaphore sph;
 
-void PL0_thread(void)
+void PL0_thread3(void)
 {
+    semaphore_wait(&sph);
+    print_format("another process 3, pid = %u\n",
+        syscall_param0(SYSCALL_GET_PROCESS_ID));
+    semaphore_signal(&sph);
     while(1)
+        ;
+    exit_thread();
+}
+
+void PL0_thread0(void)
+{
+    for(int i = 0;i != 3; ++i)
     {
-        /*semaphore_wait(&sph);
-        print_format("another process, pid = %u\n",
+        semaphore_wait(&sph);
+        print_format("another process 0, pid = %u\n",
             syscall_param0(SYSCALL_GET_PROCESS_ID));
-        semaphore_signal(&sph);*/
+        semaphore_signal(&sph);
     }
+    exit_thread();
+}
+
+void PL0_thread1(void)
+{
+    for(int i = 0;i != 5; ++i)
+    {
+        semaphore_wait(&sph);
+        print_format("another process 1, pid = %u\n",
+            syscall_param0(SYSCALL_GET_PROCESS_ID));
+        semaphore_signal(&sph);
+    }
+    create_process("another process3", PL0_thread3, true);
+    exit_thread();
+}
+
+void PL0_thread2(void)
+{
+    semaphore_wait(&sph);
+    print_format("another process 2, pid = %u\n",
+        syscall_param0(SYSCALL_GET_PROCESS_ID));
+    semaphore_signal(&sph);
+    while(1)
+        ;
+    exit_thread();
 }
 
 void init_kernel(void)
@@ -65,15 +101,22 @@ int main(void)
 
     init_semaphore(&sph, 1);
     
-    create_process("another process", PL0_thread, false);
+    create_process("another process0", PL0_thread0, true);
+    create_process("another process1", PL0_thread1, true);
+    create_process("another process2", PL0_thread2, true);
 
     _enable_intr();
 
-    while(1)
     {
         semaphore_wait(&sph);
         uint32_t pid = syscall_param0(SYSCALL_GET_PROCESS_ID);
         print_format("main process, pid = %u\n", pid);
         semaphore_signal(&sph);
+    }
+
+    while(1)
+    {
+        do_releasing_thds_procs();
+        yield_CPU();
     }
 }
