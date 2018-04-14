@@ -2,6 +2,10 @@ bochs.out
 
 .vscode/
 
+doc/docsrc/
+doc/
+DESIGN.md
+
 *.o
 *.d
 *.bin
