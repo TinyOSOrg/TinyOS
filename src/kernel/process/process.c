@@ -96,6 +96,9 @@ struct intr_stack_bak
 /* 进程列表 */
 static ilist processes;
 
+/* PID -> PCB映射 */
+struct PCB *pid_to_pcb[MAX_PROCESS_COUNT];
+
 /* PCB空间自由链表 */
 static freelist_handle PCB_freelist;
 
@@ -123,6 +126,8 @@ static struct PCB *create_empty_process(const char *name, bool is_PL_0)
     pcb->pid = get_usr_vir_addr_idx(pcb->addr_space) + 1;
     pcb->is_PL_0 = is_PL_0;
     pcb->addr_space_inited = false;
+
+    pid_to_pcb[pcb->pid] = pcb;
 
     init_ilist(&pcb->threads_list);
 
@@ -240,6 +245,8 @@ static void init_bootloader_process(void)
     pcb->pid = 0;
     pcb->is_PL_0 = true;
 
+    pid_to_pcb[0] = pcb;
+
     init_ilist(&pcb->threads_list);
     push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
         
@@ -248,6 +255,9 @@ static void init_bootloader_process(void)
 
 void init_process_man(void)
 {
+    for(size_t i = 0;i != MAX_PROCESS_COUNT; ++i)
+        pid_to_pcb[i] = NULL;
+
     init_TSS();
     init_user_segments();
 
@@ -258,11 +268,6 @@ void init_process_man(void)
     init_freelist(&PCB_freelist);
 
     init_bootloader_process();
-}
-
-void set_tss_esp0(uint32_t esp0)
-{
-    tss.esp0 = esp0;
 }
 
 void create_process(const char *name, process_exec_func func, bool is_PL_0)
@@ -285,11 +290,6 @@ uint32_t syscall_get_cur_PID_impl(void)
     return get_cur_TCB()->pcb->pid;
 }
 
-void _add_PCB_mem(struct PCB *pcb)
-{
-    add_freelist(&PCB_freelist, pcb);
-}
-
 void kill_process(struct PCB *pcb)
 {
     while(!is_ilist_empty(&pcb->threads_list))
@@ -298,4 +298,19 @@ void kill_process(struct PCB *pcb)
             struct TCB, threads_in_proc_node, pop_front_ilist(&pcb->threads_list));
         kill_thread(tcb);
     }
+}
+
+void _set_tss_esp0(uint32_t esp0)
+{
+    tss.esp0 = esp0;
+}
+
+void _add_PCB_mem(struct PCB *pcb)
+{
+    add_freelist(&PCB_freelist, pcb);
+}
+
+void _clr_PID_to_PCB(uint32_t pid)
+{
+    pid_to_pcb[pid] = NULL;
 }

@@ -6,6 +6,9 @@
 #include <lib/bool.h>
 #include <lib/intdef.h>
 
+/* 最多支持多少个虚拟地址空间（除ker_addr_space） */
+#define MAX_VIR_ADDR_SPACE_COUNT 64
+
 /* 初始化整个虚拟地址空间管理系统，在init_phy_mem_man()之后即可调用 */
 void init_vir_mem_man(void);
 

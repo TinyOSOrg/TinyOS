@@ -13,6 +13,9 @@
         USER_STACK_BITMAP_ADDR处用位图记录哪些区域已经用来做栈了
 */
 
+/* 最大进程数量（包括内核初始进程） */
+#define MAX_PROCESS_COUNT (MAX_VIR_ADDR_SPACE_COUNT + 1)
+
 /* 默认用户栈大小：1M */
 #define USER_STACK_SIZE 0x100000
 
@@ -65,19 +68,26 @@ typedef void (*process_exec_func)(void);
 */
 void init_process_man(void);
 
-/* 设置tss中的esp0字段 */
-void set_tss_esp0(uint32_t esp0);
-
 /* 创建进程，不解释 */
 void create_process(const char *name, process_exec_func func, bool is_PL_0);
 
 /* 进程相关系统调用实现 */
 uint32_t syscall_get_cur_PID_impl(void);
 
+/* 干掉一个进程 */
+void kill_process(struct PCB *pcb);
+
+/*=====================================================================
+    下面的东西是给thread.c用的
+=====================================================================*/
+
+/* 设置tss中的esp0字段 */
+void _set_tss_esp0(uint32_t esp0);
+
 /* PCB自由链表 */
 void _add_PCB_mem(struct PCB *pcb);
 
-/* 干掉一个进程 */
-void kill_process(struct PCB *pcb);
+/* 清空PID到PCB映射中的某一项 */
+void _clr_PID_to_PCB(uint32_t pid);
 
 #endif /* TINY_OS_PROCESS_H */

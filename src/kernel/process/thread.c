@@ -106,6 +106,7 @@ static void erase_thread_in_process(struct TCB *tcb)
     if(is_ilist_empty(&pcb->threads_list))
     {
         erase_from_ilist(&pcb->processes_node);
+        _clr_PID_to_PCB(pcb->pid);
         push_back_rlist(&waiting_release_processes,
             pcb, kernel_resident_rlist_node_alloc);
     }
@@ -144,7 +145,7 @@ static void thread_scheduler(void)
     {
         set_current_vir_addr_space(cur_running_TCB->pcb->addr_space);
         if(!cur_running_TCB->pcb->is_PL_0)
-            set_tss_esp0((uint32_t)(cur_running_TCB->init_ker_stack));
+            _set_tss_esp0((uint32_t)(cur_running_TCB->init_ker_stack));
     }
 
     if(last->state == thread_state_killed)

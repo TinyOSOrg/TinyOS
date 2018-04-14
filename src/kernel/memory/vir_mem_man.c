@@ -44,9 +44,6 @@ struct _vir_addr_space_freelist_node
     struct _vir_addr_space_freelist_node *next;
 };
 
-/* 最多支持多少个虚拟地址空间（除ker_addr_space） */
-#define MAX_VIR_ADDR_SPACE_COUNT 64
-
 /* 指向用户虚拟地址空间记录数组 */
 vir_addr_space *usr_addr_spaces_arr;
 
