@@ -5,6 +5,7 @@ bochs.out
 doc/docsrc/
 doc/
 DESIGN.md
+DESIGN.html
 
 *.o
 *.d

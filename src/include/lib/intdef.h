@@ -1,5 +1,5 @@
-#ifndef TINY_OS_INT_DEF_H
-#define TINY_OS_INT_DEF_H
+#ifndef TINY_OS_LIB_INT_DEF_H
+#define TINY_OS_LIB_INT_DEF_H
 
 typedef signed char        int8_t;
 typedef signed short       int16_t;
@@ -15,4 +15,4 @@ typedef uint32_t size_t;
 
 #define NULL ((void*)0)
 
-#endif /* TINY_OS_INT_DEF_H */
+#endif /* TINY_OS_LIB_INT_DEF_H */

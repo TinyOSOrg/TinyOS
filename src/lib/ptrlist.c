@@ -1,8 +1,6 @@
 #include <lib/intdef.h>
 #include <lib/ptrlist.h>
 
-#include <kernel/print.h>
-
 void init_rlist(rlist *L)
 {
     L->last = L->next = (struct rlist_node*)L;

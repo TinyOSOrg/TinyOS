@@ -3,7 +3,6 @@
 #include <kernel/boot.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
-#include <kernel/print.h>
 #include <kernel/process/process.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/thread.h>

@@ -2,7 +2,6 @@
 #include <kernel/assert.h>
 #include <kernel/boot.h>
 #include <kernel/interrupt.h>
-#include <kernel/print.h>
 
 #include <kernel/memory/page_desc.h>
 #include <kernel/memory/phy_mem_man.h>

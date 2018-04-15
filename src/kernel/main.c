@@ -1,12 +1,14 @@
 #include <kernel/asm.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
-#include <kernel/print.h>
+#include <kernel/console/print.h>
+#include <kernel/console/console.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/process.h>
 #include <kernel/rlist_node_alloc.h>
 #include <kernel/syscall.h>
 
+#include <lib/conio.h>
 #include <lib/string.h>
 
 #define syscall_param0(N) \
@@ -22,7 +24,7 @@ struct semaphore sph;
 void PL0_thread3(void)
 {
     semaphore_wait(&sph);
-    print_format("another process 3, pid = %u\n",
+    kprint_format("another process 3, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     semaphore_signal(&sph);
     while(1)
@@ -35,7 +37,7 @@ void PL0_thread0(void)
     for(int i = 0;i != 3; ++i)
     {
         semaphore_wait(&sph);
-        print_format("another process 0, pid = %u\n",
+        kprint_format("another process 0, pid = %u\n",
             syscall_param0(SYSCALL_GET_PROCESS_ID));
         semaphore_signal(&sph);
     }
@@ -47,7 +49,7 @@ void PL0_thread1(void)
     for(int i = 0;i != 5; ++i)
     {
         semaphore_wait(&sph);
-        print_format("another process 1, pid = %u\n",
+        kprint_format("another process 1, pid = %u\n",
             syscall_param0(SYSCALL_GET_PROCESS_ID));
         semaphore_signal(&sph);
     }
@@ -58,7 +60,7 @@ void PL0_thread1(void)
 void PL0_thread2(void)
 {
     semaphore_wait(&sph);
-    print_format("another process 2, pid = %u\n",
+    kprint_format("another process 2, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     semaphore_signal(&sph);
     while(1)
@@ -89,15 +91,18 @@ void init_kernel(void)
     /* 系统调用 */
     init_syscall();
 
+    /* 控制台 */
+    init_console();
+
     /* 时钟中断频率 */
     set_8253_freq(50);
 }
 
 int main(void)
 {
-    set_cursor_pos(0);
-
     init_kernel();
+
+    kset_cursor_pos(0);
 
     init_semaphore(&sph, 1);
     
@@ -110,7 +115,7 @@ int main(void)
     {
         semaphore_wait(&sph);
         uint32_t pid = syscall_param0(SYSCALL_GET_PROCESS_ID);
-        print_format("main process, pid = %u\n", pid);
+        kprint_format("main process, pid = %u\n", pid);
         semaphore_signal(&sph);
     }
 

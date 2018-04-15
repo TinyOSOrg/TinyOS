@@ -1,7 +1,7 @@
-#ifndef TINY_OS_PTRLIST_H
-#define TINY_OS_PTRLIST_H
+#ifndef TINY_OS_LIB_PTRLIST_H
+#define TINY_OS_LIB_PTRLIST_H
 
-#include <lib/bool.h>
+#include "bool.h"
 
 /*=====================================================================
     非侵入双向循环链表
@@ -68,4 +68,4 @@ bool is_ilist_empty(ilist *L);
 
 void erase_from_ilist(struct ilist_node *node);
 
-#endif /* TINY_OS_PTRLIST_H */
+#endif /* TINY_OS_LIB_PTRLIST_H */

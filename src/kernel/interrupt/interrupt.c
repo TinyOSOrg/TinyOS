@@ -1,7 +1,6 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
 #include <kernel/interrupt.h>
-#include <kernel/print.h>
 #include <kernel/seg_desc.h>
 
 #include <lib/string.h>
@@ -45,8 +44,7 @@ void default_intr_function(uint32_t intr_number)
 {
     if(intr_number == 0x27 || intr_number == 0x2f)
         return;
-    print_format("int vec: %u\n", intr_number);
-    while(1);
+    FATAL_ERROR("unprocessed intr");
 }
 
 /* 初始化8259A */

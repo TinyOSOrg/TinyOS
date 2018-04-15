@@ -1,7 +1,7 @@
-#ifndef TINYOS_STRING_H
-#define TINYOS_STRING_H
+#ifndef TINYOS_LIB_STRING_H
+#define TINYOS_LIB_STRING_H
 
-#include <lib/intdef.h>
+#include "intdef.h"
 
 size_t strlen(const char *str);
 
@@ -17,4 +17,4 @@ void memset(char *dst, uint8_t val, size_t byte_size);
 
 void memcpy(char *dst, const char *src, size_t byte_size);
 
-#endif /* TINYOS_STRING_H */
+#endif /* TINYOS_LIB_STRING_H */

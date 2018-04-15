@@ -1,6 +1,5 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
-#include <kernel/print.h>
 
 #include <kernel/memory/vir_page_man.h>
 

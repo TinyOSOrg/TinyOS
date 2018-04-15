@@ -7,8 +7,6 @@
 #include <kernel/rlist_node_alloc.h>
 #include <kernel/seg_desc.h>
 
-#include <kernel/print.h>
-
 #include <lib/freelist.h>
 #include <lib/intdef.h>
 #include <lib/ptrlist.h>
