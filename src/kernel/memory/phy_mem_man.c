@@ -49,7 +49,7 @@ struct mem_page_pool
     uint32_t bitmap_data[0];
 };
 
-size_t total_mem_bytes;
+static size_t total_mem_bytes;
 
 /* 为alloc_static_kernel_mem所用，是静态内核存储区域已经使用部分的顶部 */
 static void *static_kernel_mem_top;

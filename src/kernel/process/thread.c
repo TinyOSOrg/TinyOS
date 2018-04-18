@@ -106,6 +106,7 @@ static void erase_thread_in_process(struct TCB *tcb)
     {
         erase_from_ilist(&pcb->processes_node);
         _clr_PID_to_PCB(pcb->pid);
+        destroy_sysmsg_queue(&pcb->sys_msgs);
         push_back_rlist(&waiting_release_processes,
             pcb, kernel_resident_rlist_node_alloc);
     }

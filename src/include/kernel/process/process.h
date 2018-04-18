@@ -2,6 +2,7 @@
 #define TINY_OS_PROCESS_H
 
 #include <kernel/memory/vir_mem_man.h>
+#include <kernel/process/sysmsg.h>
 #include <kernel/process/thread.h>
 
 #include <lib/ptrlist.h>
@@ -53,6 +54,9 @@ struct PCB
 
     // 是否是内核进程，即特权级是否是0
     bool is_PL_0;
+
+    // 内核消息队列
+    struct sysmsg_queue sys_msgs;
 
     // 各种侵入式链表节点
 

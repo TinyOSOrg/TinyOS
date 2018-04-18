@@ -128,6 +128,7 @@ static struct PCB *create_empty_process(const char *name, bool is_PL_0)
     pid_to_pcb[pcb->pid] = pcb;
 
     init_ilist(&pcb->threads_list);
+    init_sysmsg_queue(&pcb->sys_msgs);
 
     // 名字复制，超出长度限制的部分都丢掉
     size_t i_name = 0;
@@ -245,7 +246,10 @@ static void init_bootloader_process(void)
 
     pid_to_pcb[0] = pcb;
 
+    init_sysmsg_queue(&pcb->sys_msgs);
+
     init_ilist(&pcb->threads_list);
+
     push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
         
     tcb->pcb = pcb;

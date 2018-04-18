@@ -5,6 +5,7 @@
 #include <kernel/console/console.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/process.h>
+#include <kernel/process/sysmsg.h>
 #include <kernel/rlist_node_alloc.h>
 #include <kernel/syscall.h>
 
@@ -41,6 +42,9 @@ void PL0_thread0(void)
             syscall_param0(SYSCALL_GET_PROCESS_ID));
         semaphore_signal(&sph);
     }
+    semaphore_wait(&sph);
+    kprint_format("PL0_thread0 exit!\n");
+    semaphore_signal(&sph);
     exit_thread();
 }
 
@@ -93,6 +97,9 @@ void init_kernel(void)
 
     /* 控制台 */
     init_console();
+
+    /* 内核消息传递 */
+    init_sysmsg();
 
     /* 时钟中断频率 */
     set_8253_freq(50);

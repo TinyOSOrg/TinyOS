@@ -4,7 +4,7 @@
 #include <lib/intdef.h>
 #include <lib/ptrlist.h>
 
-/* 前向声明：process control block */
+/* process control block */
 struct PCB;
 
 struct semaphore;
