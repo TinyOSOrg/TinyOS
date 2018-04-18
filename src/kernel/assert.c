@@ -9,6 +9,8 @@
 void _fatal_error_impl(const char *prefix, const char *filename, const char *function, int line, const char *msg)
 {
     _disable_intr();
+
+    kset_cursor_pos(0);
     
     kput_char('\n');
     kput_str(prefix);
