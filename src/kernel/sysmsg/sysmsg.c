@@ -1,6 +1,6 @@
 #include <kernel/assert.h>
 #include <kernel/memory.h>
-#include <kernel/process/sysmsg.h>
+#include <kernel/sysmsg/sysmsg.h>
 
 #include <lib/string.h>
 

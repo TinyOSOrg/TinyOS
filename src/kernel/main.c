@@ -5,9 +5,9 @@
 #include <kernel/console/console.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/process.h>
-#include <kernel/process/sysmsg.h>
 #include <kernel/rlist_node_alloc.h>
 #include <kernel/syscall.h>
+#include <kernel/sysmsg/sysmsg.h>
 
 #include <lib/conio.h>
 #include <lib/string.h>

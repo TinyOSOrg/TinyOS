@@ -2,10 +2,17 @@
 #define TINY_OS_PROCESS_H
 
 #include <kernel/memory/vir_mem_man.h>
-#include <kernel/process/sysmsg.h>
 #include <kernel/process/thread.h>
+#include <kernel/sysmsg/sysmsg.h>
+#include <kernel/sysmsg/sysmsg_src.h>
 
 #include <lib/ptrlist.h>
+
+/*
+    进程创建和销毁
+    这里进程的销毁是通过干掉其中所有的线程实现的，因为最后一个线程退出时会干掉所属进程
+    因此进程PCB的销毁是在thread.c中实现的，虽然有些奇怪，我懒得改了……
+*/
 
 /*
     进程层面用户虚拟地址空间规划：
@@ -57,6 +64,9 @@ struct PCB
 
     // 内核消息队列
     struct sysmsg_queue sys_msgs;
+
+    // 内核消息源
+    struct sysmsg_source_list sys_msg_srcs;
 
     // 各种侵入式链表节点
 

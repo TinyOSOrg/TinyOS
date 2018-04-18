@@ -7,6 +7,8 @@
 #include <kernel/process/semaphore.h>
 #include <kernel/process/thread.h>
 #include <kernel/rlist_node_alloc.h>
+#include <kernel/sysmsg/sysmsg.h>
+#include <kernel/sysmsg/sysmsg_src.h>
 
 #include <lib/freelist.h>
 #include <lib/ptrlist.h>
@@ -100,13 +102,15 @@ static void erase_thread_in_process(struct TCB *tcb)
     
     // 从进程的线程表中删除该线程
     // 并检查是否需要干掉进程
-    // 因为虚拟地址空间现在还用着呢，所以先不去掉它，而是放入队列等会儿再做
+    // 因为虚拟地址空间现在还用着呢，所以先不去掉它，放入waiting_release_processes队列等会儿再做
     erase_from_ilist(&tcb->threads_in_proc_node);
     if(is_ilist_empty(&pcb->threads_list))
     {
-        erase_from_ilist(&pcb->processes_node);
         _clr_PID_to_PCB(pcb->pid);
+        erase_from_ilist(&pcb->processes_node);
         destroy_sysmsg_queue(&pcb->sys_msgs);
+        destroy_sysmsg_source_list(&pcb->sys_msg_srcs);
+
         push_back_rlist(&waiting_release_processes,
             pcb, kernel_resident_rlist_node_alloc);
     }
