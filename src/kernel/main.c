@@ -12,13 +12,22 @@
 #include <kernel/sysmsg/sysmsg.h>
 
 #include <lib/conio.h>
+#include <lib/keycode.h>
 #include <lib/string.h>
 
 #define syscall_param0(N) \
-    ({ int r; \
+    ({ uint32_t r; \
        asm volatile ("int $0x80;" \
                      : "=a" (r) \
                      : "a" (N) \
+                     : "memory"); \
+       r; })
+
+#define syscall_param3(N, arg1, arg2, arg3) \
+    ({ uint32_t r; \
+       asm volatile ("int $0x80" \
+                     : "=a" (r) \
+                     : "a" (N), "b" (arg1), "c" (arg2), "d" (arg3) \
                      : "memory"); \
        r; })
 
@@ -69,8 +78,36 @@ void PL0_thread2(void)
     kprint_format("another process 2, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     semaphore_signal(&sph);
+    syscall_param3(SYSCALL_SYSMSG_OPERATION, SYSMSG_SYSCALL_FUNCTION_REGISTER_KEYBOARD_MSG, 0, 0);
     while(1)
-        ;
+    {
+        struct sysmsg msg;
+        if(syscall_param3(SYSCALL_SYSMSG_OPERATION,
+                          SYSMSG_SYSCALL_FUNCTION_PEEK_MSG,
+                          SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE,
+                          &msg))
+        {
+            if(msg.type == SYSMSG_TYPE_KEYBOARD)
+            {
+                struct kbmsg_struct *kbmsg = (struct kbmsg_struct*)&msg;
+                if(!(kbmsg->flags & KBMSG_FLAG_UP))
+                {
+                    if('A' <= kbmsg->key && kbmsg->key <= 'Z')
+                    {
+                        semaphore_wait(&sph);
+                        kput_char(kbmsg->key);
+                        semaphore_signal(&sph);
+                    }
+                    else if(kbmsg->key == VK_SPACE)
+                    {
+                        semaphore_wait(&sph);
+                        kput_char(' ');
+                        semaphore_signal(&sph);
+                    }
+                }
+            }
+        }
+    }
     exit_thread();
 }
 
@@ -107,7 +144,7 @@ void init_kernel(void)
     init_sysmsg_syscall();
 
     /* 时钟中断频率 */
-    set_8253_freq(50);
+    set_8253_freq(100);
 
     /* 键盘驱动 */
     init_kb_driver();

@@ -13,11 +13,19 @@
     }
 
     flags0 down/up
-    flags1 shift
-    flags2 ctrl
 */
 
 struct PCB;
+
+struct kbmsg_struct
+{
+    sysmsg_type type; // 为SYSMSG_TYPE_KEYBOARD
+    uint32_t key;
+    uint32_t flags;
+    uint32_t reserved;
+};
+
+#define KBMSG_FLAG_UP 0x1
 
 void init_kb_driver(void);
 

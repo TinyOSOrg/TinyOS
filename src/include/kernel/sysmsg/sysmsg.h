@@ -19,7 +19,7 @@ typedef uint32_t sysmsg_type;
 
 /* 合法的消息类型 */
 
-#define SYSMSG_TYPE_KEYBOARD /* 键盘按下或释放，参数定义在kernel/kbdriver.h中 */
+#define SYSMSG_TYPE_KEYBOARD 0 /* 键盘按下或释放，参数定义在kernel/kbdriver.h中 */
 
 /*
     内核消息参数字节数

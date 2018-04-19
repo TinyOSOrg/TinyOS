@@ -20,7 +20,7 @@
     void
     return：80 * row + col
 */
-#define CONSOLE_SYSCALL_FUNCTION_GET_CURSOR               5
+#define CONSOLE_SYSCALL_FUNCTION_GET_CURSOR      5
 
 /* low8：pos */
 #define CONSOLE_SYSCALL_FUNCTION_PUT_CHAR        6
