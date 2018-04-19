@@ -85,9 +85,6 @@ void init_process_man(void);
 /* 创建进程，不解释 */
 void create_process(const char *name, process_exec_func func, bool is_PL_0);
 
-/* 进程相关系统调用实现 */
-uint32_t syscall_get_cur_PID_impl(void);
-
 /* 干掉一个进程 */
 void kill_process(struct PCB *pcb);
 
@@ -103,5 +100,11 @@ void _add_PCB_mem(struct PCB *pcb);
 
 /* 清空PID到PCB映射中的某一项 */
 void _clr_PID_to_PCB(uint32_t pid);
+
+/*=====================================================================
+    进程相关系统调用实现
+=====================================================================*/
+
+uint32_t syscall_get_cur_PID_impl(void);
 
 #endif /* TINY_OS_PROCESS_H */

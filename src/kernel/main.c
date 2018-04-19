@@ -3,10 +3,12 @@
 #include <kernel/memory.h>
 #include <kernel/console/print.h>
 #include <kernel/console/console.h>
+#include <kernel/kbdriver.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/process.h>
 #include <kernel/rlist_node_alloc.h>
 #include <kernel/syscall.h>
+#include <kernel/sysmsg/sysmsg_syscall.h>
 #include <kernel/sysmsg/sysmsg.h>
 
 #include <lib/conio.h>
@@ -92,7 +94,7 @@ void init_kernel(void)
     /* 进程管理 */
     init_process_man();
 
-    /* 系统调用 */
+    /* 系统调用框架 */
     init_syscall();
 
     /* 控制台 */
@@ -101,8 +103,14 @@ void init_kernel(void)
     /* 内核消息传递 */
     init_sysmsg();
 
+    /* 内核消息系统调用 */
+    init_sysmsg_syscall();
+
     /* 时钟中断频率 */
     set_8253_freq(50);
+
+    /* 键盘驱动 */
+    init_kb_driver();
 }
 
 int main(void)

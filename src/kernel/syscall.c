@@ -2,6 +2,7 @@
 
 #include <kernel/console/console.h>
 #include <kernel/process/process.h>
+#include <kernel/sysmsg/sysmsg_syscall.h>
 
 typedef void (*syscall_impl)(void);
 
@@ -15,4 +16,7 @@ void init_syscall(void)
     // declared in kernel/console/console.h
     syscall_func_table[SYSCALL_CONSOLE_OPERATION] =
         (syscall_impl)&syscall_console_impl;
+    // declared in kernel/sysmsg/sysmsg_syscall.h
+    syscall_func_table[SYSCALL_SYSMSG_OPERATION] =
+        (syscall_impl)&syscall_sysmsg_impl;
 }

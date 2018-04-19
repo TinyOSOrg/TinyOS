@@ -49,6 +49,6 @@ void register_sysmsg_source(struct PCB *pcb,
                             struct sysmsg_receiver_list *rcv,
                             struct sysmsg_source_list   *src);
 
-/* 没错，注册了就别想删（其实是因为解除一个链接要线性搜索链表…… */
+/* 没错，注册了就别想删（因为解除一个链接要线性搜索链表…… */
 
 #endif /* TINY_OS_SYSMSG_SRC_H */

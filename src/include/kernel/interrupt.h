@@ -30,6 +30,7 @@
 #define INTR_NUMBER_SIMD_FLOAT_EXCEPTION 19
 
 #define INTR_NUMBER_CLOCK                32
+#define INTR_NUMBER_KEYBOARD             33
 
 /* 和linux一样，0x80号中断用作系统调用 */
 #define INTR_NUMBER_SYSCALL              128

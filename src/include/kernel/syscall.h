@@ -28,7 +28,7 @@
 */
 
 /* 系统调用入口数量 */
-#define SYSCALL_COUNT 2
+#define SYSCALL_COUNT 3
 
 /* 一个合法的系统调用应返回void或uint32_t，有0~3个uint32_t大小的参数 */
 
@@ -44,6 +44,13 @@
     uint32_t impl(uint32_t func, uint32_t arg);
 */
 #define SYSCALL_CONSOLE_OPERATION 1
+
+/*
+    系统消息队列操作
+    参数含义见 kernel/sysmsg/proc_sysmsg_syscall.h
+    uint32_t impl(uint32_t func, uint32_t arg1, uint32_t arg2);
+*/
+#define SYSCALL_SYSMSG_OPERATION 2
 
 /* 系统调用初始化，至少在中断初始化后调用 */
 void init_syscall(void);

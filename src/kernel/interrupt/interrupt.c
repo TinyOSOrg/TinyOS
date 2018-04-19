@@ -62,8 +62,8 @@ static void init_8259A(void)
    _out_byte_to_port(PIC_S_DATA, 0x02);
    _out_byte_to_port(PIC_S_DATA, 0x01);
 
-   // 打开IR0
-   _out_byte_to_port(PIC_M_DATA, 0xfe);
+   // 打开IR0和IR1
+   _out_byte_to_port(PIC_M_DATA, 0xfc);
    _out_byte_to_port(PIC_S_DATA, 0xff);
 }
 
