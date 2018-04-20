@@ -1,6 +1,7 @@
 #include <kernel/syscall.h>
 
 #include <kernel/console/console.h>
+#include <kernel/kbdriver.h>
 #include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg_syscall.h>
 
@@ -19,4 +20,7 @@ void init_syscall(void)
     // declared in kernel/sysmsg/sysmsg_syscall.h
     syscall_func_table[SYSCALL_SYSMSG_OPERATION] =
         (syscall_impl)&syscall_sysmsg_impl;
+    // declared in kernel/kbdriver.h
+    syscall_func_table[SYSCALL_KEYBOARD_QUERY] =
+        (syscall_impl)&syscall_keyboard_query_impl;
 }

@@ -23,6 +23,14 @@
                      : "memory"); \
        r; })
 
+#define syscall_param2(N, arg1, arg2) \
+    ({ uint32_t r; \
+       asm volatile ("int $0x80" \
+                     : "=a" (r) \
+                     : "a" (N), "b" (arg1), "c" (arg2) \
+                     : "memory"); \
+       r; })
+
 #define syscall_param3(N, arg1, arg2, arg3) \
     ({ uint32_t r; \
        asm volatile ("int $0x80" \
@@ -95,7 +103,12 @@ void PL0_thread2(void)
                     if('A' <= kbmsg->key && kbmsg->key <= 'Z')
                     {
                         semaphore_wait(&sph);
-                        kput_char(kbmsg->key);
+                        if(syscall_param2(SYSCALL_KEYBOARD_QUERY,
+                                          KEYBOARD_SYSCALL_FUNCTION_IS_KEY_PRESSED,
+                                          VK_LSHIFT))
+                            kput_char(kbmsg->key);
+                        else
+                            kput_char(kbmsg->key - 'A' + 'a');
                         semaphore_signal(&sph);
                     }
                     else if(kbmsg->key == VK_SPACE)

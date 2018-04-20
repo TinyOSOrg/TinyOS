@@ -111,6 +111,15 @@ static bool scancode_e0;
 /* 大写是否开启 */
 static bool caps_lock;
 
+static void set_key_pressed(uint8_t vk, bool pressed)
+{
+    uint8_t idx = (vk >> 5), off = (vk & 0x1f);
+    if(pressed)
+        key_pressed[idx] |= (1 << off);
+    else
+        key_pressed[idx] &= ~(1 << off);
+}
+
 /* 键盘中断处理 */
 static void kb_intr_handler(void)
 {
@@ -164,6 +173,8 @@ static void kb_intr_handler(void)
 
     if(vk != VK_NULL)
     {
+        set_key_pressed(vk, !up);
+
         struct kbmsg_struct kbmsg;
         kbmsg.type = SYSMSG_TYPE_KEYBOARD;
         kbmsg.key  = vk;
@@ -206,4 +217,16 @@ void subscribe_kb(struct PCB *pcb)
 bool is_key_pressed(uint8_t keycode)
 {
     return (key_pressed[keycode >> 5] & (1 << (keycode &0x1f))) != 0;
+}
+
+uint32_t syscall_keyboard_query_impl(uint32_t func, uint32_t arg)
+{
+    switch(func)
+    {
+    case KEYBOARD_SYSCALL_FUNCTION_IS_KEY_PRESSED:
+        if(arg < ARRAY_SIZE(scancode_translator))
+            return is_key_pressed(arg);
+        return false;
+    }
+    return false;
 }
