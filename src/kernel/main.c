@@ -86,7 +86,7 @@ void PL0_thread2(void)
     kprint_format("another process 2, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     semaphore_signal(&sph);
-    syscall_param3(SYSCALL_SYSMSG_OPERATION, SYSMSG_SYSCALL_FUNCTION_REGISTER_KEYBOARD_MSG, 0, 0);
+    syscall_param3(SYSCALL_SYSMSG_OPERATION, SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG, 0, 0);
     while(1)
     {
         struct sysmsg msg;
@@ -95,29 +95,12 @@ void PL0_thread2(void)
                           SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE,
                           &msg))
         {
-            if(msg.type == SYSMSG_TYPE_KEYBOARD)
+            if(msg.type == SYSMSG_TYPE_CHAR)
             {
-                struct kbmsg_struct *kbmsg = (struct kbmsg_struct*)&msg;
-                if(!(kbmsg->flags & KBMSG_FLAG_UP))
-                {
-                    if('A' <= kbmsg->key && kbmsg->key <= 'Z')
-                    {
-                        semaphore_wait(&sph);
-                        if(syscall_param2(SYSCALL_KEYBOARD_QUERY,
-                                          KEYBOARD_SYSCALL_FUNCTION_IS_KEY_PRESSED,
-                                          VK_LSHIFT))
-                            kput_char(kbmsg->key);
-                        else
-                            kput_char(kbmsg->key - 'A' + 'a');
-                        semaphore_signal(&sph);
-                    }
-                    else if(kbmsg->key == VK_SPACE)
-                    {
-                        semaphore_wait(&sph);
-                        kput_char(' ');
-                        semaphore_signal(&sph);
-                    }
-                }
+                struct kbchar_msg_struct *chmsg = (struct kbchar_msg_struct*)&msg;
+                semaphore_wait(&sph);
+                kput_char(chmsg->ch);
+                semaphore_signal(&sph);
             }
         }
     }

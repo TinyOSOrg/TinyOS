@@ -100,7 +100,11 @@ static struct scancode_trans_unit scancode_translator[] =
     /* RCTRL和RALT都是e0打头，这两个键单独判断 */
 };
 
+/* 按键消息接收者队列 */
 static struct sysmsg_receiver_list kb_receivers;
+
+/* 字符消息接收者队列 */
+static struct sysmsg_receiver_list char_receivers;
 
 /* 记录按键是否被按下的位图 */
 static uint32_t key_pressed[KB_PRESSED_BITMAP_COUNT];
@@ -160,7 +164,7 @@ static void kb_intr_handler(void)
             sc -= 0x80;
         }
 
-        if(sc < 1 || sc >= 68)
+        if(sc < 1 || sc >= ARRAY_SIZE(scancode_translator))
             return;
 
         uint32_t idx = sc - 1;
@@ -171,6 +175,11 @@ static void kb_intr_handler(void)
             ch = scancode_translator[idx].ch;
     }
 
+    // 大写锁定
+    if(vk == VK_CAPS && !up)
+        caps_lock = !caps_lock;
+
+    // 按键消息发布
     if(vk != VK_NULL)
     {
         set_key_pressed(vk, !up);
@@ -188,16 +197,26 @@ static void kb_intr_handler(void)
         }
     }
 
-    if(vk == VK_CAPS && !up)
-        caps_lock = !caps_lock;
-
-    // 字符消息暂时还没有，因为没有对应的消息……
-    ch = ch;
+    // 字符消息发布
+    if(ch != CHAR_NULL && !up)
+    {
+        struct kbchar_msg_struct msg;
+        msg.type = SYSMSG_TYPE_CHAR;
+        msg.ch = ch;
+        for(struct ilist_node *node = char_receivers.processes.next;
+            node != &char_receivers.processes; node = node->next)
+        {
+            struct PCB *pcb = GET_STRUCT_FROM_MEMBER(struct sysmsg_rcv_src_list_node,
+                                                     rcv_node, node)->pcb;
+            send_sysmsg(&pcb->sys_msgs, (struct sysmsg*)&msg);
+        }
+    }
 }
 
 void init_kb_driver(void)
 {
     init_sysmsg_receiver_list(&kb_receivers);
+    init_sysmsg_receiver_list(&char_receivers);
     
     for(size_t i = 0;i != KB_PRESSED_BITMAP_COUNT; ++i)
         key_pressed[i] = 0x00000000;
@@ -212,6 +231,12 @@ void subscribe_kb(struct PCB *pcb)
 {
     ASSERT_S(pcb);
     register_sysmsg_source(pcb, &kb_receivers, &pcb->sys_msg_srcs);
+}
+
+void subscribe_char(struct PCB *pcb)
+{
+    ASSERT_S(pcb);
+    register_sysmsg_source(pcb, &char_receivers, &pcb->sys_msg_srcs);
 }
 
 bool is_key_pressed(uint8_t keycode)

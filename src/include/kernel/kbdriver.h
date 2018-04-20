@@ -5,6 +5,11 @@
 
 /*
     键盘驱动
+*/
+
+struct PCB;
+
+/*
     msg参数含义:
     struct
     {
@@ -15,9 +20,6 @@
 
     flags0 down/up
 */
-
-struct PCB;
-
 struct kbmsg_struct
 {
     sysmsg_type type; // 为SYSMSG_TYPE_KEYBOARD
@@ -26,8 +28,24 @@ struct kbmsg_struct
     uint32_t reserved;
 };
 
+/*
+    char消息
+    struct
+    {
+        uint32_t char
+    }
+*/
+struct kbchar_msg_struct
+{
+    sysmsg_type type; // 为SYSMSG_TYPE_CHAR
+    uint32_t ch;
+    uint32_t reserved1;
+    uint32_t reserved2;
+};
+
 #define KBMSG_FLAG_UP 0x1
 
+/* 键盘驱动初始化 */
 void init_kb_driver(void);
 
 /*
@@ -35,6 +53,11 @@ void init_kb_driver(void);
     通常由进程自己调用
 */
 void subscribe_kb(struct PCB *pcb);
+
+/*
+    订阅字符输入消息
+*/
+void subscribe_char(struct PCB *pcb);
 
 /* 查询某个按键的状态 */
 bool is_key_pressed(uint8_t keycode);

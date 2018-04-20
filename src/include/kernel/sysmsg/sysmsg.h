@@ -21,6 +21,8 @@ typedef uint32_t sysmsg_type;
 
 #define SYSMSG_TYPE_KEYBOARD 0 /* 键盘按下或释放，参数定义在kernel/kbdriver.h中 */
 
+#define SYSMSG_TYPE_CHAR     1 /* 字符输入消息，参数定义在kernel/kbdriver.h中 */
+
 /*
     内核消息参数字节数
     消息传递并不是拿来大规模发送数据的，所以允许的参数就很有限了……
