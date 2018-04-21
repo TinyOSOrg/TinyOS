@@ -1,6 +1,6 @@
 CC = gcc
 CC_INCLUDE_FLAGS = -I src/include/
-CC_FLAGS = -m32 -nostdinc $(CC_INCLUDE_FLAGS) -fno-stack-protector -std=gnu99 -fno-builtin -Werror -O2
+CC_FLAGS = -m32 -nostdinc $(CC_INCLUDE_FLAGS) -fno-stack-protector -std=gnu99 -fno-builtin -Werror -Wall -O2
 
 LD = ld
 LD_FLAGS = -m elf_i386
