@@ -189,13 +189,7 @@ static void kb_intr_handler(void)
         kbmsg.type = SYSMSG_TYPE_KEYBOARD;
         kbmsg.key  = vk;
         kbmsg.flags = up ? 1 : 0;
-        for(struct ilist_node *node = kb_receivers.processes.next;
-            node != &kb_receivers.processes; node = node->next)
-        {
-            struct PCB *pcb = GET_STRUCT_FROM_MEMBER(struct sysmsg_rcv_src_list_node,
-                                                     rcv_node, node)->pcb;
-            send_sysmsg(&pcb->sys_msgs, (struct sysmsg*)&kbmsg);
-        }
+        send_msg_to_procs(&kb_receivers, (struct sysmsg*)&kbmsg);
     }
 
     // 字符消息发布
@@ -204,13 +198,7 @@ static void kb_intr_handler(void)
         struct kbchar_msg_struct msg;
         msg.type = SYSMSG_TYPE_CHAR;
         msg.ch = ch;
-        for(struct ilist_node *node = char_receivers.processes.next;
-            node != &char_receivers.processes; node = node->next)
-        {
-            struct PCB *pcb = GET_STRUCT_FROM_MEMBER(struct sysmsg_rcv_src_list_node,
-                                                     rcv_node, node)->pcb;
-            send_sysmsg(&pcb->sys_msgs, (struct sysmsg*)&msg);
-        }
+        send_msg_to_procs(&char_receivers, (struct sysmsg*)&msg);
     }
 }
 

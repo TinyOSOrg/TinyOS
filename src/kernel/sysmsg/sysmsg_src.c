@@ -1,5 +1,7 @@
 #include <kernel/assert.h>
 #include <kernel/memory.h>
+#include <kernel/process/process.h>
+#include <kernel/sysmsg/sysmsg.h>
 #include <kernel/sysmsg/sysmsg_src.h>
 
 #include <shared/freelist.h>
@@ -47,6 +49,17 @@ void destroy_sysmsg_source_list(struct sysmsg_source_list *L)
                                    src_node, ori_node);
         erase_from_ilist(&dst_node->rcv_node);
         add_freelist(&sysmsg_rcv_src_list_node_freelist, dst_node);
+    }
+}
+
+void send_msg_to_procs(struct sysmsg_receiver_list *rcv, const struct sysmsg *msg)
+{
+    for(struct ilist_node *n = rcv->processes.next;
+        n != &rcv->processes; n = n->next)
+    {
+        struct PCB *pcb = GET_STRUCT_FROM_MEMBER(struct sysmsg_rcv_src_list_node,
+                                                 rcv_node, n)->pcb;
+        send_sysmsg(&pcb->sys_msgs, msg);
     }
 }
 
