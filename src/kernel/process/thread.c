@@ -98,6 +98,8 @@ static void init_bootloader_thread(void)
 */
 static void erase_thread_in_process(struct TCB *tcb)
 {
+    intr_state intr_s = fetch_and_disable_intr();
+
     struct PCB *pcb = tcb->pcb;
 
     if(tcb == pcb->sysmsg_blocked_tcb)
@@ -122,6 +124,8 @@ static void erase_thread_in_process(struct TCB *tcb)
     // 所以延迟到之后进行
     push_back_rlist(&waiting_release_threads,
         tcb, kernel_resident_rlist_node_alloc);
+    
+    set_intr_state(intr_s);
 }
 
 /*
@@ -291,10 +295,12 @@ void do_releasing_thds_procs(void)
         struct TCB *tcb = pop_front_rlist(&waiting_release_threads,
             kernel_resident_rlist_node_dealloc);
         // 内核栈
-        free_ker_page((char*)tcb->init_ker_stack
-                        + INTR_BAK_DATA_SIZE
-                        + sizeof(struct thread_init_stack)
-                        - 4096);
+        uint32_t ker_stk_page = (uint32_t)tcb->init_ker_stack
+                                        + INTR_BAK_DATA_SIZE
+                                        + sizeof(struct thread_init_stack)
+                                        - 4096;
+        ASSERT_S(ker_stk_page % 4096 == 0);
+        free_ker_page((char*)ker_stk_page);
         // 信号量
         if(tcb->blocked_sph)
             tcb->blocked_sph->val++;
