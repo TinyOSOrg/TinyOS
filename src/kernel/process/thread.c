@@ -99,6 +99,9 @@ static void init_bootloader_thread(void)
 static void erase_thread_in_process(struct TCB *tcb)
 {
     struct PCB *pcb = tcb->pcb;
+
+    if(tcb == pcb->sysmsg_blocked_tcb)
+        pcb->sysmsg_blocked_tcb = NULL;
     
     // 从进程的线程表中删除该线程
     // 并检查是否需要干掉进程
@@ -269,6 +272,8 @@ void exit_thread(void)
 
 void do_releasing_thds_procs(void)
 {
+    intr_state intr_s = fetch_and_disable_intr();
+
     // 线程
     while(!is_rlist_empty(&waiting_release_threads))
     {
@@ -297,6 +302,8 @@ void do_releasing_thds_procs(void)
         // pcb空间
         _add_PCB_mem(pcb);
     }
+
+    set_intr_state(intr_s);
 }
 
 void yield_CPU(void)

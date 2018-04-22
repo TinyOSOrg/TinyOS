@@ -124,6 +124,7 @@ static struct PCB *create_empty_process(const char *name, bool is_PL_0)
     pcb->pid = get_usr_vir_addr_idx(pcb->addr_space) + 1;
     pcb->is_PL_0 = is_PL_0;
     pcb->addr_space_inited = false;
+    pcb->sysmsg_blocked_tcb = NULL;
 
     pid_to_pcb[pcb->pid] = pcb;
 
@@ -244,6 +245,7 @@ static void init_bootloader_process(void)
 
     pcb->pid = 0;
     pcb->is_PL_0 = true;
+    pcb->sysmsg_blocked_tcb = NULL;
 
     pid_to_pcb[0] = pcb;
 
@@ -296,12 +298,24 @@ uint32_t syscall_get_cur_PID_impl(void)
 
 void kill_process(struct PCB *pcb)
 {
+    intr_state *intr_s = fetch_and_disable_intr();
+    struct TCB *this = get_cur_TCB();
+    bool killThis = false;
+
     while(!is_ilist_empty(&pcb->threads_list))
     {
         struct TCB *tcb = GET_STRUCT_FROM_MEMBER(
             struct TCB, threads_in_proc_node, pop_front_ilist(&pcb->threads_list));
-        kill_thread(tcb);
+        if(tcb != this)
+            kill_thread(tcb);
+        else
+            killThis = true;
     }
+
+    if(killThis)
+        kill_thread(this);
+
+    set_intr_state(intr_s);
 }
 
 void _set_tss_esp0(uint32_t esp0)

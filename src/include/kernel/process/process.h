@@ -65,6 +65,10 @@ struct PCB
     // 内核消息队列
     struct sysmsg_queue sys_msgs;
 
+    // 一个进程可以选择某个线程阻塞在消息队列处
+    // 若该值非空，则新消息来临时会唤醒该线程，并将该值置为NULL
+    struct TCB *sysmsg_blocked_tcb;
+
     // 内核消息源
     struct sysmsg_source_list sys_msg_srcs;
 
