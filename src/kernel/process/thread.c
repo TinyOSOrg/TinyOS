@@ -233,6 +233,17 @@ void block_cur_thread(void)
     set_intr_state(intr_s);
 }
 
+void block_cur_thread_onto_sysmsg(void)
+{
+    intr_state intr_s = fetch_and_disable_intr();
+
+    cur_running_TCB->state = thread_state_blocked;
+    cur_running_TCB->pcb->sysmsg_blocked_tcb = cur_running_TCB;
+    thread_scheduler();
+    
+    set_intr_state(intr_s);
+}
+
 void awake_thread(struct TCB *tcb)
 {
     intr_state intr_s = fetch_and_disable_intr();

@@ -31,7 +31,10 @@
 /* 注册接受字符消息，无参数 */
 #define SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG     3
 
-#define SYSMSG_SYSCALL_FUNCTION_COUNT 4
+/* 将当前线程阻塞在进程消息队列中，无参数 */
+#define SYSMSG_SYSCALL_FUNCTION_BLOCK_ONTO_SYSMSG     4
+
+#define SYSMSG_SYSCALL_FUNCTION_COUNT 5
 
 /* 初始化内核消息系统调用 */
 void init_sysmsg_syscall(void);

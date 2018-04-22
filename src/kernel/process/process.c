@@ -298,7 +298,7 @@ uint32_t syscall_get_cur_PID_impl(void)
 
 void kill_process(struct PCB *pcb)
 {
-    intr_state *intr_s = fetch_and_disable_intr();
+    intr_state intr_s = fetch_and_disable_intr();
     struct TCB *this = get_cur_TCB();
     bool killThis = false;
 

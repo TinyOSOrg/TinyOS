@@ -1,5 +1,6 @@
 #include <kernel/assert.h>
 #include <kernel/memory.h>
+#include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg.h>
 
 #include <lib/string.h>
@@ -37,6 +38,14 @@ bool send_sysmsg(struct sysmsg_queue *queue, const struct sysmsg *msg)
     memcpy((char*)&queue->msgs[queue->tail], (char*)msg, sizeof(struct sysmsg));
     queue->tail = (queue->tail + 1) % SYSMSG_QUEUE_MAX_SIZE;
     ++queue->size;
+
+    // 唤醒被消息队列阻塞的线程
+    struct PCB *pcb = GET_STRUCT_FROM_MEMBER(struct PCB, sys_msgs, queue);
+    if(pcb->sysmsg_blocked_tcb)
+    {
+        awake_thread(pcb->sysmsg_blocked_tcb);
+        pcb->sysmsg_blocked_tcb = NULL;
+    }
 
     return true;
 }

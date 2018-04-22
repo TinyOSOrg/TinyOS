@@ -23,6 +23,14 @@
                      : "memory"); \
        r; })
 
+#define syscall_param1(N, arg1) \
+    ({ uint32_t r; \
+       asm volatile ("int $0x80" \
+                     : "=a" (r) \
+                     : "a" (N), "b" (arg1) \
+                     : "memory"); \
+       r; })
+
 #define syscall_param2(N, arg1, arg2) \
     ({ uint32_t r; \
        asm volatile ("int $0x80" \
@@ -86,11 +94,13 @@ void PL0_thread2(void)
     kprint_format("another process 2, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     semaphore_signal(&sph);
-    syscall_param3(SYSCALL_SYSMSG_OPERATION, SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG, 0, 0);
+    syscall_param1(SYSCALL_SYSMSG_OPERATION, SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG);
     while(1)
     {
+        syscall_param1(SYSCALL_SYSMSG_OPERATION,
+                       SYSMSG_SYSCALL_FUNCTION_BLOCK_ONTO_SYSMSG);
         struct sysmsg msg;
-        if(syscall_param3(SYSCALL_SYSMSG_OPERATION,
+        while(syscall_param3(SYSCALL_SYSMSG_OPERATION,
                           SYSMSG_SYSCALL_FUNCTION_PEEK_MSG,
                           SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE,
                           &msg))

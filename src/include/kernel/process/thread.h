@@ -85,6 +85,9 @@ struct TCB *get_cur_TCB(void);
 /* 阻塞自己，注意系统不会维护阻塞线程 */
 void block_cur_thread(void);
 
+/* 将自己阻塞到进程消息队列上 */
+void block_cur_thread_onto_sysmsg(void);
+
 /* 唤醒一个blocked线程，将其变为ready */
 void awake_thread(struct TCB *tcb);
 

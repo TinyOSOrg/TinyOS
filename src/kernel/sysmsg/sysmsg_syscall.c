@@ -1,5 +1,6 @@
 #include <kernel/kbdriver.h>
 #include <kernel/process/process.h>
+#include <kernel/process/thread.h>
 #include <kernel/sysmsg/sysmsg_syscall.h>
 #include <kernel/sysmsg/sysmsg.h>
 
@@ -43,6 +44,12 @@ static uint32_t proc_sysmsg_syscall_register_charmsg(uint32_t a, uint32_t b)
     return 0;
 }
 
+static uint32_t proc_sysmsg_syscall_block_onto_sysmsg(uint32_t a, uint32_t b)
+{
+    block_cur_thread_onto_sysmsg();
+    return 0;
+}
+
 void init_sysmsg_syscall(void)
 {
     functions[SYSMSG_SYSCALL_FUNCTION_IS_EMPTY] =
@@ -53,6 +60,8 @@ void init_sysmsg_syscall(void)
         proc_sysmsg_syscall_register_kbmsg;
     functions[SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG] =
         proc_sysmsg_syscall_register_charmsg;
+    functions[SYSMSG_SYSCALL_FUNCTION_BLOCK_ONTO_SYSMSG] =
+        proc_sysmsg_syscall_block_onto_sysmsg;
 }
 
 uint32_t syscall_sysmsg_impl(uint32_t func, uint32_t arg1, uint32_t arg2)
