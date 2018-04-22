@@ -10,9 +10,9 @@
 #include <kernel/sysmsg/sysmsg.h>
 #include <kernel/sysmsg/sysmsg_src.h>
 
-#include <lib/freelist.h>
-#include <lib/ptrlist.h>
-#include <lib/string.h>
+#include <shared/freelist.h>
+#include <shared/ptrlist.h>
+#include <shared/string.h>
 
 /*
     中断发生时压入栈中的东西得占多少字节

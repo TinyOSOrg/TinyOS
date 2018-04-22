@@ -5,7 +5,8 @@
 #include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg_src.h>
 
-#include <lib/keycode.h>
+#include <shared/keycode.h>
+#include <shared/sysmsg/kbmsg.h>
 
 /* 按键位图数量 */
 #define KB_PRESSED_BITMAP_COUNT (256 / 32)

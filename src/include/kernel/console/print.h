@@ -1,7 +1,7 @@
 #ifndef TINY_OS_PRINT_H
 #define TINY_OS_PRINT_H
 
-#include <lib/intdef.h>
+#include <shared/intdef.h>
 
 /*
     设置光标位置

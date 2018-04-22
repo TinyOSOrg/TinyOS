@@ -1,7 +1,7 @@
 #ifndef TINY_OS_LIB_CONIO_H
 #define TINY_OS_LIB_CONIO_H
 
-#include "intdef.h"
+#include <shared/intdef.h>
 
 void set_char_row_col(uint8_t row, uint8_t col, char ch);
 

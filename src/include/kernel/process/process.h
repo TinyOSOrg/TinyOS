@@ -6,7 +6,7 @@
 #include <kernel/sysmsg/sysmsg.h>
 #include <kernel/sysmsg/sysmsg_src.h>
 
-#include <lib/ptrlist.h>
+#include <shared/ptrlist.h>
 
 /*
     进程创建和销毁

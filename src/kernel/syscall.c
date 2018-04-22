@@ -5,6 +5,8 @@
 #include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg_syscall.h>
 
+#include <shared/syscall/common.h>
+
 typedef void (*syscall_impl)(void);
 
 syscall_impl syscall_func_table[SYSCALL_COUNT];

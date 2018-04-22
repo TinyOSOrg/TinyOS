@@ -3,7 +3,7 @@
 #include <kernel/interrupt.h>
 #include <kernel/seg_desc.h>
 
-#include <lib/string.h>
+#include <shared/string.h>
 
 /* 中断描述符构成 */
 

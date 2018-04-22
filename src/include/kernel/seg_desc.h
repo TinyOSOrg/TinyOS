@@ -1,7 +1,7 @@
 #ifndef TINY_OS_SEG_DESC_H
 #define TINY_OS_SEG_DESC_H
 
-#include <lib/intdef.h>
+#include <shared/intdef.h>
 
 /*
     段描述符的基本构成

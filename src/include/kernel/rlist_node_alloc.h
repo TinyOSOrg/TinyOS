@@ -1,7 +1,7 @@
 #ifndef TINY_OS_RLIST_NODE_ALLOC_H
 #define TINY_OS_RLIST_NODE_ALLOC_H
 
-#include <lib/ptrlist.h>
+#include <shared/ptrlist.h>
 
 /*
     内核中许多地方要用到rlist

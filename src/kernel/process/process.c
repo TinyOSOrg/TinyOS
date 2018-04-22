@@ -7,10 +7,10 @@
 #include <kernel/rlist_node_alloc.h>
 #include <kernel/seg_desc.h>
 
-#include <lib/freelist.h>
-#include <lib/intdef.h>
-#include <lib/ptrlist.h>
-#include <lib/string.h>
+#include <shared/freelist.h>
+#include <shared/intdef.h>
+#include <shared/ptrlist.h>
+#include <shared/string.h>
 
 /*=====================================================================
     用户段相关

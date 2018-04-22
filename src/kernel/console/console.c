@@ -2,6 +2,8 @@
 #include <kernel/console/print.h>
 #include <kernel/process/semaphore.h>
 
+#include <shared/syscall/console.h>
+
 static struct semaphore console_mutex;
 
 static uint32_t (*functions[CONSOLE_SYSCALL_FUNCTION_COUNT])(uint32_t);

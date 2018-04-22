@@ -1,8 +1,8 @@
 #include <kernel/asm.h>
 #include <kernel/console/print.h>
 
-#include <lib/bool.h>
-#include <lib/string.h>
+#include <shared/bool.h>
+#include <shared/string.h>
 
 void kset_cursor_pos(uint16_t pos)
 {

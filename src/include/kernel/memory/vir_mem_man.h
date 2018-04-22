@@ -3,8 +3,8 @@
 
 /* 虚拟地址空间的创建、启用和销毁 */
 
-#include <lib/bool.h>
-#include <lib/intdef.h>
+#include <shared/bool.h>
+#include <shared/intdef.h>
 
 /* 最多支持多少个虚拟地址空间（除ker_addr_space） */
 #define MAX_VIR_ADDR_SPACE_COUNT 64

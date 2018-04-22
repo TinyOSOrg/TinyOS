@@ -1,5 +1,5 @@
-#include <lib/intdef.h>
-#include <lib/ptrlist.h>
+#include <shared/intdef.h>
+#include <shared/ptrlist.h>
 
 void init_rlist(rlist *L)
 {

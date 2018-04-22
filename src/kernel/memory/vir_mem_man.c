@@ -8,7 +8,7 @@
 #include <kernel/memory/vir_mem_man.h>
 #include <kernel/memory/vir_page_man.h>
 
-#include <lib/string.h>
+#include <shared/string.h>
 
 #include <common.h>
 

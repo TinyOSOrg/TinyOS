@@ -1,8 +1,8 @@
 #ifndef TINY_OS_THREAD_H
 #define TINY_OS_THREAD_H
 
-#include <lib/intdef.h>
-#include <lib/ptrlist.h>
+#include <shared/intdef.h>
+#include <shared/ptrlist.h>
 
 /* process control block */
 struct PCB;

@@ -3,6 +3,8 @@
 
 #include <lib/conio.h>
 
+#include <shared/syscall/console.h>
+
 #define CONSOLE_SYSCALL(N, arg) \
     asm volatile ("int $0x80" \
                   : \

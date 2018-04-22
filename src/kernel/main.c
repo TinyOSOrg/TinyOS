@@ -12,8 +12,12 @@
 #include <kernel/sysmsg/sysmsg.h>
 
 #include <lib/conio.h>
-#include <lib/keycode.h>
-#include <lib/string.h>
+
+#include <shared/keycode.h>
+#include <shared/string.h>
+#include <shared/syscall/common.h>
+#include <shared/syscall/sysmsg.h>
+#include <shared/sysmsg/kbmsg.h>
 
 #define syscall_param0(N) \
     ({ uint32_t r; \

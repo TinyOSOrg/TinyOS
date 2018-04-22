@@ -3,8 +3,8 @@
 
 #include <kernel/console/print.h>
 
-#include <lib/bool.h>
-#include <lib/string.h>
+#include <shared/bool.h>
+#include <shared/string.h>
 
 void _fatal_error_impl(const char *prefix, const char *filename, const char *function, int line, const char *msg)
 {

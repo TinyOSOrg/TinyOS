@@ -3,7 +3,9 @@
 #include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg.h>
 
-#include <lib/string.h>
+#include <shared/string.h>
+
+#include <shared/sysmsg/common.h>
 
 /* 消息队列容量 */
 #define SYSMSG_QUEUE_MAX_SIZE (4096 / sizeof(struct sysmsg))

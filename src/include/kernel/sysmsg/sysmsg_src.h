@@ -1,7 +1,7 @@
 #ifndef TINY_OS_SYSMSG_SRC_H
 #define TINY_OS_SYSMSG_SRC_H
 
-#include <lib/ptrlist.h>
+#include <shared/ptrlist.h>
 
 /*
     因为效率问题，系统中消息总线是不打算做的

@@ -1,7 +1,7 @@
 #include <kernel/memory.h>
 #include <kernel/rlist_node_alloc.h>
 
-#include <lib/freelist.h>
+#include <shared/freelist.h>
 
 /* 记录空闲rlist node的自由链表 */
 static freelist_handle unused_resident_rlist_nodes;

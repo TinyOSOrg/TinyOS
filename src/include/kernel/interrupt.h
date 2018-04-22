@@ -1,8 +1,8 @@
 #ifndef TINY_OS_INTERRUPT_H
 #define TINY_OS_INTERRUPT_H
 
-#include <lib/bool.h>
-#include <lib/intdef.h>
+#include <shared/bool.h>
+#include <shared/intdef.h>
 
 /* 0x20~0x2f号中断为8259A所用 */
 
