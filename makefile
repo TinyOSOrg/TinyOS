@@ -43,21 +43,21 @@ src/boot/bootloader.bootbin : src/boot/bootloader.s src/boot/boot.s
 src/boot/kernel.bootbin : $(KER_O_FILES) $(KER_BIN_FILES)
 	$(LD) $(LD_FLAGS) $(KER_O_FILES) $(KER_BIN_FILES) -Ttext $(KER_ENTRY_ADDR) -e main -o $@
 
-%.o : %.c
+%.o: %.c
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
-%.bin : %.s
+%.bin: %.s
 	$(ASM) $(ASM_FLAGS) -f elf $< -o $@
 
 # 头文件依赖
-%.d : %.c
+%.d: %.c
 	@set -e; \
 	rm -f $@; \
-	$(CC) -MM $< $(CC_INCLUDE_FLAGS) > $@.$$$$.dtmp; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$.dtmp > $@; \
+	$(CC) -MM $(CC_FLAGS) $< $(CC_INCLUDE_FLAGS) > $@.$$$$.dtmp; \
+	sed 's,\(.*\)\.o\:,$*\.o $*\.d\:,g' < $@.$$$$.dtmp > $@; \
 	rm -f $@.$$$$.dtmp
 
--include $(C_OBJ_FILES:.o=.d)
+-include $(KER_D_FILES)
 
 clean :
 	rm -f $(BOOTBIN_FILE)
