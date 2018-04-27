@@ -12,12 +12,18 @@ ASM_FLAGS =
 
 BOOTBIN_FILE = src/boot/mbr.bootbin src/boot/bootloader.bootbin src/boot/kernel.bootbin
 
-C_SRC_FILES = $(shell find ./src/ -name "*.c")
-C_OBJ_FILES = $(patsubst %.c, %.o, $(C_SRC_FILES))
-C_DPT_FILES = $(patsubst %.c, %.d, $(C_SRC_FILES))
+KER_C_FILES =  $(shell find ./src/kernel/ -name "*.c")
+KER_C_FILES += $(shell find ./src/shared/ -name "*.c")
 
-S_SRC_FILES = $(shell find ./src/kernel/ -name "*.s")
-S_BIN_FILES = $(patsubst %.s, %.bin, $(S_SRC_FILES))
+KER_O_FILES = $(patsubst %.c, %.o, $(KER_C_FILES))
+KER_D_FILES = $(patsubst %.c, %.d, $(KER_C_FILES))
+
+KER_S_FILES =  $(shell find ./src/kernel/ -name "*.s")
+KER_S_FILES += $(shell find ./src/shared/ -name "*.s")
+
+KER_BIN_FILES = $(patsubst %.s, %.bin, $(KER_S_FILES))
+
+KER_ENTRY_ADDR = 0xc0002000
 
 HD = hd.img
 
@@ -34,8 +40,8 @@ src/boot/mbr.bootbin : src/boot/mbr.s src/boot/boot.s
 src/boot/bootloader.bootbin : src/boot/bootloader.s src/boot/boot.s
 	$(ASM) $(ASM_FLAGS) $< -o $@
 
-src/boot/kernel.bootbin : $(C_OBJ_FILES) $(S_BIN_FILES)
-	$(LD) $(LD_FLAGS) $(C_OBJ_FILES) $(S_BIN_FILES) -Ttext 0xc0002000 -e main -o $@
+src/boot/kernel.bootbin : $(KER_O_FILES) $(KER_BIN_FILES)
+	$(LD) $(LD_FLAGS) $(KER_O_FILES) $(KER_BIN_FILES) -Ttext $(KER_ENTRY_ADDR) -e main -o $@
 
 %.o : %.c
 	$(CC) $(CC_FLAGS) -c $< -o $@
@@ -55,9 +61,9 @@ src/boot/kernel.bootbin : $(C_OBJ_FILES) $(S_BIN_FILES)
 
 clean :
 	rm -f $(BOOTBIN_FILE)
-	rm -f $(C_OBJ_FILES)
-	rm -f $(C_DPT_FILES) $(shell find ./src/ -name "*.dtmp")
-	rm -f $(S_BIN_FILES)
+	rm -f $(KER_O_FILES)
+	rm -f $(KER_D_FILES) $(shell find ./src/ -name "*.dtmp")
+	rm -f $(KER_BIN_FILES)
 
 bochs :
 	make
