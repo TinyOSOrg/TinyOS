@@ -1,8 +1,8 @@
 #ifndef FS_BASIC
 #define FS_BASIC
 
-#include<lib/intdef.h>
-#include<lib/bool.h>
+#include<shared/intdef.h>
+#include<shared/bool.h>
 #define BLOCK_SIZE 512 //bytes
 #define DISK_SIZE 128  //MBytes，DISK_SIZE为文件系统实际所占用的磁盘大小
 #define INODE_RATIO 16 //代表每多少块就分配一个inode
