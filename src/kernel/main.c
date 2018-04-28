@@ -123,7 +123,7 @@ void PL0_thread2(void)
 
 void init_kernel(void)
 {
-    /* 中断向量表 */
+    /* 中断系统 */
     init_IDT();
 
     /* 物理内存 */
