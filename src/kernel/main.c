@@ -135,13 +135,13 @@ void init_kernel(void)
     /* 内核链表分配器 */
     init_kernel_rlist_node_alloc();
 
-    /* 内核线程管理 */
+    /* 内核线程 */
     init_thread_man();
 
     /* 进程管理 */
     init_process_man();
 
-    /* 系统调用框架 */
+    /* 系统调用 */
     init_syscall();
 
     /* 控制台 */
