@@ -126,13 +126,13 @@ void init_kernel(void)
     /* 中断向量表 */
     init_IDT();
 
-    /* 物理内存管理 */
+    /* 物理内存 */
     init_phy_mem_man();
 
-    /* 虚拟内存管理 */
+    /* 虚拟内存 */
     init_vir_mem_man();
 
-    /* 内核链表分配器 */
+    /* 内核链表分配 */
     init_kernel_rlist_node_alloc();
 
     /* 内核线程 */
