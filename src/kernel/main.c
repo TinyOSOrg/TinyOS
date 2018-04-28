@@ -19,6 +19,10 @@
 #include <shared/syscall/sysmsg.h>
 #include <shared/sysmsg/kbmsg.h>
 
+
+#include <drive_disk/drive_disk.h>
+#include <kernel/memory/phy_mem_man.h>
+
 #define syscall_param0(N) \
     ({ uint32_t r; \
        asm volatile ("int $0x80;" \
@@ -158,6 +162,9 @@ void init_kernel(void)
 
     /* 键盘驱动 */
     init_kb_driver();
+
+    /*磁盘驱动*/
+    init_disk_drive();
 }
 
 int main(void)
@@ -168,6 +175,7 @@ int main(void)
 
     init_semaphore(&sph, 1);
     
+ 
     create_process("another process0", PL0_thread0, true);
     create_process("another process1", PL0_thread1, true);
     create_process("another process2", PL0_thread2, true);
@@ -180,7 +188,6 @@ int main(void)
         kprint_format("main process, pid = %u\n", pid);
         semaphore_signal(&sph);
     }
-
     while(1)
     {
         do_releasing_thds_procs();
