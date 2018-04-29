@@ -18,9 +18,6 @@
          读写磁盘使用LBA28模式，primary通道；
 */
 
-//set_buffer_addr函数仅在main.c函数开始时被调用一次
-void set_buffer_addr(void);
-
 bool missing_page_write_disk(uint16_t* main_memory, uint32_t disk);
 
 bool missing_page_read_disk(uint32_t disk, uint16_t* main_memory);

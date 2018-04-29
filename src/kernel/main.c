@@ -22,7 +22,7 @@
 
 #include <drive_disk/drive_disk.h>
 #include <kernel/memory/phy_mem_man.h>
-
+#include <kernel/fs/fs_start.h>
 #define syscall_param0(N) \
     ({ uint32_t r; \
        asm volatile ("int $0x80;" \
@@ -165,6 +165,8 @@ void init_kernel(void)
 
     /*磁盘驱动*/
     init_disk_drive();
+
+    /*文件系统*/
 }
 
 int main(void)
@@ -193,4 +195,5 @@ int main(void)
         do_releasing_thds_procs();
         yield_CPU();
     }
+
 }

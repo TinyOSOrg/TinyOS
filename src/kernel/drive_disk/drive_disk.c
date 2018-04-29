@@ -8,12 +8,14 @@
     set_buffer_addr函数仅在main.c函数开始时被调用一次;
     is_busy、is_wrong和one_sec_data_carry为内部函数,不要在其他文件调用此函数。
 */
-uint16_t* buffer_addr;
-void one_sec_data_carry(uint16_t* src, uint16_t* dst);
-bool is_busy(void);
-bool is_wrong(void);
+static uint16_t* buffer_addr;
+static void one_sec_data_carry(uint16_t* src, uint16_t* dst);
+static bool is_busy(void);
+static bool is_wrong(void);
+//set_buffer_addr函数仅在main.c函数开始时被调用一次
+static void set_buffer_addr(void);
 
-void set_buffer_addr(void)
+static void set_buffer_addr(void)
 {
     buffer_addr = (uint16_t*)alloc_static_kernel_mem(512, 2);
 }
@@ -111,7 +113,7 @@ bool normal_write_disk(uint16_t* main_memory, uint32_t disk)
     return true;
 }
 
-bool is_busy(void)
+static bool is_busy(void)
 {
     uint8_t data_from_0x1f7, intermediate_variable;
     data_from_0x1f7 = _in_byte_from_port(0x1f7);
@@ -122,7 +124,7 @@ bool is_busy(void)
         return true; 
 }
 
-bool is_wrong(void)
+static bool is_wrong(void)
 {
     uint8_t stat;
     stat = _in_byte_from_port(0x1f7);
@@ -132,7 +134,7 @@ bool is_wrong(void)
         return false;
 }
 
-void one_sec_data_carry(uint16_t* src, uint16_t* dst)
+static void one_sec_data_carry(uint16_t* src, uint16_t* dst)
 {
     for(size_t i = 0; i < 256; ++i)
     {
