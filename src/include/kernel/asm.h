@@ -10,6 +10,11 @@ static inline uint8_t _in_byte_from_port(uint16_t port)
     return rt;
 }
 
+static inline void _in_words_from_port(uint16_t port, void *dst, size_t wcnt)
+{
+    asm volatile ("cld; rep insw" : "+D" (dst), "+c" (wcnt) : "d" (port) : "memory");
+}
+
 static inline void _out_byte_to_port(uint16_t port, uint8_t data)
 {
     asm volatile ("out %0, %1" : : "a" (data), "d" (port));
@@ -18,6 +23,11 @@ static inline void _out_byte_to_port(uint16_t port, uint8_t data)
 static inline void _out_double_byte_to_port(uint16_t port, uint16_t data)
 {
     asm volatile ("out %0, %1" : : "a" (data), "d" (port));
+}
+
+static inline void _out_words_to_port(uint16_t port, const void *dst, uint32_t wcnt)
+{
+   asm volatile ("cld; rep outsw" : "+S" (dst), "+c" (wcnt) : "d" (port));
 }
 
 static inline void _load_IDT(uint64_t arg)
