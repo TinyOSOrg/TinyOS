@@ -35,12 +35,6 @@ static struct TCB * volatile busy_flag;
 /* 缺页标志 */
 static struct TCB * volatile pf_flag;
 
-void init_disk_driver(void)
-{
-    busy_flag = NULL;
-    pf_flag   = NULL;
-}
-
 static inline bool wait_for_ready(void)
 {
     while(IS_DISK_BUSY())
@@ -171,6 +165,23 @@ static bool try_disk_pfrw_raw(const struct disk_rw_task *task)
 
     post_post_process();
     return true;
+}
+
+static void disk_driver_intr_handler(void)
+{
+    if(busy_flag)
+    {
+        struct TCB *bf = busy_flag;
+        busy_flag = NULL;
+        awake_thread(bf);
+    }
+}
+
+void init_disk_driver(void)
+{
+    busy_flag = NULL;
+    pf_flag   = NULL;
+    set_intr_function(INTR_NUMBER_DISK, disk_driver_intr_handler);
 }
 
 void disk_rw_raw(const struct disk_rw_task *task)

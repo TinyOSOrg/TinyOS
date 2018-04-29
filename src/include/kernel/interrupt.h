@@ -32,6 +32,8 @@
 #define INTR_NUMBER_CLOCK                32
 #define INTR_NUMBER_KEYBOARD             33
 
+#define INTR_NUMBER_DISK                 46
+
 /* 和linux一样，0x80号中断用作系统调用 */
 #define INTR_NUMBER_SYSCALL              128
 

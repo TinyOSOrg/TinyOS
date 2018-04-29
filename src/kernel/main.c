@@ -3,6 +3,7 @@
 #include <kernel/memory.h>
 #include <kernel/console/print.h>
 #include <kernel/console/console.h>
+#include <kernel/diskdriver.h>
 #include <kernel/kbdriver.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/process.h>
@@ -158,6 +159,9 @@ void init_kernel(void)
 
     /* 键盘驱动 */
     init_kb_driver();
+
+    /* 硬盘驱动 */
+    init_disk_driver();
 }
 
 int main(void)
