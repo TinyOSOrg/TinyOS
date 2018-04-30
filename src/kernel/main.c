@@ -4,6 +4,7 @@
 #include <kernel/console/print.h>
 #include <kernel/console/console.h>
 #include <kernel/diskdriver.h>
+#include <kernel/filesys/dpt.h>
 #include <kernel/kbdriver.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/process.h>
@@ -162,6 +163,9 @@ void init_kernel(void)
 
     /* 硬盘驱动 */
     init_disk_driver();
+
+    /* 磁盘分区 */
+    init_dpt();
 }
 
 uint8_t sec_data[512];
@@ -186,29 +190,6 @@ int main(void)
         kprint_format("main process, pid = %u\n", pid);
         semaphore_signal(&sph);
     }
-
-    for(int i = 0;i != 512; ++i)
-        sec_data[i] = i;
-
-    struct disk_rw_task dt;
-    dt.type = DISK_RW_TASK_TYPE_WRITE;
-    dt.sector_base = 400;
-    dt.sector_cnt  = 1;
-    dt.addr.write_src = sec_data;
-    disk_rw_raw(&dt);
-
-    for(int i = 0;i != 512; ++i)
-        sec_data[i] = 0;
-
-    dt.type = DISK_RW_TASK_TYPE_READ;
-    dt.sector_base = 400;
-    dt.sector_cnt  = 1;
-    dt.addr.read_dst = sec_data;
-    disk_rw_raw(&dt);
-
-    semaphore_wait(&sph);
-    kprint_format("main process, disk data = %u\n", sec_data[6]);
-    semaphore_signal(&sph);
 
     while(1)
     {
