@@ -8,7 +8,7 @@ CC_FLAGS = -m32 $(CC_INCLUDE_FLAGS) \
 
 CPPC = g++
 CPPC_INCLUDE_FLAGS = -I src/include/
-CPPC_FLAGS = -std=c++14 -Werror -Wall -O2
+CPPC_FLAGS = -std=c++14 -Werror -Wall -O2 $(CPPC_INCLUDE_FLAGS)
 
 LD = ld
 LD_FLAGS = -m elf_i386
@@ -83,7 +83,7 @@ $(KER_D_FILES) : %.d : %.c
 
 ############################## 分区表创建工具 ##############################
 
-MKDPT_CPP_FILES =  $(shell find ./src/tools/mkdpt/ -name "*.cpp")
+MKDPT_CPP_FILES = $(shell find ./src/tools/mkdpt/ -name "*.cpp")
 
 MKDPT_O_FILES = $(patsubst %.cpp, %.o, $(MKDPT_CPP_FILES))
 MKDPT_D_FILES = $(patsubst %.cpp, %.d, $(MKDPT_CPP_FILES))
