@@ -11,13 +11,13 @@
 #include<shared/intdef.h>
 #include<shared/bool.h>
 typedef struct _partition_table_item{
-    uint8_t is_null; //1表示为空，０表示非空
-    uint8_t is_formatting;//1表示已经格式化，０表示还没有格式化
-    char fs_name[16];  //占16个字节，要有结束标志
+    int32_t partition_state; //-2表示分区表项为空，-1表示分区表项非空但分区未格式化，0表示分区表项非空且分区已格式化
+    uint32_t fs_type;  //用数字表示文件系统的类型：0表示ext_variant
+    char fs_name[16];  //分区的名称，可由用户更改，占16个字节，要有结束标志，结束标志使用'\0'
     uint32_t fs_begin;
     uint32_t fs_end;
-    //还剩38个字节留作备用
-    char reserve[38];
+    //还剩32个字节留作备用
+    char reserve[32];
 }PartitionTableItem;
 
 typedef bool PartitionTableInfo[8]; //用于返回每个表项是否为空，若某项为空，则相应值置为
