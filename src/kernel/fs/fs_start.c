@@ -3,7 +3,7 @@
 #include<shared/bool.h>
 #include<drive_disk/drive_disk.h>
 #include<kernel/memory/vir_mem_man.h>
-
+#include<kernel/fs/fs_evei.h>
 //只有read_partition_table函数可以修改partition_table_item_ptr变量的值
 static PartitionTableItem* partition_table_item_ptr;
 static void read_partition_table(void);
@@ -11,6 +11,7 @@ static void read_partition_table(void);
 void formatting_fs(PartitionTableItem* item_ptr)
 {
     //开始进行格式化文件系统的操作
+
 }
 
 void init_fs(void)
@@ -20,15 +21,15 @@ void init_fs(void)
     PartitionTableItem* temp_item_ptr = partition_table_item_ptr;
     for(uint32_t i = 0; i < 8; ++i)
     {
-        if(partition_table_item_ptr->is_null == 1) 
+        if(temp_item_ptr->is_null == 1) 
             ;
         else
         {
-            if(partition_table_item_ptr->is_formatting == 1)
+            if(temp_item_ptr->is_formatting == 1)
                 ;
             else
             {
-                //根据fs_name执行formatting_fs函数
+                //根据temp_item_ptr执行formatting_fs函数
             }
         }
         temp_item_ptr++;

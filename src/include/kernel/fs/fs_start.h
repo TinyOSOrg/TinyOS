@@ -2,14 +2,14 @@
 #define FORMATTING_H 
 
 /*
-    文件系统的分区表占用一个扇区（在LBA中编号为301的扇区），
+    文件系统的分区表占用一个扇区（在LBA中编号为300的扇区），
     整个分区表在内存上是连续的，每个区表项占用64个字节,一共有8个分区表项，
     每个表项多余的空间留作未来备份，
     分区表所在扇区的LBA编号由宏PARTION_TABLE_SECTION确定。
 */
 #define PARTITION_TABLE_SECTION 300
 #include<shared/intdef.h>
-
+#include<shared/bool.h>
 typedef struct _partition_table_item{
     uint8_t is_null; //1表示为空，０表示非空
     uint8_t is_formatting;//1表示已经格式化，０表示还没有格式化
