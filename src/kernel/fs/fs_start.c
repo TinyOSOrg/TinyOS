@@ -21,11 +21,11 @@ void init_fs(void)
     PartitionTableItem* temp_item_ptr = partition_table_item_ptr;
     for(uint32_t i = 0; i < 8; ++i)
     {
-        if(temp_item_ptr->is_null == 1) 
+        if(temp_item_ptr->partition_state == -2) 
             ;
         else
         {
-            if(temp_item_ptr->is_formatting == 1)
+            if(temp_item_ptr->partition_state == 0)
                 ;
             else
             {
