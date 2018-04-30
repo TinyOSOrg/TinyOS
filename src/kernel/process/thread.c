@@ -274,6 +274,9 @@ void kill_thread(struct TCB *tcb)
     else // 在ready队列中或被阻塞
     {
         erase_from_ilist(&tcb->ready_block_threads_node);
+        // 信号量
+        if(tcb->blocked_sph)
+            tcb->blocked_sph->val++;
         erase_thread_in_process(tcb);
     }
 
@@ -301,9 +304,6 @@ void do_releasing_thds_procs(void)
                                         - 4096;
         ASSERT_S(ker_stk_page % 4096 == 0);
         free_ker_page((char*)ker_stk_page);
-        // 信号量
-        if(tcb->blocked_sph)
-            tcb->blocked_sph->val++;
 
         // tcb空间
         add_freelist(&TCB_freelist, tcb);

@@ -3,6 +3,7 @@
 #include <kernel/diskdriver.h>
 #include <kernel/interrupt.h>
 #include <kernel/process/thread.h>
+#include <kernel/process/semaphore.h>
 
 #include <shared/string.h>
 
@@ -27,13 +28,17 @@
 #define IS_DISK_READY() \
     ((_in_byte_from_port(DISK_PORT_STATUS) & DISK_STATUS_READY) != 0)
 
-/* 阻塞在pf_flag上的缺页任务的任务描述 */
-static struct disk_rw_task pf_task;
+/* 普通任务阻塞线程队列 */
+static ilist blocked_normal_tasks;
 
-/* 硬盘忙标志 */
-static struct TCB * volatile busy_flag;
-/* 缺页标志 */
-static struct TCB * volatile pf_flag;
+/* 缺页中断阻塞线程队列 */
+static ilist blocked_pagefault_tasks;
+
+/*
+    硬盘忙阻塞线程
+    其实这里至多有一个线程，但是为了兼容TCB的blocked内嵌节点，只好做个链表了
+*/
+static ilist blocked_busy_tasks;
 
 static inline bool wait_for_ready(void)
 {
@@ -62,140 +67,101 @@ static void disk_cmd(const struct disk_rw_task *task)
                       task->type == DISK_RW_TASK_TYPE_READ ? 0x20 : 0x30);
 }
 
-static void commit_pf_task(void)
+static void normal_task_entry(void)
 {
-    ASSERT_S(pf_flag && !busy_flag);
-    disk_cmd(&pf_task);
-    busy_flag = pf_flag;
-    pf_flag   = NULL;
+    while(!is_ilist_empty(&blocked_busy_tasks))
+    {
+        push_back_ilist(&blocked_normal_tasks,
+                        &get_cur_TCB()->ready_block_threads_node);
+        block_cur_thread();
+    }
+    push_back_ilist(&blocked_busy_tasks,
+                    &get_cur_TCB()->ready_block_threads_node);
 }
 
-static void post_post_process(void)
+static void task_exit(void)
 {
-    ASSERT_S(busy_flag == NULL);
-    if(pf_flag)
+    // assertion: blocked_busy_task.first is this_thread.ready_block_threads_node
+    pop_front_ilist(&blocked_busy_tasks);
+
+    if(!is_ilist_empty(&blocked_pagefault_tasks))
     {
-        commit_pf_task();
-        ASSERT_S(busy_flag);
+        struct ilist_node *next = pop_front_ilist(&blocked_pagefault_tasks);
+        struct TCB *tcb = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
+                                                 next);
+        awake_thread(tcb);
+    }
+    else if(!is_ilist_empty(&blocked_normal_tasks))
+    {
+        struct ilist_node *next = pop_front_ilist(&blocked_normal_tasks);
+        struct TCB *tcb = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
+                                                 next);
+        awake_thread(tcb);
     }
 }
 
-static bool try_disk_rw_raw(const struct disk_rw_task *task)
+static void disk_intr_handler(void)
 {
-    if(busy_flag)
+    if(!is_ilist_empty(&blocked_busy_tasks))
     {
-        yield_CPU();
-        return false;
+        struct ilist_node *n = pop_front_ilist(&blocked_busy_tasks);
+        struct TCB *tcb = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
+                                                 n);
+        awake_thread(tcb);
     }
+    _in_byte_from_port(DISK_PORT_STATUS);
+}
 
-    if(pf_flag)
-    {
-        commit_pf_task();
-        return false;
-    }
+static void disk_read_raw(const struct disk_rw_task *task)
+{
+    normal_task_entry();
+
+    disk_cmd(task);
+    block_cur_thread();
+
+    if(!wait_for_ready())
+        FATAL_ERROR("invalid disk status");
+    
+    _in_words_from_port(DISK_PORT_DATA, task->addr.read_dst,
+                                        task->sector_cnt * 512 / 2);
+
+    task_exit();
+}
+
+static void disk_write_raw(const struct disk_rw_task *task)
+{
+    normal_task_entry();
 
     disk_cmd(task);
 
-    if(task->type == DISK_RW_TASK_TYPE_READ)
-    {
-        busy_flag = get_cur_TCB();
-        block_cur_thread();
-        if(!wait_for_ready())
-            FATAL_ERROR("invalid disk status");
-        _in_words_from_port(DISK_PORT_DATA, task->addr.read_dst, task->sector_cnt * 512 / 2);
-    }
-    else
-    {
-        if(!wait_for_ready())
-            FATAL_ERROR("invalid disk status");
-        _out_words_to_port(DISK_PORT_DATA, task->addr.write_src, task->sector_cnt * 512 / 2);
-        busy_flag = get_cur_TCB();
-        block_cur_thread();
-    }
+    if(!wait_for_ready())
+        FATAL_ERROR("invalid disk status");
+    
+    _out_words_to_port(DISK_PORT_DATA, task->addr.write_src,
+                                       task->sector_cnt * 512 / 2);
+        
+    block_cur_thread();
 
-    post_post_process();
-    return true;
-}
-
-static bool try_disk_pfrw_raw(const struct disk_rw_task *task)
-{
-    if(busy_flag)
-    {
-        if(pf_flag)
-        {
-            yield_CPU();
-            return false;
-        }
-        else
-        {
-            pf_flag = get_cur_TCB();
-            memcpy((char*)&pf_task, (char*)task, sizeof(struct disk_rw_task));
-            block_cur_thread();
-            return false;
-        }
-    }
-
-    if(pf_flag)
-    {
-        commit_pf_task();
-        pf_flag = get_cur_TCB();
-        memcpy((char*)&pf_task, (char*)task, sizeof(struct disk_rw_task));
-        block_cur_thread();
-        return false;
-    }
-
-    disk_cmd(task);
-
-    if(task->type == DISK_RW_TASK_TYPE_READ)
-    {
-        busy_flag = get_cur_TCB();
-        block_cur_thread();
-        if(!wait_for_ready())
-            FATAL_ERROR("invalid disk status");
-        _in_words_from_port(DISK_PORT_DATA, task->addr.read_dst, task->sector_cnt * 512 / 2);
-    }
-    else
-    {
-        if(!wait_for_ready())
-            FATAL_ERROR("invalid disk status");
-        _out_words_to_port(DISK_PORT_DATA, task->addr.write_src, task->sector_cnt * 512 / 2);
-        busy_flag = get_cur_TCB();
-        block_cur_thread();
-    }
-
-    post_post_process();
-    return true;
-}
-
-static void disk_driver_intr_handler(void)
-{
-    if(busy_flag)
-    {
-        struct TCB *bf = busy_flag;
-        busy_flag = NULL;
-        awake_thread(bf);
-    }
+    task_exit();
 }
 
 void init_disk_driver(void)
 {
-    busy_flag = NULL;
-    pf_flag   = NULL;
-    set_intr_function(INTR_NUMBER_DISK, disk_driver_intr_handler);
+    init_ilist(&blocked_busy_tasks);
+    init_ilist(&blocked_normal_tasks);
+    init_ilist(&blocked_pagefault_tasks);
+
+    set_intr_function(INTR_NUMBER_DISK, disk_intr_handler);
 }
 
 void disk_rw_raw(const struct disk_rw_task *task)
 {
-    intr_state intr_s = fetch_and_disable_intr();
-    while(!try_disk_rw_raw(task))
-        ;
-    set_intr_state(intr_s);
-}
+    intr_state is = fetch_and_disable_intr();
 
-void disk_pfrw_raw(const struct disk_rw_task *task)
-{
-    intr_state intr_s = fetch_and_disable_intr();
-    while(!try_disk_pfrw_raw(task))
-        ;
-    set_intr_state(intr_s);
+    if(task->type == DISK_RW_TASK_TYPE_READ)
+        disk_read_raw(task);
+    else if(task->type == DISK_RW_TASK_TYPE_WRITE)
+        disk_write_raw(task);
+
+    set_intr_state(is);
 }
