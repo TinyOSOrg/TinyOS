@@ -168,8 +168,6 @@ void init_kernel(void)
     init_dpt();
 }
 
-uint8_t sec_data[512];
-
 int main(void)
 {
     init_kernel();

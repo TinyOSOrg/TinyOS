@@ -43,7 +43,6 @@ int main(int argc, const char *argv[])
         return -1;
     }
 
-    fout.seekp(512 * DPT_SECTOR_POSITION);
     fout.write((const char*)&dpts, sizeof(dpts));
     fout.close();
 

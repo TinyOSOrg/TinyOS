@@ -1,3 +1,4 @@
+#include <kernel/assert.h>
 #include <kernel/diskdriver.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/memory.h>
@@ -27,14 +28,8 @@ void init_dpt(void)
     memcpy((char*)dpts, (char*)dpt_sec_data, DPT_BYTE_SIZE);
 }
 
-void rewrite_dpt(void)
+const struct dpt_unit *get_dpt_unit(size_t idx)
 {
-    struct disk_rw_task task =
-    {
-        .type           = DISK_RW_TASK_TYPE_WRITE,
-        .sector_base    = DPT_SECTOR_POSITION,
-        .sector_cnt     = 1,
-        .addr.write_src = dpts
-    };
-    disk_rw_raw(&task);
+    ASSERT_S(0 <= idx && idx < DPT_UNIT_COUNT);
+    return &dpts[idx];
 }
