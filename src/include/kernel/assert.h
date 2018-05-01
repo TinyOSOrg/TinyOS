@@ -15,4 +15,7 @@
 
 void _fatal_error_impl(const char *prefix, const char *filename, const char *function, int line, const char *msg);
 
+#define STATIC_ASSERT(EXPR, MSG) \
+    typedef char static_assert_failed__##MSG[2 * !!(EXPR) - 1]
+
 #endif /* TINY_OS_FATAL_ERROR_H */
