@@ -12,3 +12,5 @@ DESIGN.html
 *.bin
 *.bootbin
 *.img
+
+tools/
