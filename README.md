@@ -23,6 +23,5 @@ makefile仅对在bochs虚拟机上的运行有所支持。要使用bochs运行�
 
 1. 安装bochs，版本不低于2.68。
 2. 跟据bochs所附带的显示插件，修改`bochsrc.txt`中的`display_library`项。
-3. 在项目根目录下运行命令`mkdir tools`，创建外部工具输出目录。
-4. 在项目根目录下运行命令`bximage`，创建一个大小为128MB、名为`hd.img`、模式为`flat`的硬盘映像文件。
-5. 运行命令`make bochs`以构建项目并启动虚拟机。
+3. 初次运行前，运行命令`bash setup.sh`初始化环境。
+4. 运行命令`make bochs`以构建项目并启动虚拟机。
