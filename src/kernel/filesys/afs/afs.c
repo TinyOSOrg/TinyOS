@@ -1,5 +1,6 @@
 #include <kernel/filesys/afs/afs.h>
-#include <kernel/filesys/afs/afs_storage.h>
+#include <kernel/filesys/afs/memory.h>
+#include <kernel/filesys/afs/storage.h>
 #include <kernel/memory.h>
 
 #include <shared/freelist.h>

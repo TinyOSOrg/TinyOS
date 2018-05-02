@@ -23,7 +23,7 @@
     静态内核存储区大小
     应是0x1000的整数倍
 */
-#define STATIC_KERNEL_MEM_SIZE 0x100000
+#define STATIC_KERNEL_MEM_SIZE 0x200000
 
 /* bootloader在虚拟内存中的位置 */
 #define BOOTLOADER_START_ADDR 0xc0000900
