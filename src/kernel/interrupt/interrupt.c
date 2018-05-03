@@ -141,3 +141,10 @@ intr_state fetch_and_disable_intr(void)
     _disable_intr();
     return rt;
 }
+
+intr_state fetch_and_enable_intr(void)
+{
+    intr_state rt = get_intr_state();
+    _enable_intr();
+    return rt;
+}

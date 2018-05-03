@@ -14,6 +14,8 @@ typedef uint32_t disk_partition_type;
 #define DISK_PT_SWAP        2   /* 交换分区 */
 #define DISK_PT_AFS         3   /* 建立了AFS */
 
+#define DISK_PT_FORMATTING  255 /* 格式化中，禁止访问 */
+
 /* 分区名字最大长度 */
 #define DP_NAME_BUF_SIZE 16
 

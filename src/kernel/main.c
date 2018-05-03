@@ -4,6 +4,7 @@
 #include <kernel/console/print.h>
 #include <kernel/console/console.h>
 #include <kernel/diskdriver.h>
+#include <kernel/filesys/afs/afs.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/kbdriver.h>
 #include <kernel/process/semaphore.h>

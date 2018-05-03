@@ -67,4 +67,7 @@ void set_intr_state(intr_state state);
 /* 关中断并取得中断状态 */
 intr_state fetch_and_disable_intr(void);
 
+/* 开中断并取得开之前的中断状态 */
+intr_state fetch_and_enable_intr(void);
+
 #endif /* TINY_OS_INTERRUPT_H */

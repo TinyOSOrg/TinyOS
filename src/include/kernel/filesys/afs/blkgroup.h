@@ -11,9 +11,9 @@
     分区被划分为多个大小相等的block group
     每个block group头部用链表记录该group内的空闲块
     有空闲的block group用自由链表组织在磁盘上
-    自由链表头部的block group常驻内存
 
-    设
+    设分区范围为[0, dp_secs)，则block group数量为
+    blkgrp_cnt = ceil(dp_secs / (AFS_BLOCK_GROUP_MAX_EMPTY_BLOCKS_COUNT + 1))
 */
 
 /* afs扇区LBA */
@@ -31,14 +31,14 @@ typedef uint32_t afs_blkgroup_index;
 /* block group头部中的链表节点 */
 struct afs_block_group_inner_freelist_node
 {
-    // last和next都是afs_block_group_head::blocks的下标
-    uint16_t last;
-    uint16_t next;
+    // next都是afs_block_group_head::blocks的下标
+    // 为负表示没有
+    int16_t next;
 };
 
 /*
     一个block group至多有多少个空block
-    加上block group head会占用一个block，一个block group占磁盘空间至多为
+    加上block group head会占用一个block，一个block group占磁盘空间为
         AFS_BLOCK_GROUP_MAX_EMPTY_BLOCKS_COUNT + 1
     当然实际上由于分区大小不一定是这个值的整数倍，每个分区末尾的block一般会小一些。
  */
@@ -48,7 +48,7 @@ struct afs_block_group_inner_freelist_node
 /* 磁盘上的block group结构 */
 struct afs_block_group_head
 {
-    // 总block数量
+    // 总block数量（自身所占block除外）
     uint32_t total_blocks;
     // 空闲block数量
     uint32_t empty_blocks;

@@ -53,18 +53,50 @@ struct afs_file_entry
     uint32_t used_size;
     // 文件所处block的首个扇区号
     afs_sector_index sector;
+    // flags
+    unsigned int is_index   : 1;
+    unsigned int type       : 3;
+    unsigned int write_lock : 1;
+    unsigned int read_lock  : 12;
+};
+
+/*
+    分区头
+    固定占一个扇区
+*/
+struct afs_dp_head
+{
+    // 有效范围[begin, end)
+    afs_sector_index begin_sector;
+    afs_sector_index end_sector;
+    afs_blkgroup_index fst_available_blkgrp;
+    struct afs_file_entry root_dir;
+    char padding[512 - 28];
+};
+
+STATIC_ASSERT(sizeof(struct afs_dp_head) == 512,
+              invalid_size_of_afs_dp_head);
+
+/* 文件名最大长度 */
+#define AFS_FILENAME_MAX_LENGTH 255
+
+/*
+    目录文件中的入口
+    目录文件结构如下：
+    uint32_t file_cnt;
+    afs_dir_entry[file_cnt];
+*/
+struct afs_dir_entry
+{
+    char name[AFS_FILENAME_MAX_LENGTH];
+    struct afs_file_entry entry;
 };
 
 /*=====================================================================
     文件flags含义
 =====================================================================*/
 
-#define AFS_FILE_SLOT_FLAG_IS_INDEX_MASK    0b00000000001; /* sector指向的是内容块还是索引块 */
-#define AFS_FILE_SLOT_FLAG_TYPE_MASK        0b00000001110; /* 类型mask，取值见AFS_FILE_TYPE_XXX */
-#define AFS_FILE_SLOT_FLAG_WRITE_LOCK_MASK  0b00000010000; /* 写入锁 */
-#define AFS_FILE_SLOT_FLAG_READ_LOCK_MASK   0b11111100000; /* 读取锁 */
-
-#define AFS_FILE_TYPE_REGULAR   (1 << 1) /* 文件类型取值：常规文件 */
-#define AFS_FILE_TYPE_DIRECTORY (2 << 1) /* 文件类型取值：目录 */
+#define AFS_FILE_TYPE_REGULAR   0b00 /* 文件类型取值：常规文件 */
+#define AFS_FILE_TYPE_DIRECTORY 0b01 /* 文件类型取值：目录 */
 
 #endif /* TINY_OS_FILESYS_AFS_STORAGE_H */

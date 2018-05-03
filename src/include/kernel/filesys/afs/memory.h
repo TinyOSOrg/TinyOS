@@ -15,8 +15,8 @@ struct afs_handle
     // 根目录入口文件扇区号
     afs_sector_index root_dir_sec;
 
-    // 根目录文件块
-    char root_block[AFS_BLOCK_BYTE_SIZE];
+    // 首个可用block group头部
+    struct afs_block_group_head *fst_available_blkgrp;
 };
 
 #endif /* TINY_OS_FILESYS_AFS_MEMORY_H */
