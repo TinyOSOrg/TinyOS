@@ -22,7 +22,7 @@
 */
 #define CONSOLE_SYSCALL_FUNCTION_GET_CURSOR      5
 
-/* low8：pos */
+/* low8：char */
 #define CONSOLE_SYSCALL_FUNCTION_PUT_CHAR        6
 /* pointer to str */
 #define CONSOLE_SYSCALL_FUNCTION_PUT_STR         7

@@ -4,7 +4,7 @@ CC = gcc
 CC_INCLUDE_FLAGS = -nostdinc -I src/include/
 CC_FLAGS = -m32 $(CC_INCLUDE_FLAGS) \
 		   -fno-stack-protector -std=gnu99 \
-		   -fno-builtin -Werror -Wall -O2
+		   -fno-builtin -Werror -Wall
 
 CPPC = g++
 CPPC_INCLUDE_FLAGS = -I src/include/
@@ -40,12 +40,14 @@ BOOTBIN_FILE = src/boot/mbr.bootbin src/boot/bootloader.bootbin src/boot/kernel.
 
 KER_C_FILES =  $(shell find ./src/kernel/ -name "*.c")
 KER_C_FILES += $(shell find ./src/shared/ -name "*.c")
+KER_C_FILES += $(shell find ./src/lib/ -name "*.c")
 
 KER_O_FILES = $(patsubst %.c, %.o, $(KER_C_FILES))
 KER_D_FILES = $(patsubst %.c, %.d, $(KER_C_FILES))
 
 KER_S_FILES =  $(shell find ./src/kernel/ -name "*.s")
 KER_S_FILES += $(shell find ./src/shared/ -name "*.s")
+KER_C_FILES += $(shell find ./src/lib/ -name "*.s")
 
 KER_BIN_FILES = $(patsubst %.s, %.bin, $(KER_S_FILES))
 

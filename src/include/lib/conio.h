@@ -11,4 +11,10 @@ void get_cursor_row_col(uint8_t *row, uint8_t *col);
 
 void set_cursor_row_col(uint8_t row, uint8_t col);
 
+void put_char(char ch);
+
+void put_str(const char *str);
+
+void printf(const char *fmt, ...);
+
 #endif /* TINY_OS_LIB_CONIO_H */

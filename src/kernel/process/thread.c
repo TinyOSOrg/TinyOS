@@ -369,5 +369,7 @@ void do_releasing_thds_procs(void)
 
 void yield_CPU(void)
 {
+    intr_state is = fetch_and_disable_intr();
     thread_scheduler();
+    set_intr_state(is);
 }
