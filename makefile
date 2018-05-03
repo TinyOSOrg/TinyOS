@@ -27,8 +27,11 @@ MKDPT = tools/mkdpt
 .PHONY : all
 all : $(HD) tools
 
+.PHONY : mkdpt
+mkdpt : $(MKDPT)
+
 .PHONY : tools
-tools : $(MKDPT)
+tools : mkdpt
 
 ############################## 内核 ##############################
 
