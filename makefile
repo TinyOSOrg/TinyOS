@@ -4,7 +4,7 @@ CC = gcc
 CC_INCLUDE_FLAGS = -nostdinc -I src/include/
 CC_FLAGS = -m32 $(CC_INCLUDE_FLAGS) \
 		   -fno-stack-protector -std=gnu99 \
-		   -fno-builtin -Werror -Wall
+		   -fno-builtin -Werror -Wall -O2
 
 CPPC = g++
 CPPC_INCLUDE_FLAGS = -I src/include/
