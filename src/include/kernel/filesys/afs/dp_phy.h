@@ -1,0 +1,131 @@
+#ifndef TINY_OS_FILESYS_AFS_DP_PHY_H
+#define TINY_OS_FILESYS_AFS_DP_PHY_H
+
+#include <kernel/assert.h>
+
+#include <shared/bool.h>
+#include <shared/intdef.h>
+
+/*======================================================
+分区格式描述：
+    afs_dp_head: 分区头部，一个扇区------------------
+    entry数组: 一些扇区 <---------------|          |
+    {                                            |
+        afs_blkgrp_head: 块组头部，一个扇区         |
+        AFS_BLOCK_BYTE_SIZE+                     |
+    }+ <-----------------------------------------|
+======================================================*/
+
+/* 一个扇区多少字节 */
+#define AFS_SECTOR_BYTE_SIZE 512
+
+/* 一个block含多少扇区 */
+#define AFS_BLOCK_SECTOR_COUNT 2
+
+/*
+    平均一个文件能够占用多少block
+    用于格式化时估算需要的entry数量
+*/
+#define AFS_FILE_AVERAGE_BLOCK_COUNT 2
+
+/* 一个block多少字节 */
+#define AFS_BLOCK_BYTE_SIZE (AFS_BLOCK_SECTOR_COUNT * AFS_SECTOR_BYTE_SIZE)
+
+/* 分区首个扇区的描述符 */
+struct afs_dp_head
+{
+    // 分区扇区范围
+    uint32_t dp_sec_beg;
+    uint32_t dp_sec_cnt;
+
+    // entry数组起始扇区号以及entry数组大小
+    uint32_t entry_arr_sec;
+    uint32_t entry_arr_len;
+
+    // 还剩多少空闲entry
+    uint32_t empty_entry_cnt;
+    // 首个空闲entry在entry数组中的下标
+    uint32_t fst_avl_entry_idx;
+
+    // 还剩多少空闲block
+    uint32_t empty_block_cnt;
+    // 首个空闲block group起始扇区号
+    uint32_t fst_avl_blkgrp_sec;
+
+    char padding[AFS_SECTOR_BYTE_SIZE - 32];
+};
+
+STATIC_ASSERT(sizeof(struct afs_dp_head) == AFS_SECTOR_BYTE_SIZE,
+              invalid_size_of_afs_dp_head);
+
+/*
+    每个block group头部的描述符，固定占一个扇区
+    afs将分区组织成多个block group，用于管理空闲的block
+*/
+struct afs_blkgrp_head
+{
+    // blkgrp范围，包括head自身在内
+    uint32_t blkgrp_sec_beg;
+    uint32_t blkgrp_sec_cnt;
+
+    // 总共有多少block
+    uint32_t all_blk_cnt;
+    // 还剩多少block
+    uint32_t empty_blk_cnt;
+
+    // block使用位图
+    uint32_t blk_btmp[(AFS_SECTOR_BYTE_SIZE - 16) >> 2];
+};
+
+// 一个blkgrp至多包含多少block，由其head中的位图大小限制
+#define AFS_BLKGRP_BLOCKS_MAX_COUNT (32 * ((AFS_SECTOR_BYTE_SIZE - 16) >> 2))
+
+// 一个完整的blkgrp总共占用多少扇区（包括头部）
+#define AFS_COMPLETE_BLKGRP_SECTOR_COUNT \
+    (1 + AFS_BLKGRP_BLOCKS_MAX_COUNT * AFS_BLOCK_SECTOR_COUNT)
+
+STATIC_ASSERT(sizeof(struct afs_blkgrp_head) == AFS_SECTOR_BYTE_SIZE,
+              invalid_size_of_afs_blkgrp_head);
+
+/*
+    文件entry
+    每个afs分区都维护一个全局的entry数组作为文件描述符
+    可以通过文件描述符下标来引用任意一个文件
+
+    空闲的entry的首个uint32_t是下一个空闲entry的下标
+    如果分区head中空闲entry数目为0,那么这个下标不具有任何含义
+*/
+struct afs_file_entry
+{
+    // 文件所在block的首个扇区号
+    uint32_t sec_beg;
+
+    // 文件字节数
+    // 如果是目录文件，就为其所有子文件的字节数之和
+    uint32_t byte_size;
+
+    // 文件flags
+    unsigned int rlock : 16; // 读取锁
+    unsigned int wlock : 1;  // 写入锁
+    unsigned int index : 1;  // 索引标志
+    unsigned int type  : 6;  // 类型
+};
+
+STATIC_ASSERT(sizeof(struct afs_file_entry) == 12,
+              invalid_size_of_afs_file_entry);
+
+#define AFS_FILE_TYPE_REGULAR   1
+#define AFS_FILE_TYPE_DIRECTORY 2
+
+/* 一个扇区至多包含多少个file entry */
+#define AFS_SECTOR_MAX_FILE_ENTRY_COUNT \
+    (AFS_SECTOR_BYTE_SIZE / sizeof(struct afs_file_entry))
+
+/* 给定分区扇区范围[beg, beg + cnt)，在物理层上将其格式化，包括：
+    1. 建立磁盘上的entry自由链表
+    2. 建立磁盘上的各blkgrp的head
+    3. 建立dp_head
+*/
+bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt);
+
+#endif /* TINY_OS_FILESYS_AFS_DP_PHY_H */
