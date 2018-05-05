@@ -50,7 +50,7 @@ struct afs_dp_head
     // 还剩多少空闲block
     uint32_t empty_block_cnt;
     // 首个空闲block group起始扇区号
-    uint32_t fst_avl_blkgrp_sec;
+    uint32_t fst_avl_blkgrp_idx;
 
     char padding[AFS_SECTOR_BYTE_SIZE - 32];
 };
@@ -73,12 +73,15 @@ struct afs_blkgrp_head
     // 还剩多少block
     uint32_t empty_blk_cnt;
 
+    // 下一个有空闲的blkgrp的blkgrp下标
+    uint32_t next_avl_blkgrp;
+
     // block使用位图
-    uint32_t blk_btmp[(AFS_SECTOR_BYTE_SIZE - 16) >> 2];
+    uint32_t blk_btmp[(AFS_SECTOR_BYTE_SIZE - 20) >> 2];
 };
 
 // 一个blkgrp至多包含多少block，由其head中的位图大小限制
-#define AFS_BLKGRP_BLOCKS_MAX_COUNT (32 * ((AFS_SECTOR_BYTE_SIZE - 16) >> 2))
+#define AFS_BLKGRP_BLOCKS_MAX_COUNT (32 * ((AFS_SECTOR_BYTE_SIZE - 20) >> 2))
 
 // 一个完整的blkgrp总共占用多少扇区（包括头部）
 #define AFS_COMPLETE_BLKGRP_SECTOR_COUNT \

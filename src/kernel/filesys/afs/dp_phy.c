@@ -3,6 +3,8 @@
 #include <kernel/filesys/afs/blk_mem_buf.h>
 #include <kernel/filesys/afs/dp_phy.h>
 
+#include <shared/string.h>
+
 static inline size_t ceil_int_div(size_t a, size_t b)
 {
     return (a / b) + (a % b ? 1 : 0);
@@ -39,7 +41,7 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
     uint32_t last_blkgrp_sec_cnt =
         blkgrp_cnt % AFS_COMPLETE_BLKGRP_SECTOR_COUNT;
     // 最后一个block group有多少block
-    uint32_t last_blkgrp_blk_cnt = (last_blkgrp_blk_cnt - 1) /
+    uint32_t last_blkgrp_blk_cnt = (last_blkgrp_sec_cnt - 1) /
         AFS_BLOCK_SECTOR_COUNT;
     // 如果最后一个blkgrp根本没block可用,就把那点空间扔掉
     if(!last_blkgrp_blk_cnt)
@@ -89,7 +91,47 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
 
     //********************* 写入blkgrps *********************
 
-    
+    struct afs_blkgrp_head *blkgrp_head =
+        (struct afs_blkgrp_head *)afs_alloc_block_buffer();
+
+    // 当前正在写入的blkgrp的起始扇区号
+    uint32_t blkgrp_sec_beg = beg + 1 + entry_sec_cnt;
+
+    // 总空闲block数量
+    uint32_t total_empty_blk_cnt = 0;
+
+    for(uint32_t i = 0;i != blkgrp_cnt; ++i)
+    {
+        // 本block group有多少block
+        uint32_t blk_cnt = (i + 1 == blkgrp_cnt) ?
+            AFS_BLKGRP_BLOCKS_MAX_COUNT :
+            last_blkgrp_blk_cnt;
+        total_empty_blk_cnt += blk_cnt;
+        
+        blkgrp_head->blkgrp_sec_beg = blkgrp_sec_beg;
+        blkgrp_head->blkgrp_sec_cnt = 1 + blk_cnt * AFS_BLOCK_SECTOR_COUNT;
+
+        blkgrp_head->all_blk_cnt   = blk_cnt;
+        blkgrp_head->empty_blk_cnt = blk_cnt;
+
+        blkgrp_head->next_avl_blkgrp = i + 1;
+
+        memset((char*)blkgrp_head->blk_btmp, 0xff,
+               AFS_BLKGRP_BLOCKS_MAX_COUNT / 8);
+        
+        struct disk_rw_task task =
+        {
+            .type           = DISK_RW_TASK_TYPE_WRITE,
+            .sector_base    = blkgrp_sec_beg,
+            .sector_cnt     = 1,
+            .addr.write_src = blkgrp_head
+        };
+        disk_rw_raw(&task);
+        
+        blkgrp_sec_beg += AFS_COMPLETE_BLKGRP_SECTOR_COUNT;
+    }
+
+    afs_free_block_buffer(blkgrp_head);
 
     //********************* 写入dp_head *********************
 
@@ -105,12 +147,19 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
     dp_head->empty_entry_cnt = entry_cnt;
     dp_head->fst_avl_entry_idx = 0;
 
-    dp_head->fst_avl_blkgrp_sec = beg + 1 + entry_sec_cnt;
-    dp_head->empty_block_cnt = 0; // TODO
+    dp_head->fst_avl_blkgrp_idx = 0;
+    dp_head->empty_block_cnt = total_empty_blk_cnt;
+
+    struct disk_rw_task dp_head_task =
+    {
+        .type           = DISK_RW_TASK_TYPE_WRITE,
+        .sector_base    = beg,
+        .sector_cnt     = 1,
+        .addr.write_src = dp_head
+    };
+    disk_rw_raw(&dp_head_task);
 
     afs_free_block_buffer(dp_head);
-
-    // TODO
 
     return true;
 }
