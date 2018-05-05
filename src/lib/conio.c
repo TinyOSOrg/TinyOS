@@ -4,20 +4,22 @@
 #include <shared/syscall/console.h>
 
 #define CONSOLE_SYSCALL(N, arg) \
-    asm volatile ("int $0x80" \
-                  : \
-                  : "a" (SYSCALL_CONSOLE_OPERATION), \
-                    "b" (N), \
-                    "c" (arg) \
-                  : "memory");
+    do { uint32_t dummy_ret; \
+         __asm__ __volatile__ ("int $0x80" \
+                             : "=a" (dummy_ret) \
+                             : "a" (SYSCALL_CONSOLE_OPERATION), \
+                               "b" (N), \
+                               "c" (arg) \
+                             : "memory"); } while(0)
 
 #define CONSOLE_SYSCALL_RET(N, arg, ret) \
-    asm volatile ("int $0x80" \
-                  : "=a" (ret) \
-                  : "a" (SYSCALL_CONSOLE_OPERATION), \
-                    "b" (N), \
-                    "c" (arg) \
-                  : "memory");
+    do { \
+        __asm__ __volatile__ ("int $0x80" \
+                            : "=a" (ret) \
+                            : "a" (SYSCALL_CONSOLE_OPERATION), \
+                              "b" (N), \
+                              "c" (arg) \
+                            : "memory"); } while(0)
 
 void set_char_row_col(uint8_t row, uint8_t col, char ch)
 {
