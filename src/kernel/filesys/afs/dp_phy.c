@@ -163,3 +163,31 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
 
     return true;
 }
+
+void afs_read_dp_head(uint32_t sec, struct afs_dp_head *output)
+{
+    ASSERT_S(output);
+
+    struct disk_rw_task task =
+    {
+        .type          = DISK_RW_TASK_TYPE_READ,
+        .sector_base   = sec,
+        .sector_cnt    = 1,
+        .addr.read_dst = output
+    };
+    disk_rw_raw(&task);
+}
+
+void afs_write_dp_head(uint32_t sec, const struct afs_dp_head *input)
+{
+    ASSERT_S(input);
+
+    struct disk_rw_task task =
+    {
+        .type           = DISK_RW_TASK_TYPE_WRITE,
+        .sector_base    = sec,
+        .sector_cnt     = 1,
+        .addr.write_src = input
+    };
+    disk_rw_raw(&task);
+}

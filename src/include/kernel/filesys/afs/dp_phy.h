@@ -58,6 +58,9 @@ struct afs_dp_head
 STATIC_ASSERT(sizeof(struct afs_dp_head) == AFS_SECTOR_BYTE_SIZE,
               invalid_size_of_afs_dp_head);
 
+// 一个blkgrp至多包含多少block，由其head中的位图大小限制
+#define AFS_BLKGRP_BLOCKS_MAX_COUNT (32 * ((AFS_SECTOR_BYTE_SIZE - 20) >> 2))
+
 /*
     每个block group头部的描述符，固定占一个扇区
     afs将分区组织成多个block group，用于管理空闲的block
@@ -77,11 +80,8 @@ struct afs_blkgrp_head
     uint32_t next_avl_blkgrp;
 
     // block使用位图
-    uint32_t blk_btmp[(AFS_SECTOR_BYTE_SIZE - 20) >> 2];
+    uint32_t blk_btmp[AFS_BLKGRP_BLOCKS_MAX_COUNT / 32];
 };
-
-// 一个blkgrp至多包含多少block，由其head中的位图大小限制
-#define AFS_BLKGRP_BLOCKS_MAX_COUNT (32 * ((AFS_SECTOR_BYTE_SIZE - 20) >> 2))
 
 // 一个完整的blkgrp总共占用多少扇区（包括头部）
 #define AFS_COMPLETE_BLKGRP_SECTOR_COUNT \
@@ -97,6 +97,7 @@ STATIC_ASSERT(sizeof(struct afs_blkgrp_head) == AFS_SECTOR_BYTE_SIZE,
 
     空闲的entry的首个uint32_t是下一个空闲entry的下标
     如果分区head中空闲entry数目为0,那么这个下标不具有任何含义
+    blkgrp构成的自由链表同理
 */
 struct afs_file_entry
 {
@@ -130,5 +131,11 @@ STATIC_ASSERT(sizeof(struct afs_file_entry) == 12,
     3. 建立dp_head
 */
 bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt);
+
+/* 从磁盘读取一个dp_head */
+void afs_read_dp_head(uint32_t sec, struct afs_dp_head *output);
+
+/* 将一个dp_head写回磁盘 */
+void afs_write_dp_head(uint32_t sec, const struct afs_dp_head *input);
 
 #endif /* TINY_OS_FILESYS_AFS_DP_PHY_H */
