@@ -66,7 +66,7 @@ static void rb_right_rotate(struct rb_tree *T, struct rb_node *n)
 }
 
 /* 把T中的u换成v */
-/*static void rb_transplant(struct rb_tree *T,
+static void rb_transplant(struct rb_tree *T,
                           struct rb_node *u, struct rb_node *v)
 {
     struct rb_node *up = rb_get_parent(u);
@@ -77,7 +77,7 @@ static void rb_right_rotate(struct rb_tree *T, struct rb_node *n)
     else
         up->right = v;
     rb_set_parent(v, up);
-}*/
+}
 
 #define TO_KEY(NODE) \
     ((void*)((char*)(NODE) + key_offset))
@@ -197,9 +197,10 @@ bool rb_insert(struct rb_tree *T, struct rb_node *z,
 void rb_erase(struct rb_tree *T, struct rb_node *z,
               int32_t key_offset, rb_less_func less)
 {
-    /*struct rb_node *y = z, *x;
+    struct rb_node *y = z, *x;
     rb_color y_ori_color = rb_get_color(y);
 
+    // 节点摘除
     if(z->left == &T->nil)
     {
         x = z->right;
@@ -212,6 +213,108 @@ void rb_erase(struct rb_tree *T, struct rb_node *z,
     }
     else
     {
+        y = rb_minimum(&T->nil, z->right);
+        y_ori_color = rb_get_color(y);
+        x = y->right;
 
-    }*/
+        if(rb_get_parent(y) == z)
+            rb_set_parent(x, y);
+        else
+        {
+            rb_transplant(T, y, y->right);
+            y->right = z->right;
+            rb_set_parent(y->right, y);
+        }
+
+        rb_transplant(T, z, y);
+        y->left = z->left;
+        rb_set_parent(y->left, y);
+        rb_set_color(y, rb_get_color(z));
+    }
+
+    if(y_ori_color != RB_COLOR_BLACK)
+        return;
+    
+    // 红黑树性质修复
+    while(x != T->root && rb_is_black(x))
+    {
+        if(x == rb_get_parent(x)->left)
+        {
+            struct rb_node *w = rb_get_parent(x)->right;
+
+            if(rb_is_red(w))
+            {
+                rb_set_black(w);
+                rb_set_red(rb_get_parent(x));
+                rb_left_rotate(T, rb_get_parent(x));
+                w = rb_get_parent(x)->right;
+            }
+
+            if(rb_is_black(w->left) && rb_is_black(w->right))
+            {
+                rb_set_red(w);
+                x = rb_get_parent(x);
+            }
+            else
+            {
+                if(rb_is_black(w->right))
+                {
+                    rb_set_black(w->left);
+                    rb_set_red(w);
+                    rb_right_rotate(T, w);
+                    w = rb_get_parent(x)->right;
+                }
+
+                rb_set_color(w, rb_get_color(rb_get_parent(x)));
+                rb_set_black(rb_get_parent(x));
+                rb_set_black(w->right);
+                rb_left_rotate(T, rb_get_parent(x));
+                x = T->root;
+            }
+        }
+        else
+        {
+            struct rb_node *w = rb_get_parent(x)->left;
+
+            if(rb_is_red(w))
+            {
+                rb_set_black(w);
+                rb_set_red(rb_get_parent(x));
+                rb_right_rotate(T, rb_get_parent(x));
+                w = rb_get_parent(x)->left;
+            }
+
+            if(rb_is_black(w->right) && rb_is_black(w->left))
+            {
+                rb_set_red(w);
+                x = rb_get_parent(x);
+            }
+            else
+            {
+                if(rb_is_black(w->left))
+                {
+                    rb_set_black(w->right);
+                    rb_set_red(w);
+                    rb_left_rotate(T, w);
+                    w = rb_get_parent(x)->left;
+                }
+
+                rb_set_color(w, rb_get_color(rb_get_parent(x)));
+                rb_set_black(rb_get_parent(x));
+                rb_set_black(w->left);
+                rb_right_rotate(T, rb_get_parent(x));
+                x = T->root;
+            }
+        }
+    }
+
+    rb_set_black(x);
+}
+
+struct rb_node *rb_minimum(struct rb_node *nil, struct rb_node *node)
+{
+    struct rb_node *p = node;
+    while(p->left != nil)
+        p = p->left;
+    return p;
 }

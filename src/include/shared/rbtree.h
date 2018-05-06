@@ -46,8 +46,7 @@ bool rb_insert(struct rb_tree *tree, struct rb_node *node,
 void rb_erase(struct rb_tree *tree, struct rb_node *node,
               int32_t key_offset, rb_less_func less);
 
-struct rb_node *rb_minimum(struct rb_node *node, int32_t key_offset,
-                           rb_less_func less);
+struct rb_node *rb_minimum(struct rb_node *nil, struct rb_node *node);
 
 /*
     给定一个结构名和一个成员名，取得 -(成员在结构体内的偏移量)
