@@ -1,4 +1,5 @@
 #include <kernel/asm.h>
+#include <kernel/assert.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
 #include <kernel/console/print.h>
@@ -17,6 +18,7 @@
 #include <lib/conio.h>
 
 #include <shared/keycode.h>
+#include <shared/rbtree.h>
 #include <shared/string.h>
 #include <shared/syscall/common.h>
 #include <shared/syscall/sysmsg.h>
