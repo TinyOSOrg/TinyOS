@@ -80,72 +80,6 @@ void PL0_thread(void)
     exit_thread();
 }
 
-/* 红黑树测试 */
-void PL1_thread_rbtree(void)
-{
-    struct rb_data
-    {
-        int key;
-        struct rb_node node;
-    };
-
-#define KOF RB_MEM_TO_MEM_OFFSET(struct rb_data, node, key)
-
-    bool rb_data_less(const void *L, const void *R)
-    {
-        return *(int*)L < *(int*)R;
-    }
-
-    printf("rbtree test begin\n");
-
-    struct rb_tree T;
-    rb_init(&T);
-
-    int key = 5;
-    struct rb_data *nodes = (struct rb_data*)alloc_ker_page(false);
-    ASSERT_S(rb_find(&T, KOF, &key, rb_data_less) == NULL);
-
-    nodes[0].key = 2;
-    rb_insert(&T, &nodes[0].node, KOF, rb_data_less);
-
-    nodes[1].key = 7;
-    rb_insert(&T, &nodes[1].node, KOF, rb_data_less);
-
-    nodes[2].key = 5;
-    rb_insert(&T, &nodes[2].node, KOF, rb_data_less);
-
-    key = 2;
-    ASSERT_S(rb_find(&T, KOF, &key, rb_data_less) == &nodes[0].node);
-
-    key = 5;
-    ASSERT_S(rb_find(&T, KOF, &key, rb_data_less) == &nodes[2].node);
-
-    key = 3;
-    ASSERT_S(rb_find(&T, KOF, &key, rb_data_less) == NULL);
-
-    rb_erase(&T, &nodes[2].node, KOF, rb_data_less);
-
-    key = 5;
-    ASSERT_S(rb_find(&T, KOF, &key, rb_data_less) == NULL);
-
-    key = 2;
-    ASSERT_S(rb_find(&T, KOF, &key, rb_data_less) == &nodes[0].node);
-
-    rb_erase(&T, &nodes[0].node, KOF, rb_data_less);
-
-    key = 2;
-    ASSERT_S(rb_find(&T, KOF, &key, rb_data_less) == NULL);
-
-    key = 7;
-    ASSERT_S(rb_find(&T, KOF, &key, rb_data_less) == &nodes[1].node);
-
-    free_ker_page(nodes);
-
-    printf("rbtree test end\n");
-
-    exit_thread();
-}
-
 void init_kernel(void)
 {
     /* 中断系统 */
@@ -198,8 +132,6 @@ int main(void)
     set_cursor_row_col(0, 0);
 
     create_process("another process", PL0_thread, true);
-
-    create_process("rbtree process", PL1_thread_rbtree, true);
 
     _enable_intr();
 
