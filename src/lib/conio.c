@@ -87,6 +87,8 @@ void printf(const char *fmt, ...)
                 put_char((char)*(uint32_t*)next_param);
                 next_param += 4;
                 break;
+            case '\0':
+                return;
             }
             ++fmt;
         }

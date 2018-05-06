@@ -2,6 +2,7 @@
 #define TINY_OS_FILESYS_AFS_DP_PHY_H
 
 #include <kernel/assert.h>
+#include <kernel/diskdriver.h>
 
 #include <shared/bool.h>
 #include <shared/intdef.h>
@@ -132,10 +133,11 @@ STATIC_ASSERT(sizeof(struct afs_file_entry) == 12,
 */
 bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt);
 
-/* 从磁盘读取一个dp_head */
-void afs_read_dp_head(uint32_t sec, struct afs_dp_head *output);
+#define afs_read_sector(SEC, DATA)  disk_read(SEC, 1, DATA)
+#define afs_read_block(SEC, DATA)   disk_read(SEC, AFS_BLOCK_SECTOR_COUNT, DATA)
+#define afs_write_sector(SEC, DATA) disk_write(SEC, 1, DATA)
+#define afs_write_block(SEC, DATA)  disk_write(SEC, AFS_BLOCK_SECTOR_COUNT, DATA)
 
-/* 将一个dp_head写回磁盘 */
-void afs_write_dp_head(uint32_t sec, const struct afs_dp_head *input);
+
 
 #endif /* TINY_OS_FILESYS_AFS_DP_PHY_H */

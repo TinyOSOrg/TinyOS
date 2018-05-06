@@ -77,14 +77,7 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
             *(uint32_t*)&entry_buf[ei] = entry_idx + 1;
         }
 
-        struct disk_rw_task task =
-        {
-            .type           = DISK_RW_TASK_TYPE_WRITE,
-            .sector_base    = beg + 1 + es_i,
-            .sector_cnt     = 1,
-            .addr.write_src = entry_buf
-        };
-        disk_rw_raw(&task);
+        afs_write_sector(beg + 1 + es_i, entry_buf);        
     }
 
     afs_free_block_buffer(entry_buf);
@@ -119,14 +112,7 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
         memset((char*)blkgrp_head->blk_btmp, 0xff,
                AFS_BLKGRP_BLOCKS_MAX_COUNT / 8);
         
-        struct disk_rw_task task =
-        {
-            .type           = DISK_RW_TASK_TYPE_WRITE,
-            .sector_base    = blkgrp_sec_beg,
-            .sector_cnt     = 1,
-            .addr.write_src = blkgrp_head
-        };
-        disk_rw_raw(&task);
+        afs_write_sector(blkgrp_sec_beg, blkgrp_head);
         
         blkgrp_sec_beg += AFS_COMPLETE_BLKGRP_SECTOR_COUNT;
     }
@@ -150,44 +136,9 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
     dp_head->fst_avl_blkgrp_idx = 0;
     dp_head->empty_block_cnt = total_empty_blk_cnt;
 
-    struct disk_rw_task dp_head_task =
-    {
-        .type           = DISK_RW_TASK_TYPE_WRITE,
-        .sector_base    = beg,
-        .sector_cnt     = 1,
-        .addr.write_src = dp_head
-    };
-    disk_rw_raw(&dp_head_task);
+    afs_write_sector(beg, dp_head);
 
     afs_free_block_buffer(dp_head);
 
     return true;
-}
-
-void afs_read_dp_head(uint32_t sec, struct afs_dp_head *output)
-{
-    ASSERT_S(output);
-
-    struct disk_rw_task task =
-    {
-        .type          = DISK_RW_TASK_TYPE_READ,
-        .sector_base   = sec,
-        .sector_cnt    = 1,
-        .addr.read_dst = output
-    };
-    disk_rw_raw(&task);
-}
-
-void afs_write_dp_head(uint32_t sec, const struct afs_dp_head *input)
-{
-    ASSERT_S(input);
-
-    struct disk_rw_task task =
-    {
-        .type           = DISK_RW_TASK_TYPE_WRITE,
-        .sector_base    = sec,
-        .sector_cnt     = 1,
-        .addr.write_src = input
-    };
-    disk_rw_raw(&task);
 }

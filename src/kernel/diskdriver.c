@@ -112,7 +112,7 @@ static void disk_intr_handler(void)
     _in_byte_from_port(DISK_PORT_STATUS);
 }
 
-static void disk_read_raw(const struct disk_rw_task *task)
+static void disk_read_raw_impl(const struct disk_rw_task *task)
 {
     normal_task_entry();
 
@@ -128,7 +128,7 @@ static void disk_read_raw(const struct disk_rw_task *task)
     task_exit();
 }
 
-static void disk_write_raw(const struct disk_rw_task *task)
+static void disk_write_raw_impl(const struct disk_rw_task *task)
 {
     normal_task_entry();
 
@@ -159,9 +159,9 @@ void disk_rw_raw(const struct disk_rw_task *task)
     intr_state is = fetch_and_disable_intr();
 
     if(task->type == DISK_RW_TASK_TYPE_READ)
-        disk_read_raw(task);
+        disk_read_raw_impl(task);
     else if(task->type == DISK_RW_TASK_TYPE_WRITE)
-        disk_write_raw(task);
+        disk_write_raw_impl(task);
 
     set_intr_state(is);
 }
