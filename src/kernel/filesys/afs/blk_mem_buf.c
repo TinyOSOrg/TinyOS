@@ -9,7 +9,7 @@ static freelist_handle blk_buf_fl;
 
 static freelist_handle sec_buf_fl;
 
-void init_afs_block_buffer_allocator(void)
+void init_afs_buffer_allocator(void)
 {
     init_freelist(&blk_buf_fl);
     init_freelist(&sec_buf_fl);
