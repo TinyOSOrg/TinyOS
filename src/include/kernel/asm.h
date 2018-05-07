@@ -109,4 +109,13 @@ static inline void _ltr(uint16_t sel)
     asm volatile ("ltr %w0" : : "r" (sel));
 }
 
+static inline uint32_t xchg_u32(volatile uint32_t *p, uint32_t x)  
+{    
+    __asm__ __volatile__("xchgl %0, %1"    
+                       : "=r" (x)    
+                       : "m" (*p), "0" (x)    
+                       : "memory");    
+    return x;    
+}
+
 #endif /* TINY_OS_IO_PORT */
