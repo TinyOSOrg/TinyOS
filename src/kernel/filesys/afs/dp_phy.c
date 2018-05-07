@@ -77,7 +77,7 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
             *(uint32_t*)&entry_buf[ei] = entry_idx + 1;
         }
 
-        afs_write_sector(beg + 1 + es_i, entry_buf);        
+        afs_write_sector_raw(beg + 1 + es_i, entry_buf);
     }
 
     afs_free_block_buffer(entry_buf);
@@ -112,7 +112,7 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
         memset((char*)blkgrp_head->blk_btmp, 0xff,
                AFS_BLKGRP_BLOCKS_MAX_COUNT / 8);
         
-        afs_write_sector(blkgrp_sec_beg, blkgrp_head);
+        afs_write_sector_raw(blkgrp_sec_beg, blkgrp_head);
         
         blkgrp_sec_beg += AFS_COMPLETE_BLKGRP_SECTOR_COUNT;
     }
@@ -136,7 +136,7 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
     dp_head->fst_avl_blkgrp_idx = 0;
     dp_head->empty_block_cnt = total_empty_blk_cnt;
 
-    afs_write_sector(beg, dp_head);
+    afs_write_sector_raw(beg, dp_head);
 
     afs_free_block_buffer(dp_head);
 

@@ -133,11 +133,9 @@ STATIC_ASSERT(sizeof(struct afs_file_entry) == 12,
 */
 bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt);
 
-#define afs_read_sector(SEC, DATA)  disk_read(SEC, 1, DATA)
-#define afs_read_block(SEC, DATA)   disk_read(SEC, AFS_BLOCK_SECTOR_COUNT, DATA)
-#define afs_write_sector(SEC, DATA) disk_write(SEC, 1, DATA)
-#define afs_write_block(SEC, DATA)  disk_write(SEC, AFS_BLOCK_SECTOR_COUNT, DATA)
-
-
+#define afs_read_sector_raw(SEC, DATA)  disk_read(SEC, 1, DATA)
+#define afs_read_block_raw(SEC, DATA)   disk_read(SEC, AFS_BLOCK_SECTOR_COUNT, DATA)
+#define afs_write_sector_raw(SEC, DATA) disk_write(SEC, 1, DATA)
+#define afs_write_block_raw(SEC, DATA)  disk_write(SEC, AFS_BLOCK_SECTOR_COUNT, DATA)
 
 #endif /* TINY_OS_FILESYS_AFS_DP_PHY_H */
