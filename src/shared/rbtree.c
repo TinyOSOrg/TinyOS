@@ -154,17 +154,20 @@ bool rb_insert(struct rb_tree *T, struct rb_node *z,
                 rb_set_red(zpp0);
                 z = zpp0;
             }
-            else if(z == zp0->right)
+            else
             {
-                z = zp0;
-                rb_left_rotate(T, z);
-            }
+                if(z == zp0->right)
+                {
+                    z = zp0;
+                    rb_left_rotate(T, z);
+                }
 
-            struct rb_node *zp1  = rb_get_parent(z);
-            struct rb_node *zpp1 = rb_get_parent(zp1);
-            rb_set_black(zp1);
-            rb_set_red(zpp1);
-            rb_right_rotate(T, zpp1);
+                struct rb_node *zp1  = rb_get_parent(z);
+                struct rb_node *zpp1 = rb_get_parent(zp1);
+                rb_set_black(zp1);
+                rb_set_red(zpp1);
+                rb_right_rotate(T, zpp1);
+            }
         }
         else
         {
@@ -176,17 +179,20 @@ bool rb_insert(struct rb_tree *T, struct rb_node *z,
                 rb_set_red(zpp0);
                 z = zpp0;
             }
-            else if(z == zp0->left)
+            else
             {
-                z = zp0;
-                rb_right_rotate(T, z);
-            }
+                if(z == zp0->left)
+                {
+                    z = zp0;
+                    rb_right_rotate(T, z);
+                }
 
-            struct rb_node *zp1  = rb_get_parent(z);
-            struct rb_node *zpp1 = rb_get_parent(zp1);
-            rb_set_black(zp1);
-            rb_set_red(zpp1);
-            rb_left_rotate(T, zpp1);
+                struct rb_node *zp1  = rb_get_parent(z);
+                struct rb_node *zpp1 = rb_get_parent(zp1);
+                rb_set_black(zp1);
+                rb_set_red(zpp1);
+                rb_left_rotate(T, zpp1);
+            }
         }
     }
     rb_set_black(T->root);
