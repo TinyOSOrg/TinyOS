@@ -38,4 +38,14 @@ void afs_write_to_sector(uint32_t sec, size_t offset, size_t size, const void *d
 */
 void afs_release_all_sector_cache(void);
 
+/* 获取某个扇区的缓存区以用于读取，用完一定要调用对应的end函数 */
+const void *afs_read_from_sector_begin(uint32_t sec);
+
+void afs_read_from_sector_end(uint32_t end);
+
+/* 获取某个扇区的缓存区以用于写入，用完一定要调用对应的end函数 */
+void *afs_write_to_sector_begin(uint32_t sec);
+
+void afs_write_to_sector_end(uint32_t sec);
+
 #endif /* TINY_OS_FILESYS_AFS_SECTOR_CACHE_H */

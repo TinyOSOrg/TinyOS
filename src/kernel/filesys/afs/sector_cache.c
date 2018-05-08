@@ -94,13 +94,13 @@ static bool rb_less(const void *L, const void *R)
 /* 释放一块sec缓存，如果它是脏的，就执行写回操作 */
 static void release_sec_buf(struct LRUnode *node)
 {
-    // disk_write会调度其他线程，所以要先保证list和tree中的node已经被删了
+    // afs_write_sector_raw会调度其他线程，所以要先保证list和tree中的node已经被删了
     erase_from_ilist(&node->list_node);
     rb_erase(&sec_tree, &node->tree_node, KOF, rb_less);
     --sec_list_size;
 
     if(node->dirty)
-        disk_write(node->sec, 1, node->buffer);
+        afs_write_sector_raw(node->sec, node->buffer);
 
     afs_free_sector_buffer(node->buffer);
     free_LRUnode(node);
@@ -205,7 +205,7 @@ RESTART:
         ++sec_list_size;
 
         void *nb = afs_alloc_sector_buffer();
-        disk_read(sec, 1, nb);
+        afs_read_sector_raw(sec, nb);
         nn->buffer = nb;
         ret = nb;
     }
@@ -299,7 +299,7 @@ RESTART:
        ++sec_list_size;
 
        void *nb = afs_alloc_sector_buffer();
-       disk_read(sec, 1, nb);
+       afs_read_sector_raw(sec, nb);
        nn->buffer = nb;
        ret = nb;
     }
@@ -352,4 +352,24 @@ void afs_release_all_sector_cache(void)
     sec_list_size = 0;
 
     set_intr_state(is);
+}
+
+const void *afs_read_from_sector_begin(uint32_t sec)
+{
+    return afs_read_sector_entry(sec);
+}
+
+void afs_read_from_sector_end(uint32_t sec)
+{
+    afs_read_sector_exit(sec);
+}
+
+void *afs_write_to_sector_begin(uint32_t sec)
+{
+    return afs_write_sector_entry(sec);
+}
+
+void afs_write_to_sector_end(uint32_t sec)
+{
+    afs_write_sector_exit(sec);
 }

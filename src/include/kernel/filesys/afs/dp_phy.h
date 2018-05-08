@@ -48,12 +48,15 @@ struct afs_dp_head
     // 首个空闲entry在entry数组中的下标
     uint32_t fst_avl_entry_idx;
 
+    // 首个block group的头部所在扇区号
+    uint32_t fst_blkgrp_sec;
+
     // 还剩多少空闲block
     uint32_t empty_block_cnt;
-    // 首个空闲block group起始扇区号
+    // 首个空闲block group的下标
     uint32_t fst_avl_blkgrp_idx;
 
-    char padding[AFS_SECTOR_BYTE_SIZE - 32];
+    char padding[AFS_SECTOR_BYTE_SIZE - 36];
 };
 
 STATIC_ASSERT(sizeof(struct afs_dp_head) == AFS_SECTOR_BYTE_SIZE,
@@ -137,5 +140,17 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt);
 #define afs_read_block_raw(SEC, DATA)   disk_read(SEC, AFS_BLOCK_SECTOR_COUNT, DATA)
 #define afs_write_sector_raw(SEC, DATA) disk_write(SEC, 1, DATA)
 #define afs_write_block_raw(SEC, DATA)  disk_write(SEC, AFS_BLOCK_SECTOR_COUNT, DATA)
+
+/*
+    分配一个空闲块，返回其首个扇区LBA
+    分配失败时返回0
+*/
+uint32_t afs_alloc_disk_block(struct afs_dp_head *head);
+
+/*
+    释放一个用afs_alloc_disk_block分配的块
+    如果参数并非afs_alloc_disk_block分配，UB
+*/
+void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec);
 
 #endif /* TINY_OS_FILESYS_AFS_DP_PHY_H */

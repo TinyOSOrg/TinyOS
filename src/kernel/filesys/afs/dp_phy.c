@@ -1,13 +1,22 @@
+#include <kernel/asm.h>
 #include <kernel/assert.h>
 #include <kernel/diskdriver.h>
+
 #include <kernel/filesys/afs/blk_mem_buf.h>
 #include <kernel/filesys/afs/dp_phy.h>
+#include <kernel/filesys/afs/sector_cache.h>
 
 #include <shared/string.h>
 
 static inline size_t ceil_int_div(size_t a, size_t b)
 {
     return (a / b) + (a % b ? 1 : 0);
+}
+
+/* 将blkgrp下标转换为其头部描述符所在的扇区号 */
+static inline uint32_t blkgrp_idx_to_head_sec(struct afs_dp_head *dph, uint32_t idx)
+{
+    return dph->fst_blkgrp_sec + idx * AFS_COMPLETE_BLKGRP_SECTOR_COUNT;
 }
 
 bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
@@ -135,10 +144,80 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
 
     dp_head->fst_avl_blkgrp_idx = 0;
     dp_head->empty_block_cnt = total_empty_blk_cnt;
+    dp_head->fst_blkgrp_sec = beg + 1 + entry_sec_cnt;
 
     afs_write_sector_raw(beg, dp_head);
 
     afs_free_block_buffer(dp_head);
 
     return true;
+}
+
+uint32_t afs_alloc_disk_block(struct afs_dp_head *head)
+{
+    if(!head->empty_block_cnt)
+        return 0;
+    
+    // 取得首个有空闲的blkgrp的头部描述符
+    uint32_t fst_avl_blkgrp_head_sec =
+        blkgrp_idx_to_head_sec(head, head->fst_avl_blkgrp_idx);
+    struct afs_blkgrp_head *blkgrp_head = (struct afs_blkgrp_head *)
+        afs_write_to_sector_begin(fst_avl_blkgrp_head_sec);
+    
+    ASSERT_S(blkgrp_head->empty_blk_cnt != 0);
+
+    // 在block group头部位图中搜索一个可用block
+    uint32_t g_idx = 0, l_idx = 0;
+    while(true)
+    {
+        if(blkgrp_head->blk_btmp[g_idx])
+        {
+            l_idx = _find_lowest_nonzero_bit(blkgrp_head->blk_btmp[g_idx]);
+            blkgrp_head->blk_btmp[g_idx] &= ~(1 << l_idx);
+            break;
+        }
+        ++g_idx;
+    }
+    
+    head->empty_block_cnt--;
+    blkgrp_head->empty_blk_cnt--;
+
+    // 如果该blkgrp已经用尽，更新head中的首个可用blkgrp编号
+    if(!blkgrp_head->empty_blk_cnt)
+        head->fst_avl_blkgrp_idx = blkgrp_head->next_avl_blkgrp;
+
+    afs_write_to_sector_end(fst_avl_blkgrp_head_sec);
+
+    return fst_avl_blkgrp_head_sec + 1 +
+        AFS_BLOCK_SECTOR_COUNT * (32 * g_idx + l_idx);
+}
+
+void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec)
+{
+    // 计算blk_sec处于head中的哪个blkgrp中
+    uint32_t blkgrp_idx = (blk_sec - head->fst_blkgrp_sec)
+                        / AFS_COMPLETE_BLKGRP_SECTOR_COUNT;
+    
+    // 取得对应blkgrp的头部描述符
+    uint32_t blkgrp_head_sec = blkgrp_idx_to_head_sec(head, blkgrp_idx);
+    struct afs_blkgrp_head *blkgrp_head = (struct afs_blkgrp_head *)
+        afs_write_to_sector_begin(blkgrp_head_sec);
+    
+    // 把blk_sec对应的位图位置1
+    uint32_t l_offset = (blk_sec - (blkgrp_head_sec + 1))
+                      / AFS_BLOCK_SECTOR_COUNT;
+    ASSERT_S(l_offset < blkgrp_head->all_blk_cnt);
+    blkgrp_head->blk_btmp[l_offset >> 5] |= (1 << (l_offset & 0b11111));
+
+    head->empty_block_cnt++;
+    blkgrp_head->empty_blk_cnt++;
+
+    // 检查是否需要把这个blkgrp重新链入空闲blkgrp链表中
+    if(blkgrp_head->empty_blk_cnt == 1)
+    {
+        blkgrp_head->next_avl_blkgrp = head->fst_avl_blkgrp_idx;
+        head->fst_avl_blkgrp_idx = blkgrp_idx;
+    }
+
+    afs_write_to_sector_end(blkgrp_head_sec);
 }

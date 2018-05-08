@@ -62,7 +62,8 @@ void PL0_thread(void)
 {
     printf("hahaha process, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
-    syscall_param1(SYSCALL_SYSMSG_OPERATION, SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG);
+    syscall_param1(SYSCALL_SYSMSG_OPERATION,
+                   SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG);
 
     char buf[512];
     for(int i = 0;i != 40; ++i)
@@ -88,13 +89,14 @@ void PL0_thread(void)
                        SYSMSG_SYSCALL_FUNCTION_BLOCK_ONTO_SYSMSG);
         struct sysmsg msg;
         while(syscall_param3(SYSCALL_SYSMSG_OPERATION,
-                          SYSMSG_SYSCALL_FUNCTION_PEEK_MSG,
-                          SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE,
-                          &msg))
+                             SYSMSG_SYSCALL_FUNCTION_PEEK_MSG,
+                             SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE,
+                             &msg))
         {
             if(msg.type == SYSMSG_TYPE_CHAR)
             {
-                struct kbchar_msg_struct *chmsg = (struct kbchar_msg_struct*)&msg;
+                struct kbchar_msg_struct *chmsg =
+                    (struct kbchar_msg_struct*)&msg;
                 put_char(chmsg->ch);
             }
         }
@@ -160,7 +162,8 @@ int main(void)
 
     _enable_intr();
 
-    printf("main process, pid = %u\n", syscall_param0(SYSCALL_GET_PROCESS_ID));
+    printf("main process, pid = %u\n",
+        syscall_param0(SYSCALL_GET_PROCESS_ID));
 
     char buf[512];
     for(int i = 0;i != 40; ++i)
@@ -168,8 +171,6 @@ int main(void)
         memset(buf, i, 512);
         afs_write_to_sector(320 + i, 0, 512, buf);
     }
-
-    //afs_release_all_sector_cache();
 
     for(int i = 0;i != 40; ++i)
     {
