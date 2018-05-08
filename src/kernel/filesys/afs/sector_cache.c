@@ -1,11 +1,12 @@
 #include <kernel/assert.h>
 #include <kernel/diskdriver.h>
-#include <kernel/filesys/afs/blk_mem_buf.h>
-#include <kernel/filesys/afs/disk_cache.h>
-#include <kernel/filesys/afs/dp_phy.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
 #include <kernel/process/spinlock.h>
+
+#include <kernel/filesys/afs/blk_mem_buf.h>
+#include <kernel/filesys/afs/dp_phy.h>
+#include <kernel/filesys/afs/sector_cache.h>
 
 #include <shared/freelist.h>
 #include <shared/ptrlist.h>
@@ -38,10 +39,6 @@ struct LRUnode
 static ilist sec_list;
 static size_t sec_list_size;
 static struct rb_tree sec_tree;
-
-/* block缓存记录，linked map，节点类型为LRUnode */
-static ilist blk_list;
-static struct rb_tree blk_tree;
 
 /* 空闲LRUnode的自由链表 */
 static freelist_handle empty_LRUnodes;
@@ -77,14 +74,11 @@ static void free_LRUnode(struct LRUnode *node)
     spinlock_unlock(&empty_LRUnodes_lock);
 }
 
-void init_afs_disk_cache(void)
+void init_afs_sector_cache(void)
 {
     init_ilist(&sec_list);
     sec_list_size = 0;
     rb_init(&sec_tree);
-
-    init_ilist(&blk_list);
-    rb_init(&blk_tree);
 
     init_freelist(&empty_LRUnodes);
     init_spinlock(&empty_LRUnodes_lock);
@@ -100,10 +94,14 @@ static bool rb_less(const void *L, const void *R)
 /* 释放一块sec缓存，如果它是脏的，就执行写回操作 */
 static void release_sec_buf(struct LRUnode *node)
 {
-    if(node->dirty)
-        disk_write(node->sec, 1, node->buffer);
+    // disk_write会调度其他线程，所以要先保证list和tree中的node已经被删了
     erase_from_ilist(&node->list_node);
     rb_erase(&sec_tree, &node->tree_node, KOF, rb_less);
+    --sec_list_size;
+
+    if(node->dirty)
+        disk_write(node->sec, 1, node->buffer);
+
     afs_free_sector_buffer(node->buffer);
     free_LRUnode(node);
 }
@@ -116,6 +114,8 @@ static void release_sec_buf(struct LRUnode *node)
 */
 static void try_release_redundant_secs(void)
 {
+RESTART:
+
     if(sec_list_size <= MAX_SEC_LRU_SIZE)
         return;
 
@@ -135,7 +135,15 @@ static void try_release_redundant_secs(void)
         if(node->reader_count || node->writer_lock)
             node->release_flag = 1;
         else
+        {
             release_sec_buf(node);
+
+            // IMPROVE
+            // release_sec_buf涉及到其他线程的调度，可能导致目前对list的遍历失效
+            // 所以一旦真正释放了一个块，就重启对list的遍历
+            // 的确慢了点，以后想办法优化
+            goto RESTART;
+        }
     }
 }
 
@@ -160,7 +168,14 @@ RESTART:
     {
         struct LRUnode *node = GET_STRUCT_FROM_MEMBER(
             struct LRUnode, tree_node, rbn);
-        if(node->writer_lock)
+
+        // 更新LRU，让这块缓存别被释放了
+        erase_from_ilist(&node->list_node);
+        push_back_ilist(&sec_list, &node->list_node);
+        node->release_flag = 0;
+
+        // buffer为NULL说明有别的线程创建了这个扇区记录，正在读磁盘，故也应该让出CPU
+        if(node->writer_lock || !node->buffer)
         {
             yield_CPU();
             goto RESTART;
@@ -168,20 +183,18 @@ RESTART:
         else
         {
             node->reader_count++;
-            erase_from_ilist(&node->list_node);
-            push_back_ilist(&sec_list, &node->list_node);
-            node->release_flag = 0;
             ret = node->buffer;
         }
     }
     else
     {
-        void *nb = afs_alloc_sector_buffer();
-        disk_read(sec, 1, nb);
+        // 注意到这里先把nn->buffer置为空
+        // 等到相关数据结构(list, tree, node)都更新完成了才真正从磁盘读数据
+        // 这是因为读磁盘时会调度其他线程，必须保证数据结构完整性
 
         struct LRUnode *nn = alloc_LRUnode();
-        nn->sec = sec;
-        nn->buffer = nb;
+        nn->sec          = sec;
+        nn->buffer       = NULL;
         nn->reader_count = 1;
         nn->writer_lock  = 0;
         nn->release_flag = 0;
@@ -191,7 +204,10 @@ RESTART:
         push_back_ilist(&sec_list, &nn->list_node);
         ++sec_list_size;
 
-        ret = nn->buffer;
+        void *nb = afs_alloc_sector_buffer();
+        disk_read(sec, 1, nb);
+        nn->buffer = nb;
+        ret = nb;
     }
 
     try_release_redundant_secs();
@@ -228,4 +244,97 @@ void afs_read_from_sector(uint32_t sec, size_t offset, size_t size, void *data)
     memcpy((char*)data, (char*)buf + offset, size);
 
     afs_read_sector_exit(sec);
+}
+
+/* 开始写一个扇区
+    在红黑树中查找目标
+        找到了，有人在读/写，yieldCPU等会儿再试
+               没人用，置写标志位，开始使用
+        没找到，从磁盘读进来加入LRU管理，开始使用
+*/
+static void *afs_write_sector_entry(uint32_t sec)
+{
+    intr_state is = fetch_and_disable_intr();
+    void *ret = NULL;
+    struct rb_node *rbn = NULL;
+
+RESTART:
+
+    rbn = rb_find(&sec_tree, KOF, &sec, rb_less);
+
+    if(rbn)
+    {
+        struct LRUnode *node = GET_STRUCT_FROM_MEMBER(
+            struct LRUnode, tree_node, rbn);
+
+        // 更新LRU
+        erase_from_ilist(&node->list_node);
+        push_back_ilist(&sec_list, &node->list_node);
+        node->release_flag = 0;
+
+        if(node->reader_count || node->writer_lock || !node->buffer)
+        {
+            yield_CPU();
+            goto RESTART;
+        }
+        else
+        {
+            node->writer_lock  = 1;
+            node->dirty        = 1;
+            ret = node->buffer;
+        }
+    }
+    else
+    {
+       struct LRUnode *nn = alloc_LRUnode();
+       nn->sec          = sec;
+       nn->buffer       = NULL;
+       nn->reader_count = 0;
+       nn->writer_lock  = 1;
+       nn->release_flag = 0;
+       nn->dirty        = 1;
+
+       rb_insert(&sec_tree, &nn->tree_node, KOF, rb_less);
+       push_back_ilist(&sec_list, &nn->list_node);
+       ++sec_list_size;
+
+       void *nb = afs_alloc_sector_buffer();
+       disk_read(sec, 1, nb);
+       nn->buffer = nb;
+       ret = nb;
+    }
+
+    try_release_redundant_secs();
+    set_intr_state(is);
+    return ret;
+}
+
+static void afs_write_sector_exit(uint32_t sec)
+{
+    intr_state is = fetch_and_disable_intr();
+
+    // 一定能在红黑树中找到这个扇区的缓存
+    struct rb_node *rbn = rb_find(&sec_tree, KOF, &sec, rb_less);
+    ASSERT_S(rbn != NULL);
+    struct LRUnode *node = GET_STRUCT_FROM_MEMBER(
+            struct LRUnode, tree_node, rbn);
+    ASSERT_S(node->writer_lock && !node->reader_count);
+
+    // 自己肯定是唯一的操作者，查看这块缓存的释放标志
+    node->writer_lock = 0;
+    if(node->release_flag)
+        release_sec_buf(node);
+
+    set_intr_state(is);
+}
+
+void afs_write_to_sector(uint32_t sec, size_t offset, size_t size, const void *data)
+{
+   ASSERT_S(size > 0 && offset + size < AFS_SECTOR_BYTE_SIZE);
+
+   void *buf = afs_write_sector_entry(sec);
+
+   memcpy((char*)buf + offset, (char*)data, size);
+
+   afs_write_sector_exit(sec);
 }
