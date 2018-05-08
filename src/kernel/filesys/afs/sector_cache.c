@@ -13,8 +13,6 @@
 #include <shared/rbtree.h>
 #include <shared/string.h>
 
-#include <lib/conio.h>
-
 struct LRUnode
 {
     // linked map结构
@@ -203,7 +201,6 @@ RESTART:
         nn->dirty        = 0;
 
         rb_insert(&sec_tree, &nn->tree_node, KOF, rb_less);
-        printf("%u, ", &nn->tree_node);
         push_back_ilist(&sec_list, &nn->list_node);
         ++sec_list_size;
 
@@ -225,7 +222,6 @@ static void afs_read_sector_exit(uint32_t sec)
 
     // 一定能在红黑树中找到这个扇区的缓存
     struct rb_node *rbn = rb_find(&sec_tree, KOF, &sec, rb_less);
-    printf("%u, ", rbn);
     ASSERT_S(rbn != NULL);
     struct LRUnode *node = GET_STRUCT_FROM_MEMBER(
             struct LRUnode, tree_node, rbn);        

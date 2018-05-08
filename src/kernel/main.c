@@ -63,6 +63,25 @@ void PL0_thread(void)
     printf("hahaha process, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     syscall_param1(SYSCALL_SYSMSG_OPERATION, SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG);
+
+    char buf[512];
+    for(int i = 0;i != 40; ++i)
+    {
+        printf("Fuck %u ", i);
+        memset(buf, i, 512);
+        afs_write_to_sector(390 + i, 0, 512, buf);
+        printf("Shit %u ", i);
+    }
+
+    printf("Shit\n");
+
+    for(int i = 0;i != 40; ++i)
+    {
+        printf("suck%u: ", i);
+        afs_read_from_sector(390 + i, 0, 512, buf);
+        printf("%u ", buf[10]);
+    }
+
     while(1)
     {
         syscall_param1(SYSCALL_SYSMSG_OPERATION,
@@ -150,13 +169,13 @@ int main(void)
         afs_write_to_sector(320 + i, 0, 512, buf);
     }
 
-    afs_release_all_sector_cache();
+    //afs_release_all_sector_cache();
 
     for(int i = 0;i != 40; ++i)
     {
-        printf("r%u: ", i);
+        printf("r%u: ", 320 + i);
         afs_read_from_sector(320 + i, 256, 20, buf);
-        printf("%u \n", (uint32_t)buf[10]);
+        printf("%u, ", (uint32_t)buf[10]);
     }
 
     while(1)
