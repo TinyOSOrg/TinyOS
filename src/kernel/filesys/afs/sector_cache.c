@@ -13,6 +13,8 @@
 #include <shared/rbtree.h>
 #include <shared/string.h>
 
+#include <lib/conio.h>
+
 struct LRUnode
 {
     // linked map结构
@@ -106,7 +108,7 @@ static void release_sec_buf(struct LRUnode *node)
     free_LRUnode(node);
 }
 
-#define MAX_SEC_LRU_SIZE 16
+#define MAX_SEC_LRU_SIZE 32
 
 /*
     尝试释放超出数量阈值的、最近没怎么用过的sec缓存
@@ -201,6 +203,7 @@ RESTART:
         nn->dirty        = 0;
 
         rb_insert(&sec_tree, &nn->tree_node, KOF, rb_less);
+        printf("%u, ", &nn->tree_node);
         push_back_ilist(&sec_list, &nn->list_node);
         ++sec_list_size;
 
@@ -222,6 +225,7 @@ static void afs_read_sector_exit(uint32_t sec)
 
     // 一定能在红黑树中找到这个扇区的缓存
     struct rb_node *rbn = rb_find(&sec_tree, KOF, &sec, rb_less);
+    printf("%u, ", rbn);
     ASSERT_S(rbn != NULL);
     struct LRUnode *node = GET_STRUCT_FROM_MEMBER(
             struct LRUnode, tree_node, rbn);        
@@ -237,7 +241,7 @@ static void afs_read_sector_exit(uint32_t sec)
 
 void afs_read_from_sector(uint32_t sec, size_t offset, size_t size, void *data)
 {
-    ASSERT_S(size > 0 && offset + size < AFS_SECTOR_BYTE_SIZE);
+    ASSERT_S(size > 0 && offset + size <= AFS_SECTOR_BYTE_SIZE);
 
     void *buf = afs_read_sector_entry(sec);
 
@@ -330,11 +334,26 @@ static void afs_write_sector_exit(uint32_t sec)
 
 void afs_write_to_sector(uint32_t sec, size_t offset, size_t size, const void *data)
 {
-   ASSERT_S(size > 0 && offset + size < AFS_SECTOR_BYTE_SIZE);
+   ASSERT_S(size > 0 && offset + size <= AFS_SECTOR_BYTE_SIZE);
 
    void *buf = afs_write_sector_entry(sec);
 
    memcpy((char*)buf + offset, (char*)data, size);
 
    afs_write_sector_exit(sec);
+}
+
+void afs_release_all_sector_cache(void)
+{
+    intr_state is = fetch_and_disable_intr();
+
+    while(!is_ilist_empty(&sec_list))
+    {
+        struct ilist_node *in = pop_front_ilist(&sec_list);
+        release_sec_buf(GET_STRUCT_FROM_MEMBER(
+            struct LRUnode, list_node, in));
+    }
+    sec_list_size = 0;
+
+    set_intr_state(is);
 }

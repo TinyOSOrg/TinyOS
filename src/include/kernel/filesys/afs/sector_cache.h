@@ -31,4 +31,11 @@ void afs_read_from_sector(uint32_t sec, size_t offset, size_t size, void *data);
 
 void afs_write_to_sector(uint32_t sec, size_t offset, size_t size, const void *data);
 
+/*
+    释放所有扇区缓存
+    比如关机的时候/销毁文件系统的时候用
+    调用时，文件系统须保证没有别的线程会调用afs_read/write_from/to_sector函数
+*/
+void afs_release_all_sector_cache(void);
+
 #endif /* TINY_OS_FILESYS_AFS_SECTOR_CACHE_H */

@@ -5,8 +5,6 @@
 #include <kernel/console/print.h>
 #include <kernel/console/console.h>
 #include <kernel/diskdriver.h>
-#include <kernel/filesys/afs/afs.h>
-#include <kernel/filesys/dpt.h>
 #include <kernel/kbdriver.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/process.h>
@@ -14,6 +12,10 @@
 #include <kernel/syscall.h>
 #include <kernel/sysmsg/sysmsg_syscall.h>
 #include <kernel/sysmsg/sysmsg.h>
+
+#include <kernel/filesys/afs/afs.h>
+#include <kernel/filesys/dpt.h>
+#include <kernel/filesys/afs/sector_cache.h>
 
 #include <lib/conio.h>
 
@@ -140,6 +142,22 @@ int main(void)
     _enable_intr();
 
     printf("main process, pid = %u\n", syscall_param0(SYSCALL_GET_PROCESS_ID));
+
+    char buf[512];
+    for(int i = 0;i != 40; ++i)
+    {
+        memset(buf, i, 512);
+        afs_write_to_sector(320 + i, 0, 512, buf);
+    }
+
+    afs_release_all_sector_cache();
+
+    for(int i = 0;i != 40; ++i)
+    {
+        printf("r%u: ", i);
+        afs_read_from_sector(320 + i, 256, 20, buf);
+        printf("%u \n", (uint32_t)buf[10]);
+    }
 
     while(1)
     {
