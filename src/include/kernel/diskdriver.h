@@ -58,5 +58,5 @@ void disk_rw_raw(const struct disk_rw_task *task);
         }; \
         disk_rw_raw(&task); \
     } while(0)
-    
+
 #endif /* TINY_OS_DISK_DRIVER_H */
