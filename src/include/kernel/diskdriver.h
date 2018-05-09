@@ -35,4 +35,28 @@ void init_disk_driver(void);
 */
 void disk_rw_raw(const struct disk_rw_task *task);
 
+#define disk_read(SEC, CNT, DATA) \
+    do { \
+        struct disk_rw_task task = \
+        { \
+            .type          = DISK_RW_TASK_TYPE_READ, \
+            .sector_base   = (SEC), \
+            .sector_cnt    = (CNT), \
+            .addr.read_dst = (DATA) \
+        }; \
+        disk_rw_raw(&task); \
+    } while(0)
+
+#define disk_write(SEC, CNT, DATA) \
+    do { \
+        struct disk_rw_task task = \
+        { \
+            .type           = DISK_RW_TASK_TYPE_WRITE, \
+            .sector_base    = (SEC), \
+            .sector_cnt     = (CNT), \
+            .addr.write_src = (DATA) \
+        }; \
+        disk_rw_raw(&task); \
+    } while(0)
+
 #endif /* TINY_OS_DISK_DRIVER_H */
