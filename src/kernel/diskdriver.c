@@ -31,14 +31,7 @@
 /* 普通任务阻塞线程队列 */
 static ilist blocked_normal_tasks;
 
-/* 缺页中断阻塞线程队列 */
-static ilist blocked_pagefault_tasks;
-
-/*
-    硬盘忙阻塞线程
-    其实这里至多有一个线程，但是为了兼容TCB的blocked内嵌节点，只好做个链表了
-*/
-static ilist blocked_busy_tasks;
+static struct TCB *busy_task;
 
 static inline bool wait_for_ready(void)
 {
@@ -69,29 +62,20 @@ static void disk_cmd(const struct disk_rw_task *task)
 
 static void normal_task_entry(void)
 {
-    while(!is_ilist_empty(&blocked_busy_tasks))
+    while(busy_task)
     {
         push_back_ilist(&blocked_normal_tasks,
                         &get_cur_TCB()->ready_block_threads_node);
         block_cur_thread();
     }
-    push_back_ilist(&blocked_busy_tasks,
-                    &get_cur_TCB()->ready_block_threads_node);
+    busy_task = get_cur_TCB();
 }
 
 static void task_exit(void)
 {
-    // assertion: blocked_busy_task.first is this_thread.ready_block_threads_node
-    pop_front_ilist(&blocked_busy_tasks);
+    busy_task = NULL;
 
-    if(!is_ilist_empty(&blocked_pagefault_tasks))
-    {
-        struct ilist_node *next = pop_front_ilist(&blocked_pagefault_tasks);
-        struct TCB *tcb = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
-                                                 next);
-        awake_thread(tcb);
-    }
-    else if(!is_ilist_empty(&blocked_normal_tasks))
+    if(!is_ilist_empty(&blocked_normal_tasks))
     {
         struct ilist_node *next = pop_front_ilist(&blocked_normal_tasks);
         struct TCB *tcb = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
@@ -102,17 +86,12 @@ static void task_exit(void)
 
 static void disk_intr_handler(void)
 {
-    if(!is_ilist_empty(&blocked_busy_tasks))
-    {
-        struct ilist_node *n = pop_front_ilist(&blocked_busy_tasks);
-        struct TCB *tcb = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
-                                                 n);
-        awake_thread(tcb);
-    }
+    if(busy_task)
+        awake_thread(busy_task);
     _in_byte_from_port(DISK_PORT_STATUS);
 }
 
-static void disk_read_raw(const struct disk_rw_task *task)
+static void disk_read_raw_impl(const struct disk_rw_task *task)
 {
     normal_task_entry();
 
@@ -128,7 +107,7 @@ static void disk_read_raw(const struct disk_rw_task *task)
     task_exit();
 }
 
-static void disk_write_raw(const struct disk_rw_task *task)
+static void disk_write_raw_impl(const struct disk_rw_task *task)
 {
     normal_task_entry();
 
@@ -147,9 +126,9 @@ static void disk_write_raw(const struct disk_rw_task *task)
 
 void init_disk_driver(void)
 {
-    init_ilist(&blocked_busy_tasks);
+    busy_task = NULL;
+
     init_ilist(&blocked_normal_tasks);
-    init_ilist(&blocked_pagefault_tasks);
 
     set_intr_function(INTR_NUMBER_DISK, disk_intr_handler);
 }
@@ -159,9 +138,9 @@ void disk_rw_raw(const struct disk_rw_task *task)
     intr_state is = fetch_and_disable_intr();
 
     if(task->type == DISK_RW_TASK_TYPE_READ)
-        disk_read_raw(task);
+        disk_read_raw_impl(task);
     else if(task->type == DISK_RW_TASK_TYPE_WRITE)
-        disk_write_raw(task);
+        disk_write_raw_impl(task);
 
     set_intr_state(is);
 }
