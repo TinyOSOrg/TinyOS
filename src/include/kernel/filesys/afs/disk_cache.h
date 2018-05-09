@@ -29,7 +29,7 @@
     块则没有互斥，因为块读写用于文件操作，应该由文件系统负责互斥
 */
 
-void init_afs_sector_cache(void);
+void init_afs_disk_cache(void);
 
 void afs_read_from_sector(uint32_t sec, size_t offset, size_t size, void *data);
 

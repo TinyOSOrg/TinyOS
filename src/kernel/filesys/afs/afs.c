@@ -6,5 +6,5 @@
 void init_afs(void)
 {
     init_afs_buffer_allocator();
-    init_afs_sector_cache();
+    init_afs_disk_cache();
 }
