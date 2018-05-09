@@ -11,7 +11,7 @@ static void read_partition_table(void);
 void formatting_fs(PartitionTableItem* item_ptr)
 {
     //开始进行格式化文件系统的操作
-
+    
 }
 
 void init_fs(void)
