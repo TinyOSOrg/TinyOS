@@ -15,7 +15,7 @@
 
 #include <kernel/filesys/afs/afs.h>
 #include <kernel/filesys/dpt.h>
-#include <kernel/filesys/afs/sector_cache.h>
+#include <kernel/filesys/afs/disk_cache.h>
 
 #include <lib/conio.h>
 

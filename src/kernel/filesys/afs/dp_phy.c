@@ -4,7 +4,7 @@
 
 #include <kernel/filesys/afs/blk_mem_buf.h>
 #include <kernel/filesys/afs/dp_phy.h>
-#include <kernel/filesys/afs/sector_cache.h>
+#include <kernel/filesys/afs/disk_cache.h>
 
 #include <shared/string.h>
 

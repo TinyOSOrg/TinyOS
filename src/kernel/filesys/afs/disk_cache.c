@@ -6,7 +6,7 @@
 
 #include <kernel/filesys/afs/blk_mem_buf.h>
 #include <kernel/filesys/afs/dp_phy.h>
-#include <kernel/filesys/afs/sector_cache.h>
+#include <kernel/filesys/afs/disk_cache.h>
 
 #include <shared/freelist.h>
 #include <shared/ptrlist.h>
@@ -31,14 +31,6 @@ struct LRUnode
     // 脏位
     unsigned int dirty        : 1;
 };
-
-/*
-    扇区缓存记录，linked map，节点类型为LRUnode
-    list的back为最新的，front为最旧的
-*/
-static ilist sec_list;
-static size_t sec_list_size;
-static struct rb_tree sec_tree;
 
 /* 空闲LRUnode的自由链表 */
 static freelist_handle empty_LRUnodes;
@@ -73,6 +65,16 @@ static void free_LRUnode(struct LRUnode *node)
     add_freelist(&empty_LRUnodes, node);
     spinlock_unlock(&empty_LRUnodes_lock);
 }
+
+//=========================== 扇区缓存管理 ===========================
+
+/*
+    扇区缓存记录，linked map，节点类型为LRUnode
+    list的back为最新的，front为最旧的
+*/
+static ilist sec_list;
+static size_t sec_list_size;
+static struct rb_tree sec_tree;
 
 void init_afs_sector_cache(void)
 {
@@ -373,3 +375,5 @@ void afs_write_to_sector_end(uint32_t sec)
 {
     afs_write_sector_exit(sec);
 }
+
+//=========================== block缓存管理 ===========================
