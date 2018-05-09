@@ -221,3 +221,72 @@ void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec)
 
     afs_write_to_sector_end(blkgrp_head_sec);
 }
+
+#define ENTRY_INDEX_TO_GLOBAL_LOCAL_INDEX(IDX, GBL, LCL) \
+    do { \
+        (GBL) = (IDX) / AFS_SECTOR_MAX_FILE_ENTRY_COUNT; \
+        (LCL) = (IDX) % AFS_SECTOR_MAX_FILE_ENTRY_COUNT; \
+    } while(0)
+
+uint32_t afs_alloc_file_entry(struct afs_dp_head *head,
+                              const struct afs_file_entry *init_data)
+{
+    ASSERT_S(head && head->empty_entry_cnt != 0 && init_data);
+
+    // 计算首个空闲entry所处的扇区号及扇区内偏移
+    uint32_t ret = head->fst_avl_entry_idx;
+    uint32_t gbl, lcl;
+    ENTRY_INDEX_TO_GLOBAL_LOCAL_INDEX(ret, gbl, lcl);
+    uint32_t sec = head->dp_sec_beg + 1 + gbl;
+
+    struct afs_file_entry *entrys = (struct afs_file_entry*)
+        afs_write_to_sector_begin(sec);
+
+    head->empty_entry_cnt--;
+    head->fst_avl_entry_idx = *(uint32_t*)&entrys[lcl];
+
+    memcpy((char*)&entrys[lcl], (const char *)init_data,
+           sizeof(struct afs_file_entry));
+
+    afs_write_to_sector_end(sec);
+
+    return ret;
+}
+
+void afs_read_file_entry(struct afs_dp_head *head, uint32_t idx,
+                         struct afs_file_entry *data)
+{
+    uint32_t gbl, lcl, sec;
+    ENTRY_INDEX_TO_GLOBAL_LOCAL_INDEX(idx, gbl, lcl);
+    sec = head->dp_sec_beg + 1 + gbl;
+
+    afs_read_from_sector(sec, sizeof(struct afs_file_entry) * lcl,
+                         sizeof(struct afs_file_entry), data);
+}
+
+void afs_modify_file_entry(struct afs_dp_head *head, uint32_t idx,
+                           const struct afs_file_entry *data)
+{
+    uint32_t gbl, lcl, sec;
+    ENTRY_INDEX_TO_GLOBAL_LOCAL_INDEX(idx, gbl, lcl);
+    sec = head->dp_sec_beg + 1 + gbl;
+
+    afs_write_to_sector(sec, sizeof(struct afs_file_entry) * lcl,
+                        sizeof(struct afs_file_entry), data);
+}
+
+void afs_free_file_entry(struct afs_dp_head *head, uint32_t idx)
+{
+    uint32_t gbl, lcl, sec;
+    ENTRY_INDEX_TO_GLOBAL_LOCAL_INDEX(idx, gbl, lcl);
+    sec = head->dp_sec_beg + 1 + gbl;
+
+    struct afs_file_entry *entrys = (struct afs_file_entry*)
+        afs_write_to_sector_begin(sec);
+    
+    *(uint32_t*)&entrys[lcl] = head->fst_avl_entry_idx;
+    head->fst_avl_entry_idx = idx;
+    head->empty_entry_cnt++;
+
+    afs_write_to_sector_end(sec);
+}

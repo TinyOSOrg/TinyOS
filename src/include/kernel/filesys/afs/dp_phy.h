@@ -153,4 +153,32 @@ uint32_t afs_alloc_disk_block(struct afs_dp_head *head);
 */
 void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec);
 
+/*
+    分配一个新的文件入口并返回其在entry数组中的下标
+    必须提供初始化数据
+    若head中所有的entry已用完，UB
+*/
+uint32_t afs_alloc_file_entry(struct afs_dp_head *head,
+                              const struct afs_file_entry *init_data);
+
+/*
+    读取一个file_entry的数据
+    若目标并非由afs_alloc_file_entry分配，UB
+*/
+void afs_read_file_entry(struct afs_dp_head *head, uint32_t idx,
+                         struct afs_file_entry *data);
+
+/*
+    覆写一个已经存在的file_entry
+    若目标并非由afs_alloc_file_entry分配，UB
+*/
+void afs_modify_file_entry(struct afs_dp_head *head, uint32_t idx,
+                           const struct afs_file_entry *data);
+
+/*
+    释放一个已经存在的file_entry
+    若目标并非由afs_alloc_file_entry分配，UB
+*/
+void afs_free_file_entry(struct afs_dp_head *head, uint32_t idx);
+
 #endif /* TINY_OS_FILESYS_AFS_DP_PHY_H */
