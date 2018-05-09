@@ -31,9 +31,6 @@
 /* 普通任务阻塞线程队列 */
 static ilist blocked_normal_tasks;
 
-/* 缺页中断阻塞线程队列 */
-static ilist blocked_pagefault_tasks;
-
 static struct TCB *busy_task;
 
 static inline bool wait_for_ready(void)
@@ -78,14 +75,7 @@ static void task_exit(void)
 {
     busy_task = NULL;
 
-    if(!is_ilist_empty(&blocked_pagefault_tasks))
-    {
-        struct ilist_node *next = pop_front_ilist(&blocked_pagefault_tasks);
-        struct TCB *tcb = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
-                                                 next);
-        awake_thread(tcb);
-    }
-    else if(!is_ilist_empty(&blocked_normal_tasks))
+    if(!is_ilist_empty(&blocked_normal_tasks))
     {
         struct ilist_node *next = pop_front_ilist(&blocked_normal_tasks);
         struct TCB *tcb = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
@@ -139,7 +129,6 @@ void init_disk_driver(void)
     busy_task = NULL;
 
     init_ilist(&blocked_normal_tasks);
-    init_ilist(&blocked_pagefault_tasks);
 
     set_intr_function(INTR_NUMBER_DISK, disk_intr_handler);
 }

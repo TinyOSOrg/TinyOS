@@ -35,12 +35,6 @@ void init_disk_driver(void);
 */
 void disk_rw_raw(const struct disk_rw_task *task);
 
-/*
-    执行一个无缓冲缺页读写
-    优先级比一般的读写任务要高
-*/
-void disk_pfrw_raw(const struct disk_rw_task *task);
-
 #define disk_read(SEC, CNT, DATA) \
     do { \
         struct disk_rw_task task = \
@@ -64,5 +58,5 @@ void disk_pfrw_raw(const struct disk_rw_task *task);
         }; \
         disk_rw_raw(&task); \
     } while(0)
-
+    
 #endif /* TINY_OS_DISK_DRIVER_H */
