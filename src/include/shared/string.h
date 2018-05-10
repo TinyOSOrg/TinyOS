@@ -17,4 +17,6 @@ void memset(char *dst, uint8_t val, size_t byte_size);
 
 void memcpy(char *dst, const char *src, size_t byte_size);
 
+uint32_t strhash(const char *str);
+
 #endif /* TINYOS_LIB_STRING_H */

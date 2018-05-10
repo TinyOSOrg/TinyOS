@@ -3,6 +3,7 @@
 
 #include <kernel/assert.h>
 #include <kernel/diskdriver.h>
+#include <kernel/process/semaphore.h>
 
 #include <shared/bool.h>
 #include <shared/intdef.h>
@@ -56,8 +57,9 @@ struct afs_dp_head
     // 首个空闲block group的下标
     uint32_t fst_avl_blkgrp_idx;
 
-    char padding[AFS_SECTOR_BYTE_SIZE - 36];
-};
+    // 分区头部锁
+    struct semaphore lock;
+} __attribute__((aligned (512)));
 
 STATIC_ASSERT(sizeof(struct afs_dp_head) == AFS_SECTOR_BYTE_SIZE,
               invalid_size_of_afs_dp_head);
@@ -113,8 +115,6 @@ struct afs_file_entry
     uint32_t byte_size;
 
     // 文件flags
-    unsigned int rlock : 16; // 读取锁
-    unsigned int wlock : 1;  // 写入锁
     unsigned int index : 1;  // 索引标志
     unsigned int type  : 6;  // 类型
 };
@@ -154,12 +154,13 @@ uint32_t afs_alloc_disk_block(struct afs_dp_head *head);
 void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec);
 
 /*
-    分配一个新的文件入口并返回其在entry数组中的下标
+    分配一个新的文件入口并取得其在entry数组中的下标
     必须提供初始化数据
-    若head中所有的entry已用完，UB
+    若head中所有的entry已用完，返回false
 */
-uint32_t afs_alloc_file_entry(struct afs_dp_head *head,
-                              const struct afs_file_entry *init_data);
+bool afs_alloc_file_entry(struct afs_dp_head *head,
+                              const struct afs_file_entry *init_data,
+                              uint32_t *entry_idx);
 
 /*
     读取一个file_entry的数据
@@ -180,5 +181,10 @@ void afs_modify_file_entry(struct afs_dp_head *head, uint32_t idx,
     若目标并非由afs_alloc_file_entry分配，UB
 */
 void afs_free_file_entry(struct afs_dp_head *head, uint32_t idx);
+
+struct afs_file_entry *afs_access_file_entry_begin(
+    struct afs_dp_head *head, uint32_t idx);
+
+void afs_access_file_entry_end(struct afs_dp_head *head, uint32_t idx);
 
 #endif /* TINY_OS_FILESYS_AFS_DP_PHY_H */

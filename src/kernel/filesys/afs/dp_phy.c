@@ -155,8 +155,11 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
 
 uint32_t afs_alloc_disk_block(struct afs_dp_head *head)
 {
+    semaphore_wait(&head->lock);
+    uint32_t ret = 0;
+
     if(!head->empty_block_cnt)
-        return 0;
+        goto EXIT;
     
     // 取得首个有空闲的blkgrp的头部描述符
     uint32_t fst_avl_blkgrp_head_sec =
@@ -188,12 +191,19 @@ uint32_t afs_alloc_disk_block(struct afs_dp_head *head)
 
     afs_write_to_sector_end(fst_avl_blkgrp_head_sec);
 
-    return fst_avl_blkgrp_head_sec + 1 +
+    ret = fst_avl_blkgrp_head_sec + 1 +
         AFS_BLOCK_SECTOR_COUNT * (32 * g_idx + l_idx);
+
+EXIT:
+
+    semaphore_signal(&head->lock);
+    return ret;
 }
 
 void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec)
 {
+    semaphore_wait(&head->lock);
+
     // 计算blk_sec处于head中的哪个blkgrp中
     uint32_t blkgrp_idx = (blk_sec - head->fst_blkgrp_sec)
                         / AFS_COMPLETE_BLKGRP_SECTOR_COUNT;
@@ -220,6 +230,8 @@ void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec)
     }
 
     afs_write_to_sector_end(blkgrp_head_sec);
+
+    semaphore_signal(&head->lock);
 }
 
 #define ENTRY_INDEX_TO_GLOBAL_LOCAL_INDEX(IDX, GBL, LCL) \
@@ -228,9 +240,23 @@ void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec)
         (LCL) = (IDX) % AFS_SECTOR_MAX_FILE_ENTRY_COUNT; \
     } while(0)
 
-uint32_t afs_alloc_file_entry(struct afs_dp_head *head,
-                              const struct afs_file_entry *init_data)
+#define ENTRY_INDEX_TO_GLOBAL_INDEX(IDX, GBL) \
+    do { \
+        (GBL) = (IDX) / AFS_SECTOR_MAX_FILE_ENTRY_COUNT; \
+    } while(0)
+
+bool afs_alloc_file_entry(struct afs_dp_head *head,
+                              const struct afs_file_entry *init_data,
+                              uint32_t *entry_idx)
 {
+    semaphore_signal(&head->lock);
+
+    if(!head->empty_entry_cnt)
+    {
+        semaphore_signal(&head->lock);
+        return false;
+    }
+
     ASSERT_S(head && head->empty_entry_cnt != 0 && init_data);
 
     // 计算首个空闲entry所处的扇区号及扇区内偏移
@@ -250,7 +276,12 @@ uint32_t afs_alloc_file_entry(struct afs_dp_head *head,
 
     afs_write_to_sector_end(sec);
 
-    return ret;
+    semaphore_signal(&head->lock);
+
+    ASSERT_S(entry_idx);
+    *entry_idx = ret;
+    
+    return true;
 }
 
 void afs_read_file_entry(struct afs_dp_head *head, uint32_t idx,
@@ -277,6 +308,8 @@ void afs_modify_file_entry(struct afs_dp_head *head, uint32_t idx,
 
 void afs_free_file_entry(struct afs_dp_head *head, uint32_t idx)
 {
+    semaphore_wait(&head->lock);
+
     uint32_t gbl, lcl, sec;
     ENTRY_INDEX_TO_GLOBAL_LOCAL_INDEX(idx, gbl, lcl);
     sec = head->dp_sec_beg + 1 + gbl;
@@ -287,6 +320,30 @@ void afs_free_file_entry(struct afs_dp_head *head, uint32_t idx)
     *(uint32_t*)&entrys[lcl] = head->fst_avl_entry_idx;
     head->fst_avl_entry_idx = idx;
     head->empty_entry_cnt++;
+
+    afs_write_to_sector_end(sec);
+
+    semaphore_signal(&head->lock);
+}
+
+struct afs_file_entry *afs_access_file_entry_begin(
+    struct afs_dp_head *head, uint32_t idx)
+{
+    uint32_t gbl, lcl, sec;
+    ENTRY_INDEX_TO_GLOBAL_LOCAL_INDEX(idx, gbl, lcl);
+    sec = head->dp_sec_beg + 1 + gbl;
+
+    struct afs_file_entry *entrys = (struct afs_file_entry*)
+        afs_write_to_sector_begin(sec);
+    
+    return &entrys[lcl];
+}
+
+void afs_access_file_entry_end(struct afs_dp_head *head, uint32_t idx)
+{
+    uint32_t gbl, sec;
+    ENTRY_INDEX_TO_GLOBAL_INDEX(idx, gbl);
+    sec = head->dp_sec_beg + 1 + gbl;
 
     afs_write_to_sector_end(sec);
 }

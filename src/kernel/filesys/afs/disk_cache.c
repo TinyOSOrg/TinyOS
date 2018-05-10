@@ -582,7 +582,7 @@ void afs_release_all_block_cache(void)
     set_intr_state(is);
 }
 
-void *afs_read_from_block_begin(uint32_t sec)
+const void *afs_read_from_block_begin(uint32_t sec)
 {
     return afs_access_block_entry(sec, false);
 }

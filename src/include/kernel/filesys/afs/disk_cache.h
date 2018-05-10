@@ -58,7 +58,7 @@ void afs_write_to_block(uint32_t sec, size_t offset, size_t size, const void *da
 
 void afs_release_all_block_cache(void);
 
-void *afs_read_from_block_begin(uint32_t sec);
+const void *afs_read_from_block_begin(uint32_t sec);
 
 void afs_read_from_block_end(uint32_t sec);
 
