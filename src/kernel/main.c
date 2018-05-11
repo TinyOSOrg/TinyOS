@@ -16,6 +16,7 @@
 #include <kernel/filesys/afs/afs.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/filesys/afs/disk_cache.h>
+#include <kernel/filesys/afs/file.h>
 
 #include <lib/conio.h>
 
@@ -64,24 +65,6 @@ void PL0_thread(void)
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     syscall_param1(SYSCALL_SYSMSG_OPERATION,
                    SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG);
-
-    char buf[512];
-    for(int i = 0;i != 40; ++i)
-    {
-        printf("Fuck %u ", i);
-        memset(buf, i, 512);
-        afs_write_to_sector(390 + i, 0, 512, buf);
-        printf("Shit %u ", i);
-    }
-
-    printf("Shit\n");
-
-    for(int i = 0;i != 40; ++i)
-    {
-        printf("suck%u: ", i);
-        afs_read_from_sector(390 + i, 0, 512, buf);
-        printf("%u ", buf[10]);
-    }
 
     while(1)
     {
@@ -164,21 +147,7 @@ int main(void)
 
     printf("main process, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
-
-    char buf[512];
-    for(int i = 0;i != 40; ++i)
-    {
-        memset(buf, i, 512);
-        afs_write_to_sector(320 + i, 0, 512, buf);
-    }
-
-    for(int i = 0;i != 40; ++i)
-    {
-        printf("r%u: ", 320 + i);
-        afs_read_from_sector(320 + i, 256, 20, buf);
-        printf("%u, ", (uint32_t)buf[10]);
-    }
-
+    
     while(1)
     {
         do_releasing_thds_procs();

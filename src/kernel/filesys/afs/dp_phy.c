@@ -33,13 +33,13 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
                          AFS_FILE_AVERAGE_BLOCK_COUNT;
     if(1 + entry_cnt >= cnt || entry_cnt < 1)
         return false;
-    
+
     // entry数组占用的扇区数
     uint32_t entry_sec_cnt = ceil_int_div(
         entry_cnt, AFS_SECTOR_MAX_FILE_ENTRY_COUNT);
     
     // 所有block group的总扇区数
-    uint32_t total_blkgrp_sec_cnt = cnt - 1 - entry_cnt;
+    uint32_t total_blkgrp_sec_cnt = cnt - 1 - entry_sec_cnt;
     if(total_blkgrp_sec_cnt < 1)
         return false;
     
@@ -106,8 +106,7 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
     {
         // 本block group有多少block
         uint32_t blk_cnt = (i + 1 == blkgrp_cnt) ?
-            AFS_BLKGRP_BLOCKS_MAX_COUNT :
-            last_blkgrp_blk_cnt;
+            last_blkgrp_blk_cnt : AFS_BLKGRP_BLOCKS_MAX_COUNT;
         total_empty_blk_cnt += blk_cnt;
         
         blkgrp_head->blkgrp_sec_beg = blkgrp_sec_beg;
@@ -153,6 +152,12 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
     return true;
 }
 
+void afs_init_dp_head(uint32_t dp_beg, struct afs_dp_head *head)
+{
+    afs_read_from_sector(dp_beg, 0, sizeof(struct afs_dp_head), head);
+    init_semaphore(&head->lock, 1);
+}
+
 uint32_t afs_alloc_disk_block(struct afs_dp_head *head)
 {
     semaphore_wait(&head->lock);
@@ -166,7 +171,6 @@ uint32_t afs_alloc_disk_block(struct afs_dp_head *head)
         blkgrp_idx_to_head_sec(head, head->fst_avl_blkgrp_idx);
     struct afs_blkgrp_head *blkgrp_head = (struct afs_blkgrp_head *)
         afs_write_to_sector_begin(fst_avl_blkgrp_head_sec);
-    
     ASSERT_S(blkgrp_head->empty_blk_cnt != 0);
 
     // 在block group头部位图中搜索一个可用block

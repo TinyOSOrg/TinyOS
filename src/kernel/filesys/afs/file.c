@@ -90,6 +90,9 @@ void init_afs_file(void)
 {
     init_spinlock(&opening_files_lock);
     rb_init(&opening_files);
+
+    init_spinlock(&file_desc_freelist_lock);
+    init_freelist(&file_desc_freelist);
 }
 
 uint32_t afs_create_empty_file(struct afs_dp_head *head,

@@ -28,7 +28,7 @@
     平均一个文件能够占用多少block
     用于格式化时估算需要的entry数量
 */
-#define AFS_FILE_AVERAGE_BLOCK_COUNT 2
+#define AFS_FILE_AVERAGE_BLOCK_COUNT 16
 
 /* 一个block多少字节 */
 #define AFS_BLOCK_BYTE_SIZE (AFS_BLOCK_SECTOR_COUNT * AFS_SECTOR_BYTE_SIZE)
@@ -58,11 +58,9 @@ struct afs_dp_head
     uint32_t fst_avl_blkgrp_idx;
 
     // 分区头部锁
+    // 注意到这个结构也会被顺带写入到头部扇区中，但是需要专门初始化
     struct semaphore lock;
-} __attribute__((aligned (512)));
-
-STATIC_ASSERT(sizeof(struct afs_dp_head) == AFS_SECTOR_BYTE_SIZE,
-              invalid_size_of_afs_dp_head);
+};
 
 // 一个blkgrp至多包含多少block，由其head中的位图大小限制
 #define AFS_BLKGRP_BLOCKS_MAX_COUNT (32 * ((AFS_SECTOR_BYTE_SIZE - 20) >> 2))
@@ -141,6 +139,8 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt);
 #define afs_write_sector_raw(SEC, DATA) disk_write(SEC, 1, DATA)
 #define afs_write_block_raw(SEC, DATA)  disk_write(SEC, AFS_BLOCK_SECTOR_COUNT, DATA)
 
+void afs_init_dp_head(uint32_t dp_beg, struct afs_dp_head *head);
+
 /*
     分配一个空闲块，返回其首个扇区LBA
     分配失败时返回0
@@ -183,7 +183,7 @@ void afs_modify_file_entry(struct afs_dp_head *head, uint32_t idx,
 void afs_free_file_entry(struct afs_dp_head *head, uint32_t idx);
 
 struct afs_file_entry *afs_access_file_entry_begin(
-    struct afs_dp_head *head, uint32_t idx);
+        struct afs_dp_head *head, uint32_t idx);
 
 void afs_access_file_entry_end(struct afs_dp_head *head, uint32_t idx);
 
