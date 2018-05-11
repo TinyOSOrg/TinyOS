@@ -405,7 +405,7 @@ bool afs_read_binary(struct afs_dp_head *head,
     SET_RT(afs_file_opr_success);
     return true;
 }
-#include <lib/conio.h>
+
 static void write_to_index_tree(uint32_t block_sec,
                                 uint32_t offset_bytes,
                                 uint32_t remain_bytes,
