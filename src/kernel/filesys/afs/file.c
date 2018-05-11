@@ -344,43 +344,18 @@ static inline uint32_t pow(uint32_t a, uint32_t b)
 }
 
 /*
-    从block_sec代表的索引树开始的offset_bytes处尝试读取remain_bytes个字节
-    返回实际读取的字节数
+    从block_sec代表的索引树边缘的offset_bytes处读取remain_bytes个字节
 */
-static uint32_t read_from_index_tree(uint32_t block_sec,
-                                     uint32_t offset_bytes,
-                                     uint32_t remain_bytes,
-                                     void *data)
+static void read_from_index_tree(uint32_t block_sec,
+                                 uint32_t offset_bytes,
+                                 uint32_t remain_bytes,
+                                 void *data)
 {
     const struct afs_index_block *block = afs_read_from_block_begin(block_sec);
 
-    // 本次读取的字节数
-    uint32_t read_bytes = 0;
-
-    // 孩子为内容块，准备直接读取
-    if(block->height == 1)
-    {
-        uint32_t ch_idx = 0;
-
-        // 按offset跳过一些内容块
-        ch_idx = offset_bytes / AFS_BLOCK_BYTE_SIZE;
-        offset_bytes %= AFS_BLOCK_BYTE_SIZE;
-
-        while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
-        {
-            uint32_t local_read_bytes = MIN(remain_bytes, AFS_BLOCK_BYTE_SIZE);
-            afs_read_from_block(block->child_sec[ch_idx],
-                                offset_bytes, local_read_bytes, data);
-            
-            remain_bytes -= local_read_bytes;
-            ++ch_idx;
-            offset_bytes = 0;
-            read_bytes += local_read_bytes;
-            data = (void*)((uint32_t)data + local_read_bytes);
-        }
-
-        goto EXIT;
-    }
+    // 如何读孩子节点
+    void (*reader)(uint32_t, uint32_t, uint32_t, void*) = block->height == 1 ?
+        afs_read_from_block : read_from_index_tree;
 
     // 一个孩子对应多少字节的内容
     uint32_t bytes_per_child = pow(AFS_BLOCK_BYTE_SIZE, block->height);
@@ -394,38 +369,150 @@ static uint32_t read_from_index_tree(uint32_t block_sec,
     while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
     {
         uint32_t local_read_bytes = MIN(remain_bytes, bytes_per_child);
-        read_from_index_tree(block->child_sec[ch_idx],
-                             offset_bytes, local_read_bytes, data);
+        reader(block->child_sec[ch_idx], offset_bytes, local_read_bytes, data);
         
         remain_bytes -= local_read_bytes;
         ++ch_idx;
         offset_bytes = 0;
-        read_bytes += local_read_bytes;
         data = (void*)((uint32_t)data + local_read_bytes);
     }
 
-EXIT:
-
     afs_read_from_block_end(block_sec);
-    return read_bytes;
 }
 
 bool afs_read_binary(struct afs_dp_head *head,
                      struct afs_file_desc *file,
                      uint32_t fpos, uint32_t bytes,
-                     void *data)
+                     void *data,
+                     enum afs_file_operation_status *rt)
 {
     // 读取越界
     if(!bytes || fpos + bytes > file->entry.byte_size)
+    {
+        SET_RT(afs_file_opr_limit_exceeded);
         return false;
+    }
     
     // 若文件只包含一个内容块，直接从中拷贝数据即可
     if(!file->entry.index)
     {
         afs_read_from_block(file->entry.sec_beg, fpos, bytes, data);
+        SET_RT(afs_file_opr_success);
         return true;
     }
 
     read_from_index_tree(file->entry.sec_beg, fpos, bytes, data);
+    SET_RT(afs_file_opr_success);
+    return true;
+}
+
+static void write_to_index_tree(uint32_t block_sec,
+                                uint32_t offset_bytes,
+                                uint32_t remain_bytes,
+                                const void *data)
+{
+    const struct afs_index_block *block = afs_read_from_block_begin(block_sec);
+
+    // 如何写入孩子节点
+    void (*writer)(uint32_t, uint32_t, uint32_t, const void*) =
+        block->height == 1 ? afs_write_to_block : write_to_index_tree;
+
+    // 一个孩子对应多少字节的内容
+    uint32_t bytes_per_child = pow(AFS_BLOCK_BYTE_SIZE, block->height);
+
+    // 跟据offset跳过一些孩子
+    uint32_t ch_idx = offset_bytes / bytes_per_child;
+    offset_bytes %= bytes_per_child;
+
+    ASSERT_S(ch_idx < AFS_BLOCK_MAX_CHILD_COUNT);
+
+    while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
+    {
+        uint32_t local_write_bytes = MIN(remain_bytes, bytes_per_child);
+        writer(block->child_sec[ch_idx], offset_bytes, local_write_bytes, data);
+        
+        remain_bytes -= local_write_bytes;
+        ++ch_idx;
+        offset_bytes = 0;
+        data = (void*)((uint32_t)data + local_write_bytes);
+    }
+
+    afs_read_from_block_end(block_sec);
+}
+
+bool afs_write_binary(struct afs_dp_head *head,
+                      struct afs_file_desc *file,
+                      uint32_t fpos, uint32_t bytes,
+                      const void *data,
+                      enum afs_file_operation_status *rt)
+{
+    // 文件为只读
+    if(!file->wlock)
+    {
+        SET_RT(afs_file_opr_read_only);
+        return false;
+    }
+
+    // 写入越界
+    if(!bytes || fpos + bytes > file->entry.byte_size)
+    {
+        SET_RT(afs_file_opr_limit_exceeded);
+        return false;
+    }
+
+    // 若只包含一个内容块，可直接从中拷贝
+    if(!file->entry.index)
+    {
+        afs_write_to_block(file->entry.sec_beg, fpos, bytes, data);
+        SET_RT(afs_file_opr_success);
+        return true;
+    }
+
+    write_to_index_tree(file->entry.sec_beg, fpos, bytes, data);
+    SET_RT(afs_file_opr_success);
+    return true;
+}
+
+/* 计算索引树的高度 */
+/*static uint32_t index_tree_height(uint32_t bytes)
+{
+    uint32_t ret = 0;
+    while(bytes > AFS_BLOCK_BYTE_SIZE)
+    {
+        bytes /= AFS_BLOCK_BYTE_SIZE;
+        ret++;
+    }
+    return ret;
+}*/
+
+bool afs_expand_file(struct afs_dp_head *head,
+                     struct afs_file_desc *file,
+                     uint32_t new_size,
+                     enum afs_file_operation_status *rt)
+{
+    // 文件必须是可写的
+    if(!file->wlock)
+    {
+        SET_RT(afs_file_opr_read_only);
+        return false;
+    }
+
+    // 只能扩大不能减小
+    if(new_size <= file->entry.byte_size)
+    {
+        SET_RT(afs_file_opr_invalid_new_size);
+        return false;
+    }
+    
+    // 如果new_size也只需要一个内容块，那么直接改entry中的大小即可
+    if(new_size <= AFS_BLOCK_BYTE_SIZE)
+    {
+        file->entry.byte_size = new_size;
+        SET_RT(afs_file_opr_success);
+        return true;
+    }
+
+    // TODO
+
     return true;
 }

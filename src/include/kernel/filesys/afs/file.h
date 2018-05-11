@@ -18,6 +18,8 @@ enum afs_file_operation_status
     afs_file_opr_limit_exceeded,    // 文件读写范围超出文件大小
     afs_file_opr_no_empty_entry,    // 创建文件失败：没有空闲的entry
     afs_file_opr_no_empty_block,    // 创建/扩充文件失败：没有空闲的block
+    afs_file_opr_read_only,         // 试图写入一个只读文件
+    afs_file_opr_invalid_new_size,  // 扩充文件时，新的大小不是合法值
 };
 
 /* 一个打开的文件槽句柄 */
@@ -67,7 +69,8 @@ void afs_close_file_for_writing(struct afs_dp_head *head,
 bool afs_read_binary(struct afs_dp_head *head,
                      struct afs_file_desc *file,
                      uint32_t fpos, uint32_t size,
-                     void *data);
+                     void *data,
+                     enum afs_file_operation_status *rt);
 
 /*
     将二进制内容写入到某个文件
@@ -76,11 +79,13 @@ bool afs_read_binary(struct afs_dp_head *head,
 bool afs_write_binary(struct afs_dp_head *head,
                       struct afs_file_desc *file,
                       uint32_t fpos, uint32_t bytes,
-                      const void *data);
+                      const void *data,
+                      enum afs_file_operation_status *rt);
 
-/* 扩充某个以可写方式打开的文件的大小，末尾扩充部分自动填0 */
+/* 扩充某个以可写方式打开的文件的大小，末尾扩充部分的内容为undefined */
 bool afs_expand_file(struct afs_dp_head *head,
                      struct afs_file_desc *file,
-                     uint32_t new_size);
+                     uint32_t new_size,
+                     enum afs_file_operation_status *rt);
 
 #endif /* TINY_OS_FILESYS_AFS_FILE_H */
