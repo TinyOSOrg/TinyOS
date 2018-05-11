@@ -338,7 +338,7 @@ void afs_close_file_for_writing(struct afs_dp_head *head,
 static inline uint32_t pow(uint32_t a, uint32_t b)
 {
     uint32_t r = 1;
-    while(b > 0)
+    while(b-- > 0)
         r *= a;
     return r;
 }
@@ -405,7 +405,7 @@ bool afs_read_binary(struct afs_dp_head *head,
     SET_RT(afs_file_opr_success);
     return true;
 }
-
+#include <lib/conio.h>
 static void write_to_index_tree(uint32_t block_sec,
                                 uint32_t offset_bytes,
                                 uint32_t remain_bytes,
@@ -551,8 +551,15 @@ static bool expand_index_tree(struct afs_dp_head *head,
             }
 
             uint32_t dexp = 0;
-            expand_index_tree(head, block->child_sec[ch_idx], NULL,
-                              child_used, exp_bytes - exp, &dexp, NULL);
+            if(!expand_index_tree(head, block->child_sec[ch_idx], NULL,
+                                  child_used, exp_bytes - exp, &dexp, rt))
+            {
+                afs_write_to_block_end(blk_sec);
+                exp += dexp;
+                *exp_rt = exp;
+                return false;
+            }
+
             exp += dexp;
             child_used = 0;
         }
@@ -580,12 +587,12 @@ static bool expand_index_tree(struct afs_dp_head *head,
     
     *new_root = new_root_sec;
     uint32_t dexp = 0;
-    expand_index_tree(head, new_root_sec, new_root,
-                      full_index_tree_bytes(old_height),
-                      exp_bytes - exp, &dexp, rt);
+    bool ret = expand_index_tree(head, new_root_sec, new_root,
+                                 full_index_tree_bytes(old_height),
+                                 exp_bytes - exp, &dexp, rt);
     *exp_rt = exp + dexp;
 
-    return true;
+    return ret;
 }
 
 bool afs_expand_file(struct afs_dp_head *head,
@@ -613,6 +620,23 @@ bool afs_expand_file(struct afs_dp_head *head,
         file->entry.byte_size = new_size;
         SET_RT(afs_file_opr_success);
         return true;
+    }
+
+    // 如果new_size超过一个内容块但目前只有一个块，将其扩充为一棵索引树
+    if(!file->entry.index)
+    {
+        uint32_t new_root = afs_alloc_disk_block(head);
+        struct afs_index_block *root =
+            afs_write_to_block_begin(new_root);
+        
+        root->height = 1;
+        root->child_count = 1;
+        root->child_sec[0] = file->entry.sec_beg;
+
+        afs_write_to_block_end(new_root);
+
+        file->entry.sec_beg = new_root;
+        file->entry.index = 1;
     }
 
     uint32_t dexp;

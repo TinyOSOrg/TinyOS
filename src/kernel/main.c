@@ -148,6 +148,43 @@ int main(void)
     printf("main process, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     
+    struct dpt_unit *dp = get_dpt_unit(0);
+    afs_phy_reformat_dp(dp->sector_begin,
+        dp->sector_end - dp->sector_begin);
+
+    struct afs_dp_head dph;
+    afs_init_dp_head(dp->sector_begin, &dph);
+
+    // 建立一个空文件
+    uint32_t file_idx = afs_create_empty_file(
+        &dph, AFS_FILE_TYPE_REGULAR, NULL);
+    
+    struct afs_file_desc *fp = afs_open_file_for_writing(
+        &dph, file_idx, NULL);
+
+    printf("shit!\n");
+    
+    uint32_t file_size = 1024 * 5;
+    afs_expand_file(&dph, fp, file_size, NULL);
+
+    printf("shit!\n");
+
+    for(uint32_t i = 0, j = 0;i < file_size; i += 4, ++j)
+        afs_write_binary(&dph, fp, i, 4, &j, NULL);
+
+    printf("shit!\n");
+
+    for(uint32_t i = 12; i < 72; i += 4)
+    {
+        uint32_t j = 0;
+        afs_read_binary(&dph, fp, i, 4, &j, NULL);
+        printf("j = %u ", j);
+    }
+
+    printf("shit!\n");
+
+    afs_close_file_for_writing(&dph, fp);
+
     while(1)
     {
         do_releasing_thds_procs();
