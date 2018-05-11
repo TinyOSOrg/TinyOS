@@ -46,10 +46,6 @@ bool is_rlist_empty(rlist *L);
     侵入式双向循环链表
 =====================================================================*/
 
-/* 跟据成员地址取得包含它的结构体地址 */
-#define GET_STRUCT_FROM_MEMBER(STU, MEM, p_mem) \
-    ((STU*)((char*)(p_mem) - (char*)(&((STU*)0)->MEM)))
-
 struct ilist_node
 {
     struct ilist_node *last;

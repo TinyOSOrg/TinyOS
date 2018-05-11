@@ -5,6 +5,7 @@
 #include <kernel/sysmsg/sysmsg_src.h>
 
 #include <shared/freelist.h>
+#include <shared/utility.h>
 
 /* 用来分配sysmsg_rcv_src_list_node的自由链表 */
 static freelist_handle sysmsg_rcv_src_list_node_freelist;
