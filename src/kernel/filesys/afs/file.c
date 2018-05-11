@@ -473,17 +473,120 @@ bool afs_write_binary(struct afs_dp_head *head,
     return true;
 }
 
-/* 计算索引树的高度 */
-/*static uint32_t index_tree_height(uint32_t bytes)
+static uint32_t full_index_tree_bytes(uint32_t height)
 {
-    uint32_t ret = 0;
-    while(bytes > AFS_BLOCK_BYTE_SIZE)
-    {
-        bytes /= AFS_BLOCK_BYTE_SIZE;
-        ret++;
-    }
+    uint32_t ret = AFS_BLOCK_BYTE_SIZE;
+    while(height-- > 0)
+        ret *= AFS_BLOCK_MAX_CHILD_COUNT;
     return ret;
-}*/
+}
+
+/*
+    扩充一棵索引树的容量
+    blk_sec为子树根部节点扇区号
+    若new_root非空，则当整个索引树容量不足时，树高会增加且该变量会被置为新的根
+                   否则，会将剩余的扩充任务还给caller
+    used_bytes为当前子树中已经有的字节数
+    exp_bytes为待扩充的容量
+    exp_rt为实际扩充了的容量
+
+    当扩充失败（比如磁盘空间不足）时返回false，此时rt会指出错误原因
+*/
+static bool expand_index_tree(struct afs_dp_head *head,
+                              uint32_t blk_sec,
+                              uint32_t *new_root,
+                              uint32_t used_bytes,
+                              uint32_t exp_bytes,
+                              uint32_t *exp_rt,
+                              enum afs_file_operation_status *rt)
+{
+    struct afs_index_block *block = afs_write_to_block_begin(blk_sec);
+    uint32_t exp = 0, ch_idx = block->child_count - 1;
+
+    uint32_t old_height = block->height;
+
+    // 如果孩子是content block，遍历之
+    if(old_height == 1)
+    {    
+        // 最后一个孩子节点已经用了多少字节
+        uint32_t content_used = used_bytes -
+            (block->child_count - 1) * AFS_BLOCK_BYTE_SIZE;
+
+        while(exp < exp_bytes &&
+              ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
+        {
+            if(ch_idx >= block->child_count)
+            {
+                block->child_sec[ch_idx] = afs_alloc_disk_block(head);
+                block->child_count++;
+            }
+
+            uint32_t dexp = MIN(AFS_BLOCK_BYTE_SIZE - content_used,
+                                exp_bytes - exp);
+            exp += dexp;
+            content_used = 0;
+        }
+    }
+    else
+    {
+        // 最后一个孩子节点已经用了多少字节
+        uint32_t child_used = used_bytes -
+            (block->child_count - 1) * full_index_tree_bytes(block->height);
+
+        while(exp < exp_bytes &&
+              ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
+        {
+            if(ch_idx >= block->child_count)
+            {
+                // 给孩子申请一个新索引节点
+                block->child_sec[ch_idx] = afs_alloc_disk_block(head);
+                struct afs_index_block *ch_blk =
+                    afs_write_to_block_begin(block->child_sec[ch_idx]);
+
+                ch_blk->height = old_height - 1;
+                ch_blk->child_count = 0;
+
+                afs_write_to_sector_end(block->child_sec[ch_idx]);
+                block->child_count++;
+            }
+
+            uint32_t dexp = 0;
+            expand_index_tree(head, block->child_sec[ch_idx], NULL,
+                              child_used, exp_bytes - exp, &dexp, NULL);
+            exp += dexp;
+            child_used = 0;
+        }
+    }
+
+    afs_write_to_block_end(blk_sec);
+
+    if(exp >= exp_bytes || !new_root)
+    {
+        *exp_rt = exp;
+        SET_RT(afs_file_opr_success);
+        return true;
+    }
+
+    // 这棵树已经满了，且是root，此时应分配一个新根
+
+    uint32_t new_root_sec = afs_alloc_disk_block(head);
+    struct afs_index_block *new_block = afs_write_to_block_begin(new_root_sec);
+
+    new_block->height = old_height + 1;
+    new_block->child_count = 1;
+    new_block->child_sec[0] = blk_sec;
+
+    afs_write_to_block_end(new_root_sec);
+    
+    *new_root = new_root_sec;
+    uint32_t dexp = 0;
+    expand_index_tree(head, new_root_sec, new_root,
+                      full_index_tree_bytes(old_height),
+                      exp_bytes - exp, &dexp, rt);
+    *exp_rt = exp + dexp;
+
+    return true;
+}
 
 bool afs_expand_file(struct afs_dp_head *head,
                      struct afs_file_desc *file,
@@ -512,7 +615,11 @@ bool afs_expand_file(struct afs_dp_head *head,
         return true;
     }
 
-    // TODO
+    uint32_t dexp;
+    expand_index_tree(head, file->entry.sec_beg, &file->entry.sec_beg,
+                      file->entry.byte_size, new_size - file->entry.byte_size,
+                      &dexp, rt);
+    file->entry.byte_size += dexp;
 
     return true;
 }

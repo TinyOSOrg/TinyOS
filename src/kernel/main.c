@@ -66,7 +66,7 @@ void PL0_thread(void)
     syscall_param1(SYSCALL_SYSMSG_OPERATION,
                    SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG);
 
-    while(1)
+    while(true)
     {
         syscall_param1(SYSCALL_SYSMSG_OPERATION,
                        SYSMSG_SYSCALL_FUNCTION_BLOCK_ONTO_SYSMSG);
