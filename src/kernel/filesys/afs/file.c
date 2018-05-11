@@ -9,6 +9,7 @@
 
 #include <shared/freelist.h>
 #include <shared/ptrlist.h>
+#include <shared/utility.h>
 
 struct afs_file_desc
 {
@@ -229,6 +230,7 @@ struct afs_file_desc *afs_open_file_for_reading(
         {
             ASSERT_S(desc->rlock);
             desc->rlock++;
+
             spinlock_unlock(&opening_files_lock);
             SET_RT(afs_file_opr_success);
             return desc;
@@ -297,4 +299,130 @@ struct afs_file_desc *afs_open_file_for_writing(
     return desc;
 }
 
+void afs_close_file_for_reading(struct afs_dp_head *head,
+                                struct afs_file_desc *file)
+{
+    spinlock_lock(&opening_files_lock);
 
+    ASSERT_S(file->rlock);
+
+    // 若自己是最后一个操作者，则应释放desc
+    if(!--file->rlock)
+    {
+        rb_erase(&opening_files, &file->tree_node, KOF, rb_less);
+        free_file_desc(file);
+    }
+
+    spinlock_unlock(&opening_files_lock);
+}
+
+void afs_close_file_for_writing(struct afs_dp_head *head,
+                                struct afs_file_desc *file)
+{
+    spinlock_lock(&opening_files_lock);
+
+    ASSERT_S(file->wlock && !file->rlock);
+
+    // 写者一定是最后一个操作者，故应写回entry，释放desc
+    rb_erase(&opening_files, &file->tree_node, KOF, rb_less);
+
+    spinlock_unlock(&opening_files_lock);
+
+    afs_modify_file_entry(head, file->entry_idx, &file->entry);
+    free_file_desc(file);
+}
+
+static inline uint32_t pow(uint32_t a, uint32_t b)
+{
+    uint32_t r = 1;
+    while(b > 0)
+        r *= a;
+    return r;
+}
+
+/*
+    从block_sec代表的索引树开始的offset_bytes处尝试读取remain_bytes个字节
+    返回实际读取的字节数
+*/
+static uint32_t read_from_index_tree(uint32_t block_sec,
+                                     uint32_t offset_bytes,
+                                     uint32_t remain_bytes,
+                                     void *data)
+{
+    const struct afs_index_block *block = afs_read_from_block_begin(block_sec);
+
+    // 本次读取的字节数
+    uint32_t read_bytes = 0;
+
+    // 孩子为内容块，准备直接读取
+    if(block->height == 1)
+    {
+        uint32_t ch_idx = 0;
+
+        // 按offset跳过一些内容块
+        ch_idx = offset_bytes / AFS_BLOCK_BYTE_SIZE;
+        offset_bytes %= AFS_BLOCK_BYTE_SIZE;
+
+        while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
+        {
+            uint32_t local_read_bytes = MIN(remain_bytes, AFS_BLOCK_BYTE_SIZE);
+            afs_read_from_block(block->child_sec[ch_idx],
+                                offset_bytes, local_read_bytes, data);
+            
+            remain_bytes -= local_read_bytes;
+            ++ch_idx;
+            offset_bytes = 0;
+            read_bytes += local_read_bytes;
+            data = (void*)((uint32_t)data + local_read_bytes);
+        }
+
+        goto EXIT;
+    }
+
+    // 一个孩子对应多少字节的内容
+    uint32_t bytes_per_child = pow(AFS_BLOCK_BYTE_SIZE, block->height);
+
+    // 跟据offset跳过一些孩子
+    uint32_t ch_idx = offset_bytes / bytes_per_child;
+    offset_bytes %= bytes_per_child;
+
+    ASSERT_S(ch_idx < AFS_BLOCK_MAX_CHILD_COUNT);
+
+    while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
+    {
+        uint32_t local_read_bytes = MIN(remain_bytes, bytes_per_child);
+        read_from_index_tree(block->child_sec[ch_idx],
+                             offset_bytes, local_read_bytes, data);
+        
+        remain_bytes -= local_read_bytes;
+        ++ch_idx;
+        offset_bytes = 0;
+        read_bytes += local_read_bytes;
+        data = (void*)((uint32_t)data + local_read_bytes);
+    }
+
+EXIT:
+
+    afs_read_from_block_end(block_sec);
+    return read_bytes;
+}
+
+bool afs_read_binary(struct afs_dp_head *head,
+                     struct afs_file_desc *file,
+                     uint32_t fpos, uint32_t bytes,
+                     void *data)
+{
+    // 读取越界
+    if(!bytes || fpos + bytes > file->entry.byte_size)
+        return false;
+    
+    // 若文件只包含一个内容块，直接从中拷贝数据即可
+    if(!file->entry.index)
+    {
+        afs_read_from_block(file->entry.sec_beg, fpos, bytes, data);
+        return true;
+    }
+
+    read_from_index_tree(file->entry.sec_beg, fpos, bytes, data);
+    return true;
+}
