@@ -17,6 +17,11 @@ static inline uint16_t _in_double_byte_from_port(uint16_t port)
     return rt;
 }
 
+static inline void _in_words_from_port(uint16_t port, void *dst, size_t wcnt)
+{
+    asm volatile ("cld; rep insw" : "+D" (dst), "+c" (wcnt) : "d" (port) : "memory");
+}
+
 static inline void _out_byte_to_port(uint16_t port, uint8_t data)
 {
     asm volatile ("out %0, %1" : : "a" (data), "d" (port));
@@ -25,6 +30,11 @@ static inline void _out_byte_to_port(uint16_t port, uint8_t data)
 static inline void _out_double_byte_to_port(uint16_t port, uint16_t data)
 {
     asm volatile ("out %0, %1" : : "a" (data), "d" (port));
+}
+
+static inline void _out_words_to_port(uint16_t port, const void *dst, uint32_t wcnt)
+{
+   asm volatile ("cld; rep outsw" : "+S" (dst), "+c" (wcnt) : "d" (port));
 }
 
 static inline void _load_IDT(uint64_t arg)
@@ -94,7 +104,7 @@ static inline uint32_t _get_eflag(void)
     asm volatile ("pushfl; popl %0" : "=g" (rt));
     return rt;
 }
-
+ 
 static inline void _load_GDT(uint32_t base, uint32_t size)
 {
     uint64_t opr = ((uint64_t)base << 16) | size;
@@ -104,6 +114,15 @@ static inline void _load_GDT(uint32_t base, uint32_t size)
 static inline void _ltr(uint16_t sel)
 {
     asm volatile ("ltr %w0" : : "r" (sel));
+}
+
+static inline uint32_t xchg_u32(volatile uint32_t *p, uint32_t x)  
+{    
+    __asm__ __volatile__("xchgl %0, %1"    
+                       : "=r" (x)    
+                       : "m" (*p), "0" (x)    
+                       : "memory");    
+    return x;    
 }
 
 #endif /* TINY_OS_IO_PORT */

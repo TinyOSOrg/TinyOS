@@ -64,7 +64,7 @@ static uint32_t console_syscall_function_get_cursor(uint32_t arg)
 
 static uint32_t console_syscall_function_put_char(uint32_t arg)
 {
-    kput_char(arg & 0xff);
+    kput_char((char)arg);
     return 0;
 }
 

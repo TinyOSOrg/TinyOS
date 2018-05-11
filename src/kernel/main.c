@@ -1,8 +1,11 @@
 #include <kernel/asm.h>
+#include <kernel/assert.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
 #include <kernel/console/print.h>
 #include <kernel/console/console.h>
+#include <kernel/diskdriver.h>
+#include <kernel/filesys/dpt.h>
 #include <kernel/kbdriver.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/process.h>
@@ -14,94 +17,20 @@
 #include <lib/conio.h>
 
 #include <shared/keycode.h>
+#include <shared/rbtree.h>
 #include <shared/string.h>
 #include <shared/syscall/common.h>
 #include <shared/syscall/sysmsg.h>
 #include <shared/sysmsg/kbmsg.h>
 
 
-#include <drive_disk/drive_disk.h>
+#include <kernel/drive_disk/drive_disk.h>
 #include <kernel/memory/phy_mem_man.h>
-#include <kernel/fs/fs_start.h>
-#define syscall_param0(N) \
-    ({ uint32_t r; \
-       asm volatile ("int $0x80;" \
-                     : "=a" (r) \
-                     : "a" (N) \
-                     : "memory"); \
-       r; })
-
-#define syscall_param1(N, arg1) \
-    ({ uint32_t r; \
-       asm volatile ("int $0x80" \
-                     : "=a" (r) \
-                     : "a" (N), "b" (arg1) \
-                     : "memory"); \
-       r; })
-
-#define syscall_param2(N, arg1, arg2) \
-    ({ uint32_t r; \
-       asm volatile ("int $0x80" \
-                     : "=a" (r) \
-                     : "a" (N), "b" (arg1), "c" (arg2) \
-                     : "memory"); \
-       r; })
-
-#define syscall_param3(N, arg1, arg2, arg3) \
-    ({ uint32_t r; \
-       asm volatile ("int $0x80" \
-                     : "=a" (r) \
-                     : "a" (N), "b" (arg1), "c" (arg2), "d" (arg3) \
-                     : "memory"); \
-       r; })
-
-struct semaphore sph;
-
-void PL0_thread3(void)
+/*
+void PL0_thread(void)
 {
-    semaphore_wait(&sph);
-    kprint_format("another process 3, pid = %u\n",
+    printf("hahaha process, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
-    semaphore_signal(&sph);
-    while(1)
-        ;
-    exit_thread();
-}
-
-void PL0_thread0(void)
-{
-    for(int i = 0;i != 3; ++i)
-    {
-        semaphore_wait(&sph);
-        kprint_format("another process 0, pid = %u\n",
-            syscall_param0(SYSCALL_GET_PROCESS_ID));
-        semaphore_signal(&sph);
-    }
-    semaphore_wait(&sph);
-    kprint_format("PL0_thread0 exit!\n");
-    semaphore_signal(&sph);
-    exit_thread();
-}
-
-void PL0_thread1(void)
-{
-    for(int i = 0;i != 5; ++i)
-    {
-        semaphore_wait(&sph);
-        kprint_format("another process 1, pid = %u\n",
-            syscall_param0(SYSCALL_GET_PROCESS_ID));
-        semaphore_signal(&sph);
-    }
-    create_process("another process3", PL0_thread3, true);
-    exit_thread();
-}
-
-void PL0_thread2(void)
-{
-    semaphore_wait(&sph);
-    kprint_format("another process 2, pid = %u\n",
-        syscall_param0(SYSCALL_GET_PROCESS_ID));
-    semaphore_signal(&sph);
     syscall_param1(SYSCALL_SYSMSG_OPERATION, SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG);
     while(1)
     {
@@ -116,15 +45,13 @@ void PL0_thread2(void)
             if(msg.type == SYSMSG_TYPE_CHAR)
             {
                 struct kbchar_msg_struct *chmsg = (struct kbchar_msg_struct*)&msg;
-                semaphore_wait(&sph);
-                kput_char(chmsg->ch);
-                semaphore_signal(&sph);
+                put_char(chmsg->ch);
             }
         }
     }
     exit_thread();
 }
-
+*/
 void init_kernel(void)
 {
     /* 中断系统 */
@@ -164,36 +91,44 @@ void init_kernel(void)
     init_kb_driver();
 
     /*磁盘驱动*/
-    init_disk_drive();
+    init_drive_disk();
 
-    /*文件系统*/
+    /* 磁盘分区 */
+    init_dpt(); 
 }
 
 int main(void)
 {
-    init_kernel();
-
-    kset_cursor_pos(0);
-
-    init_semaphore(&sph, 1);
-    
- 
+    init_kernel();  
+/*
     create_process("another process0", PL0_thread0, true);
     create_process("another process1", PL0_thread1, true);
     create_process("another process2", PL0_thread2, true);
-
-    _enable_intr();
-
-    {
-        semaphore_wait(&sph);
-        uint32_t pid = syscall_param0(SYSCALL_GET_PROCESS_ID);
-        kprint_format("main process, pid = %u\n", pid);
-        semaphore_signal(&sph);
-    }
+*/
+/*
     while(1)
     {
         do_releasing_thds_procs();
         yield_CPU();
     }
-
+*/
+    kprintf_format("begin\n");
+    uint16_t *memptr1 = alloc_ker_page(true);
+    uint16_t *memptr2 = alloc_ker_page(true);
+    uint16_t *ptr = memptr1;
+    for(uint32_t i = 0; i < 256; ++i)
+    {
+        *ptr++ = 28;
+    }
+    write_disk(ptr, 1000);
+    read_disk(1000, memptr2);
+    for(uint32_t i = 0; i < 256; ++i)
+    {
+        kprintf_format("%d ", *memptr2++);
+    }
+    kprintf_format("\nend\n");
+    while(1)
+    {
+        ;
+    }
 }

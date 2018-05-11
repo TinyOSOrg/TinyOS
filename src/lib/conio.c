@@ -1,25 +1,25 @@
-#include <kernel/console/console.h>
-#include <kernel/syscall.h>
-
 #include <lib/conio.h>
 
+#include <shared/string.h>
 #include <shared/syscall/console.h>
 
 #define CONSOLE_SYSCALL(N, arg) \
-    asm volatile ("int $0x80" \
-                  : \
-                  : "a" (SYSCALL_CONSOLE_OPERATION), \
-                    "b" (N), \
-                    "c" (arg) \
-                  : "memory");
+    do { uint32_t dummy_ret; \
+         __asm__ __volatile__ ("int $0x80" \
+                             : "=a" (dummy_ret) \
+                             : "a" (SYSCALL_CONSOLE_OPERATION), \
+                               "b" (N), \
+                               "c" (arg) \
+                             : "memory"); } while(0)
 
 #define CONSOLE_SYSCALL_RET(N, arg, ret) \
-    asm volatile ("int $0x80" \
-                  : "=a" (ret) \
-                  : "a" (SYSCALL_CONSOLE_OPERATION), \
-                    "b" (N), \
-                    "c" (arg) \
-                  : "memory");
+    do { \
+        __asm__ __volatile__ ("int $0x80" \
+                            : "=a" (ret) \
+                            : "a" (SYSCALL_CONSOLE_OPERATION), \
+                              "b" (N), \
+                              "c" (arg) \
+                            : "memory"); } while(0)
 
 void set_char_row_col(uint8_t row, uint8_t col, char ch)
 {
@@ -47,4 +47,50 @@ void set_cursor_row_col(uint8_t row, uint8_t col)
 {
     uint32_t arg = 80 * row + col;
     CONSOLE_SYSCALL(CONSOLE_SYSCALL_FUNCTION_SET_CURSOR, arg);
+}
+
+void put_char(char ch)
+{
+    uint32_t arg = ch;
+    CONSOLE_SYSCALL(CONSOLE_SYSCALL_FUNCTION_PUT_CHAR, arg);
+}
+
+void put_str(const char *str)
+{
+    while(*str)
+        put_char(*str++);
+}
+
+void printf(const char *fmt, ...)
+{
+    const char *next_param = (const char *)&fmt + 4;
+    char int_buf[32];
+    while(*fmt)
+    {
+        if(*fmt == '%')
+        {
+            switch(*++fmt)
+            {
+            case 'u':
+                uint32_to_str(*(uint32_t*)next_param, int_buf);
+                put_str(int_buf);
+                next_param += 4;
+                break;
+            case 's':
+                put_str(*(char**)next_param);
+                next_param += 4;
+                break;
+            case '%':
+                put_char('%');
+                break;
+            case 'c':
+                put_char((char)*(uint32_t*)next_param);
+                next_param += 4;
+                break;
+            }
+            ++fmt;
+        }
+        else
+            put_char(*fmt++);
+    }
 }

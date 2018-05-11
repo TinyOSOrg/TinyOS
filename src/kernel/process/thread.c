@@ -45,6 +45,9 @@ static freelist_handle TCB_freelist;
 /* 当前正在运行的线程 */
 static struct TCB *cur_running_TCB;
 
+/* 无ready线程时用来跑的空闲线程 */
+static struct TCB *idle_TCB;
+
 /* ready线程队列 */
 static ilist ready_threads;
 
@@ -89,6 +92,37 @@ static void init_bootloader_thread(void)
     tcb->pcb = NULL;
     tcb->blocked_sph = NULL;
     cur_running_TCB = tcb;
+}
+
+/* idle线程的执行函数 */
+static void idle_func(void)
+{
+    while(true)
+        ;
+}
+
+static void init_idle_thread(void)
+{
+    idle_TCB = alloc_TCB();
+    idle_TCB->pcb = NULL;
+    idle_TCB->state = thread_state_ready;
+    idle_TCB->blocked_sph = NULL;
+    idle_TCB->ker_stack = alloc_ker_page(true);
+    memset((char*)idle_TCB->ker_stack, 0x0, 4096);
+    idle_TCB->ker_stack = (char*)idle_TCB->ker_stack + 4096
+                          - INTR_BAK_DATA_SIZE
+                          - sizeof(struct thread_init_stack);
+    idle_TCB->init_ker_stack = idle_TCB->ker_stack;
+
+    // 初始化内核栈顶端信息
+
+    struct thread_init_stack *init_stack =
+        (struct thread_init_stack*)idle_TCB->ker_stack;
+    init_stack->eip = (uint32_t)kernel_thread_entry;
+    init_stack->func = (thread_exec_func)idle_func;
+    init_stack->func_param = NULL;
+    init_stack->ebp = init_stack->ebx = 0;
+    init_stack->esi = init_stack->edi = 0;
 }
 
 /*
@@ -139,20 +173,29 @@ static void thread_scheduler(void)
     extern void switch_to_thread(struct TCB *src, struct TCB *dst);
     extern void jmp_to_thread(struct TCB *dst);
     
+    // 如果当前线程是正常运行（不是killed之类的），且不是idle线程，就压入ready队列
     if(cur_running_TCB->state == thread_state_running)
     {
-        push_back_ilist(&ready_threads, &cur_running_TCB->ready_block_threads_node);
+        if(cur_running_TCB != idle_TCB)
+            push_back_ilist(&ready_threads,
+                            &cur_running_TCB->ready_block_threads_node);
         cur_running_TCB->state = thread_state_ready;
     }
 
-    ASSERT_S(!is_ilist_empty(&ready_threads));
-
     struct TCB *last = cur_running_TCB;
-    cur_running_TCB = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
-                                             pop_front_ilist(&ready_threads));
+
+    // 若没有就绪线程可用，就调出idle线程
+    if(is_ilist_empty(&ready_threads))
+        cur_running_TCB = idle_TCB;
+    else
+    {
+        cur_running_TCB = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
+                                                 pop_front_ilist(&ready_threads));
+    }
     cur_running_TCB->state = thread_state_running;
 
-    if(last->pcb != cur_running_TCB->pcb)
+    // 检查是否需要切换进程资源
+    if(last->pcb != cur_running_TCB->pcb && cur_running_TCB->pcb)
     {
         set_current_vir_addr_space(cur_running_TCB->pcb->addr_space);
         if(!cur_running_TCB->pcb->is_PL_0)
@@ -180,6 +223,7 @@ void init_thread_man(void)
     init_rlist(&waiting_release_processes);
 
     init_bootloader_thread();
+    init_idle_thread();
 
     set_intr_function(INTR_NUMBER_CLOCK, thread_scheduler);
 }
@@ -274,6 +318,9 @@ void kill_thread(struct TCB *tcb)
     else // 在ready队列中或被阻塞
     {
         erase_from_ilist(&tcb->ready_block_threads_node);
+        // 信号量
+        if(tcb->blocked_sph)
+            tcb->blocked_sph->val++;
         erase_thread_in_process(tcb);
     }
 
@@ -301,9 +348,6 @@ void do_releasing_thds_procs(void)
                                         - 4096;
         ASSERT_S(ker_stk_page % 4096 == 0);
         free_ker_page((char*)ker_stk_page);
-        // 信号量
-        if(tcb->blocked_sph)
-            tcb->blocked_sph->val++;
 
         // tcb空间
         add_freelist(&TCB_freelist, tcb);
@@ -325,5 +369,7 @@ void do_releasing_thds_procs(void)
 
 void yield_CPU(void)
 {
+    intr_state is = fetch_and_disable_intr();
     thread_scheduler();
+    set_intr_state(is);
 }

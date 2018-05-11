@@ -32,6 +32,8 @@
 #define INTR_NUMBER_CLOCK                32
 #define INTR_NUMBER_KEYBOARD             33
 
+#define INTR_NUMBER_DISK                 46
+
 /* 和linux一样，0x80号中断用作系统调用 */
 #define INTR_NUMBER_SYSCALL              128
 
@@ -64,5 +66,8 @@ void set_intr_state(intr_state state);
 
 /* 关中断并取得中断状态 */
 intr_state fetch_and_disable_intr(void);
+
+/* 开中断并取得开之前的中断状态 */
+intr_state fetch_and_enable_intr(void);
 
 #endif /* TINY_OS_INTERRUPT_H */
