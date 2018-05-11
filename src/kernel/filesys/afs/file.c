@@ -29,7 +29,7 @@ static struct rb_tree opening_files;
 /* rbtree锁 */
 static spinlock opening_files_lock;
 
-#define KOF RB_MEM_TO_MEM_OFFSET(struct afs_file_desc, tree_node, entry_idx)
+#define KOF MEM_TO_MEM_OFFSET(struct afs_file_desc, tree_node, entry_idx)
 
 static bool rb_less(const void *L, const void *R)
 {

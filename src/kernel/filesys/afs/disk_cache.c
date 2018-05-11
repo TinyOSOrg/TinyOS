@@ -12,6 +12,7 @@
 #include <shared/ptrlist.h>
 #include <shared/rbtree.h>
 #include <shared/string.h>
+#include <shared/utility.h>
 
 //=========================== 扇区缓存管理 ===========================
 
@@ -76,7 +77,7 @@ static ilist sec_list;
 static size_t sec_list_size;
 static struct rb_tree sec_tree;
 
-#define KOF RB_MEM_TO_MEM_OFFSET(struct sector_node, tree_node, sec)
+#define KOF MEM_TO_MEM_OFFSET(struct sector_node, tree_node, sec)
 
 static bool rb_less(const void *L, const void *R)
 {
@@ -418,7 +419,7 @@ static ilist blk_list;
 static size_t blk_list_size;
 static struct rb_tree blk_tree;
 
-#define KOF RB_MEM_TO_MEM_OFFSET(struct blk_node, tree_node, sec)
+#define KOF MEM_TO_MEM_OFFSET(struct blk_node, tree_node, sec)
 
 // rb_less用和扇区管理相同的函数
 
