@@ -11,6 +11,7 @@
 #include <shared/intdef.h>
 #include <shared/ptrlist.h>
 #include <shared/string.h>
+#include <shared/utility.h>
 
 /*=====================================================================
     用户段相关
