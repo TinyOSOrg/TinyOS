@@ -4,7 +4,7 @@
 #include <kernel/filesys/afs/dp_phy.h>
 #include <kernel/filesys/afs/file.h>
 
-void init_afs(void)
+void init_afs()
 {
     init_afs_buffer_allocator();
     init_afs_disk_cache();

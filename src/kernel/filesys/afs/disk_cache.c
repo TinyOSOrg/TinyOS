@@ -45,7 +45,7 @@ static spinlock empty_sector_nodes_lock;
     这个函数以及下面的free函数都可能在多个不同进程中被调用
     而操作时间又很短，所以spinlock
 */
-static struct sector_node *alloc_sector_node(void)
+static struct sector_node *alloc_sector_node()
 {
     spinlock_lock(&empty_sector_nodes_lock);
 
@@ -105,7 +105,7 @@ static void release_sec_buf(struct sector_node *node)
     尝试释放超出数量阈值的、最近没怎么用过的sec缓存
     如果发现有人正在使用，就置release标志为1，否则直接释放掉
 */
-static void try_release_redundant_secs(void)
+static void try_release_redundant_secs()
 {
 RESTART:
 
@@ -332,7 +332,7 @@ void afs_write_to_sector(uint32_t sec, size_t offset, size_t size, const void *d
    afs_write_sector_exit(sec);
 }
 
-void afs_release_all_sector_cache(void)
+void afs_release_all_sector_cache()
 {
     intr_state is = fetch_and_disable_intr();
 
@@ -391,7 +391,7 @@ struct blk_node
 static freelist_handle empty_blk_nodes;
 static spinlock empty_blk_nodes_lock;
 
-static struct blk_node *alloc_blk_node(void)
+static struct blk_node *alloc_blk_node()
 {
     spinlock_lock(&empty_blk_nodes_lock);
 
@@ -443,7 +443,7 @@ static void release_block_buf(struct blk_node *node)
     尝试释放超出数量阈值的、最近没怎么用过的blk缓存
     如果发现有人正在使用，就置release标志为1，否则直接释放掉
 */
-static void try_release_redundant_blks(void)
+static void try_release_redundant_blks()
 {
 RESTART:
 
@@ -568,7 +568,7 @@ void afs_write_to_block(uint32_t sec, size_t offset, size_t size, const void *da
     afs_access_block_exit(sec);
 }
 
-void afs_release_all_block_cache(void)
+void afs_release_all_block_cache()
 {
     intr_state is = fetch_and_disable_intr();
 
@@ -605,7 +605,7 @@ void afs_write_to_block_end(uint32_t sec)
 
 //=========================== 其他 ===========================
 
-void init_afs_disk_cache(void)
+void init_afs_disk_cache()
 {
     init_ilist(&sec_list);
     sec_list_size = 0;

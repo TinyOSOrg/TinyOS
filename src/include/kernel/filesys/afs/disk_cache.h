@@ -29,7 +29,7 @@
     块则没有互斥，因为块读写用于文件操作，应该由文件系统负责互斥
 */
 
-void init_afs_disk_cache(void);
+void init_afs_disk_cache();
 
 void afs_read_from_sector(uint32_t sec, size_t offset, size_t size, void *data);
 
@@ -40,7 +40,7 @@ void afs_write_to_sector(uint32_t sec, size_t offset, size_t size, const void *d
     比如关机的时候/销毁文件系统的时候用
     调用时，文件系统须保证没有别的线程会调用afs_read/write_from/to_sector函数
 */
-void afs_release_all_sector_cache(void);
+void afs_release_all_sector_cache();
 
 /* 获取某个扇区的缓存区以用于读取，用完一定要调用对应的end函数 */
 const void *afs_read_from_sector_begin(uint32_t sec);
@@ -56,7 +56,7 @@ void afs_read_from_block(uint32_t sec, size_t offset, size_t size, void *data);
 
 void afs_write_to_block(uint32_t sec, size_t offset, size_t size, const void *data);
 
-void afs_release_all_block_cache(void);
+void afs_release_all_block_cache();
 
 const void *afs_read_from_block_begin(uint32_t sec);
 

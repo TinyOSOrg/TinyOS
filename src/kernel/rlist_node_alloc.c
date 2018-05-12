@@ -7,7 +7,7 @@
 /* 记录空闲rlist node的自由链表 */
 static freelist_handle unused_resident_rlist_nodes;
 
-void init_kernel_rlist_node_alloc(void)
+void init_kernel_rlist_node_alloc()
 {
     init_freelist(&unused_resident_rlist_nodes);
 }
@@ -16,7 +16,7 @@ void init_kernel_rlist_node_alloc(void)
     这个函数可能被多个进程并行调用，而那些进程很可能是不关中断的
     所以这里的alloc和free都要关中断操作
 */
-struct rlist_node *kernel_resident_rlist_node_alloc(void)
+struct rlist_node *kernel_resident_rlist_node_alloc()
 {
     intr_state is = fetch_and_disable_intr();
 

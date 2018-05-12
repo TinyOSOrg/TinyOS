@@ -59,7 +59,7 @@ static rlist waiting_release_threads;
 static rlist waiting_release_processes;
 
 /* 分配一个空TCB块 */
-static struct TCB *alloc_TCB(void)
+static struct TCB *alloc_TCB()
 {
     // 没有空余TCB时，分配一个新的内核页并加入自由链表
     if(is_freelist_empty(&TCB_freelist))
@@ -84,7 +84,7 @@ static void kernel_thread_entry(thread_exec_func func, void *params)
 }
 
 /* 从开机以来就一直在跑的家伙也是个线程 */
-static void init_bootloader_thread(void)
+static void init_bootloader_thread()
 {
     struct TCB *tcb = alloc_TCB();
     tcb->state = thread_state_running;
@@ -96,13 +96,13 @@ static void init_bootloader_thread(void)
 }
 
 /* idle线程的执行函数 */
-static void idle_func(void)
+static void idle_func()
 {
     while(true)
         ;
 }
 
-static void init_idle_thread(void)
+static void init_idle_thread()
 {
     idle_TCB = alloc_TCB();
     idle_TCB->pcb = NULL;
@@ -167,7 +167,7 @@ static void erase_thread_in_process(struct TCB *tcb)
     线程调度
     现在就单纯地从把当前running的线程换到ready，然后从ready中取出一个变成running
 */
-static void thread_scheduler(void)
+static void thread_scheduler()
 {
     // 从src线程切换至dst线程
     // 在thread.s中实现
@@ -214,7 +214,7 @@ static void thread_scheduler(void)
     }
 }
 
-void init_thread_man(void)
+void init_thread_man()
 {
     init_freelist(&TCB_freelist);
 
@@ -267,12 +267,12 @@ struct TCB *create_thread(thread_exec_func func, void *params,
     return tcb;
 }
 
-struct TCB *get_cur_TCB(void)
+struct TCB *get_cur_TCB()
 {
     return cur_running_TCB;
 }
 
-void block_cur_thread(void)
+void block_cur_thread()
 {
     intr_state intr_s = fetch_and_disable_intr();
 
@@ -282,7 +282,7 @@ void block_cur_thread(void)
     set_intr_state(intr_s);
 }
 
-void block_cur_thread_onto_sysmsg(void)
+void block_cur_thread_onto_sysmsg()
 {
     intr_state intr_s = fetch_and_disable_intr();
 
@@ -328,12 +328,12 @@ void kill_thread(struct TCB *tcb)
     set_intr_state(intr_s);
 }
 
-void exit_thread(void)
+void exit_thread()
 {
     kill_thread(cur_running_TCB);
 }
 
-void do_releasing_thds_procs(void)
+void do_releasing_thds_procs()
 {
     intr_state intr_s = fetch_and_disable_intr();
 
@@ -368,7 +368,7 @@ void do_releasing_thds_procs(void)
     set_intr_state(intr_s);
 }
 
-void yield_CPU(void)
+void yield_CPU()
 {
     intr_state is = fetch_and_disable_intr();
     thread_scheduler();

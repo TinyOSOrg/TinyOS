@@ -37,15 +37,15 @@
 /* 和linux一样，0x80号中断用作系统调用 */
 #define INTR_NUMBER_SYSCALL              128
 
-void init_IDT(void);
+void init_IDT();
 
 /*
     合法的intr_function签名包括
-    void function(void);
+    void function();
     void function(uint32_t intr_number);
     void function(uint32_t intr_number, uint32_t err_code);
 */
-void set_intr_function(uint8_t intr_number, void (*func)(void));
+void set_intr_function(uint8_t intr_number, void (*func)());
 
 /*
     设置时钟中断频率
@@ -59,15 +59,15 @@ typedef uint32_t intr_state;
 bool is_intr_on(intr_state state);
 
 /* 取得当前计算机所处的中断状态 */
-intr_state get_intr_state(void);
+intr_state get_intr_state();
 
 /* 设置中断状态 */
 void set_intr_state(intr_state state);
 
 /* 关中断并取得中断状态 */
-intr_state fetch_and_disable_intr(void);
+intr_state fetch_and_disable_intr();
 
 /* 开中断并取得开之前的中断状态 */
-intr_state fetch_and_enable_intr(void);
+intr_state fetch_and_enable_intr();
 
 #endif /* TINY_OS_INTERRUPT_H */

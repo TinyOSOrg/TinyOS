@@ -25,7 +25,7 @@ enum afs_file_operation_status
 /* 一个打开的文件槽句柄 */
 struct afs_file_desc;
 
-void init_afs_file(void);
+void init_afs_file();
 
 /* 在磁盘上创建一个大小为0的空文件，返回entry index */
 uint32_t afs_create_empty_file(

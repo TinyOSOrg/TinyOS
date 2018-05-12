@@ -59,7 +59,7 @@
                      : "memory"); \
        r; })
 
-void PL0_thread(void)
+void PL0_thread()
 {
     printf("hahaha process, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
@@ -87,7 +87,7 @@ void PL0_thread(void)
     exit_thread();
 }
 
-void init_kernel(void)
+void init_kernel()
 {
     /* 中断系统 */
     init_IDT();
@@ -135,7 +135,7 @@ void init_kernel(void)
     init_afs();
 }
 
-int main(void)
+int main()
 {
     init_kernel();
 

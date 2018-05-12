@@ -7,11 +7,11 @@
 
 #include <shared/syscall/common.h>
 
-typedef void (*syscall_impl)(void);
+typedef void (*syscall_impl)();
 
 syscall_impl syscall_func_table[SYSCALL_COUNT];
 
-void init_syscall(void)
+void init_syscall()
 {
     // declared in kernel/process/process.h
     syscall_func_table[SYSCALL_GET_PROCESS_ID] =

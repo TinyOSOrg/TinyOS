@@ -41,7 +41,7 @@ static freelist_handle file_desc_freelist;
 /* file_desc_freelist锁 */
 static spinlock file_desc_freelist_lock;
 
-static struct afs_file_desc *alloc_file_desc(void)
+static struct afs_file_desc *alloc_file_desc()
 {
     spinlock_lock(&file_desc_freelist_lock);
 
@@ -86,7 +86,7 @@ STATIC_ASSERT(sizeof(struct afs_index_block) == AFS_BLOCK_BYTE_SIZE,
 
 #define SET_RT(V) do { if(rt) *rt = (V); } while(0)
 
-void init_afs_file(void)
+void init_afs_file()
 {
     init_spinlock(&opening_files_lock);
     rb_init(&opening_files);

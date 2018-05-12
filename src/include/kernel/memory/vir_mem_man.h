@@ -10,7 +10,7 @@
 #define MAX_VIR_ADDR_SPACE_COUNT 64
 
 /* 初始化整个虚拟地址空间管理系统，在init_phy_mem_man()之后即可调用 */
-void init_vir_mem_man(void);
+void init_vir_mem_man();
 
 /* 分配一个内核页（占用内核虚拟地址空间） */
 void *alloc_ker_page(bool resident);
@@ -31,7 +31,7 @@ typedef struct _vir_addr_space vir_addr_space;
 
     创建的虚拟页目录本身所在的物理页是常驻内存的
 */
-vir_addr_space *create_vir_addr_space(void);
+vir_addr_space *create_vir_addr_space();
 
 /*
     将某个虚拟地址空间设置为当前正使用
@@ -40,13 +40,13 @@ vir_addr_space *create_vir_addr_space(void);
 void set_current_vir_addr_space(vir_addr_space *addr_space);
 
 /* 取得当前虚拟地址空间句柄 */
-vir_addr_space *get_current_vir_addr_space(void);
+vir_addr_space *get_current_vir_addr_space();
 
 /*
     取得自bootloader开始内核所使用的虚拟地址空间句柄
     虽然这玩意儿并没有什么卵用
 */
-vir_addr_space *get_ker_vir_addr_space(void);
+vir_addr_space *get_ker_vir_addr_space();
 
 /*
     销毁某个虚拟地址空间

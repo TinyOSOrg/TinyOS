@@ -19,16 +19,16 @@ void kset_cursor_row_col(uint8_t row, uint8_t col);
     取得光标位置
     ret = 80 * row + col
 */
-uint16_t kget_cursor_pos(void);
+uint16_t kget_cursor_pos();
 
 /*
     取得光标位置
     ret = (row << 8) | col
 */
-uint16_t kget_cursor_row_col(void);
+uint16_t kget_cursor_row_col();
 
 /* 屏幕滚动一行 */
-void kroll_screen(void);
+void kroll_screen();
 
 /*
     在光标位置处输出字符并自动调整光标

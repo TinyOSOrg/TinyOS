@@ -82,7 +82,7 @@ static uint32_t console_syscall_function_roll_screen(uint32_t arg)
     return 0;
 }
 
-void init_console(void)
+void init_console()
 {
     init_semaphore(&console_mutex, 1);
 

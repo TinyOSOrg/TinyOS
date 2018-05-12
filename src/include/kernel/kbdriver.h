@@ -10,7 +10,7 @@
 struct PCB;
 
 /* 键盘驱动初始化 */
-void init_kb_driver(void);
+void init_kb_driver();
 
 /*
     订阅键盘消息

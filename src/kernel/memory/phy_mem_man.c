@@ -57,7 +57,7 @@ static void *static_kernel_mem_top;
 /* 全局物理内存池 */
 static struct mem_page_pool *phy_mem_page_pool;
 
-size_t get_mem_total_bytes(void)
+size_t get_mem_total_bytes()
 {
     return total_mem_bytes;
 }
@@ -160,7 +160,7 @@ static bool init_ker_phy_mem_pool(struct mem_page_pool **p_pool, size_t pool_beg
     return true;
 }
 
-void init_phy_mem_man(void)
+void init_phy_mem_man()
 {
     // 内存总量
     total_mem_bytes = *(size_t*)TOTAL_MEMORY_SIZE_ADDR;
@@ -237,7 +237,7 @@ void free_phy_page(uint32_t page_phy_addr)
     ++phy_mem_page_pool->unused_pages;
 }
 
-uint32_t get_free_phy_page_count(void)
+uint32_t get_free_phy_page_count()
 {
     return phy_mem_page_pool->unused_pages;
 }

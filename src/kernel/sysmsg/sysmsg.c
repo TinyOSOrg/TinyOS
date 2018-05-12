@@ -10,7 +10,7 @@
 /* 消息队列容量 */
 #define SYSMSG_QUEUE_MAX_SIZE (4096 / sizeof(struct sysmsg))
 
-void init_sysmsg(void)
+void init_sysmsg()
 {
     // 暂时没啥好做的……
 }

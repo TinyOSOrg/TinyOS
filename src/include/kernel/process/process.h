@@ -78,13 +78,13 @@ struct PCB
 };
 
 /* 进程入口函数签名 */
-typedef void (*process_exec_func)(void);
+typedef void (*process_exec_func)();
 
 /*
     进程管理机制初始化
     应在线程管理初始化之后调用
 */
-void init_process_man(void);
+void init_process_man();
 
 /* 创建进程，不解释 */
 void create_process(const char *name, process_exec_func func, bool is_PL_0);
@@ -109,6 +109,6 @@ void _clr_PID_to_PCB(uint32_t pid);
     进程相关系统调用实现
 =====================================================================*/
 
-uint32_t syscall_get_cur_PID_impl(void);
+uint32_t syscall_get_cur_PID_impl();
 
 #endif /* TINY_OS_PROCESS_H */

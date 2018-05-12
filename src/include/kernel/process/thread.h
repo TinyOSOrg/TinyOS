@@ -73,20 +73,20 @@ struct thread_init_stack
 };
 
 /* 初始化内核线程管理系统 */
-void init_thread_man(void);
+void init_thread_man();
 
 /* 创建新内核线程并加入调度 */
 struct TCB *create_thread(thread_exec_func func, void *params,
                           struct PCB *pcb);
 
 /* 取得当前线程的TCB */
-struct TCB *get_cur_TCB(void);
+struct TCB *get_cur_TCB();
 
 /* 阻塞自己，注意系统不会维护阻塞线程 */
-void block_cur_thread(void);
+void block_cur_thread();
 
 /* 将自己阻塞到进程消息队列上 */
-void block_cur_thread_onto_sysmsg(void);
+void block_cur_thread_onto_sysmsg();
 
 /* 唤醒一个blocked线程，将其变为ready */
 void awake_thread(struct TCB *tcb);
@@ -98,17 +98,17 @@ void kill_thread(struct TCB *tcb);
     每个线程结束的时候自己调用
     不然触发GP把自己干掉了，系统是不负责任的
 */
-void exit_thread(void);
+void exit_thread();
 
 /*
     清理待释放的线程和进程资源
 */
-void do_releasing_thds_procs(void);
+void do_releasing_thds_procs();
 
 /*
     让出CPU，让自己进入ready队列
     好人才会做的事
 */
-void yield_CPU(void);
+void yield_CPU();
 
 #endif /* TINY_OS_THREAD_H */

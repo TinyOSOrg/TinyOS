@@ -9,7 +9,7 @@ static freelist_handle blk_buf_fl;
 
 static freelist_handle sec_buf_fl;
 
-void init_afs_buffer_allocator(void)
+void init_afs_buffer_allocator()
 {
     init_freelist(&blk_buf_fl);
     init_freelist(&sec_buf_fl);
@@ -22,7 +22,7 @@ STATIC_ASSERT(AFS_BLOCK_BYTE_SIZE <= 4096,
     这个函数可能被多个进程并行调用，而那些进程很可能是不关中断的
     所以这里的alloc和free都要关中断操作
 */
-void *afs_alloc_block_buffer(void)
+void *afs_alloc_block_buffer()
 {    
     intr_state is = fetch_and_disable_intr();
 
@@ -45,7 +45,7 @@ void afs_free_block_buffer(void *buf)
     set_intr_state(is);
 }
 
-void *afs_alloc_sector_buffer(void)
+void *afs_alloc_sector_buffer()
 {
     intr_state is = fetch_and_disable_intr();
 

@@ -126,7 +126,7 @@ static void set_key_pressed(uint8_t vk, bool pressed)
 }
 
 /* 键盘中断处理 */
-static void kb_intr_handler(void)
+static void kb_intr_handler()
 {
     bool    up = false;
     uint8_t vk = VK_NULL;
@@ -202,7 +202,7 @@ static void kb_intr_handler(void)
     }
 }
 
-void init_kb_driver(void)
+void init_kb_driver()
 {
     init_sysmsg_receiver_list(&kb_receivers);
     init_sysmsg_receiver_list(&char_receivers);

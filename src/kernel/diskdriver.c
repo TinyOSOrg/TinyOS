@@ -34,7 +34,7 @@ static ilist blocked_normal_tasks;
 
 static struct TCB *busy_task;
 
-static inline bool wait_for_ready(void)
+static inline bool wait_for_ready()
 {
     while(IS_DISK_BUSY())
         ;
@@ -61,7 +61,7 @@ static void disk_cmd(const struct disk_rw_task *task)
                       task->type == DISK_RW_TASK_TYPE_READ ? 0x20 : 0x30);
 }
 
-static void normal_task_entry(void)
+static void normal_task_entry()
 {
     while(busy_task)
     {
@@ -72,7 +72,7 @@ static void normal_task_entry(void)
     busy_task = get_cur_TCB();
 }
 
-static void task_exit(void)
+static void task_exit()
 {
     busy_task = NULL;
 
@@ -85,7 +85,7 @@ static void task_exit(void)
     }
 }
 
-static void disk_intr_handler(void)
+static void disk_intr_handler()
 {
     if(busy_task)
         awake_thread(busy_task);
@@ -125,7 +125,7 @@ static void disk_write_raw_impl(const struct disk_rw_task *task)
     task_exit();
 }
 
-void init_disk_driver(void)
+void init_disk_driver()
 {
     busy_task = NULL;
 
