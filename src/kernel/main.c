@@ -170,14 +170,14 @@ int main()
     printf("shit!\n");
 
     for(uint32_t i = 0, j = 0;i < file_size; i += 4, ++j)
-        afs_write_binary(&dph, fp, i, 4, &j, NULL);
+        afs_write_binary(&dph, fp, 1024 + i, 4, &j, NULL);
 
     printf("shit!\n");
 
     for(uint32_t i = 12; i < 72; i += 4)
     {
         uint32_t j = 0;
-        afs_read_binary(&dph, fp, i, 4, &j, NULL);
+        afs_read_binary(&dph, fp, 1024 + i, 4, &j, NULL);
         printf("j = %u ", j);
     }
 

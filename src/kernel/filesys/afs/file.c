@@ -86,6 +86,8 @@ STATIC_ASSERT(sizeof(struct afs_index_block) == AFS_BLOCK_BYTE_SIZE,
 
 #define SET_RT(V) do { if(rt) *rt = (V); } while(0)
 
+static uint32_t full_index_tree_bytes[12];
+
 void init_afs_file()
 {
     init_spinlock(&opening_files_lock);
@@ -93,6 +95,10 @@ void init_afs_file()
 
     init_spinlock(&file_desc_freelist_lock);
     init_freelist(&file_desc_freelist);
+
+    full_index_tree_bytes[0] = AFS_BLOCK_BYTE_SIZE;
+    for(size_t i = 1;i != 12; ++i)
+        full_index_tree_bytes[i] = full_index_tree_bytes[i - 1] * AFS_BLOCK_BYTE_SIZE;
 }
 
 uint32_t afs_create_empty_file(struct afs_dp_head *head,
@@ -335,14 +341,6 @@ void afs_close_file_for_writing(struct afs_dp_head *head,
     free_file_desc(file);
 }
 
-static inline uint32_t pow(uint32_t a, uint32_t b)
-{
-    uint32_t r = 1;
-    while(b-- > 0)
-        r *= a;
-    return r;
-}
-
 /*
     从block_sec代表的索引树边缘的offset_bytes处读取remain_bytes个字节
 */
@@ -358,7 +356,7 @@ static void read_from_index_tree(uint32_t block_sec,
         afs_read_from_block : read_from_index_tree;
 
     // 一个孩子对应多少字节的内容
-    uint32_t bytes_per_child = pow(AFS_BLOCK_BYTE_SIZE, block->height);
+    uint32_t bytes_per_child = full_index_tree_bytes[block->height - 1];;
 
     // 跟据offset跳过一些孩子
     uint32_t ch_idx = offset_bytes / bytes_per_child;
@@ -418,7 +416,7 @@ static void write_to_index_tree(uint32_t block_sec,
         block->height == 1 ? afs_write_to_block : write_to_index_tree;
 
     // 一个孩子对应多少字节的内容
-    uint32_t bytes_per_child = pow(AFS_BLOCK_BYTE_SIZE, block->height);
+    uint32_t bytes_per_child = full_index_tree_bytes[block->height - 1];;
 
     // 跟据offset跳过一些孩子
     uint32_t ch_idx = offset_bytes / bytes_per_child;
@@ -473,14 +471,6 @@ bool afs_write_binary(struct afs_dp_head *head,
     return true;
 }
 
-static uint32_t full_index_tree_bytes(uint32_t height)
-{
-    uint32_t ret = AFS_BLOCK_BYTE_SIZE;
-    while(height-- > 0)
-        ret *= AFS_BLOCK_MAX_CHILD_COUNT;
-    return ret;
-}
-
 /*
     扩充一棵索引树的容量
     blk_sec为子树根部节点扇区号
@@ -531,7 +521,7 @@ static bool expand_index_tree(struct afs_dp_head *head,
     {
         // 最后一个孩子节点已经用了多少字节
         uint32_t child_used = used_bytes -
-            (block->child_count - 1) * full_index_tree_bytes(block->height);
+            (block->child_count - 1) * full_index_tree_bytes[old_height - 1];
 
         while(exp < exp_bytes &&
               ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
@@ -588,7 +578,7 @@ static bool expand_index_tree(struct afs_dp_head *head,
     *new_root = new_root_sec;
     uint32_t dexp = 0;
     bool ret = expand_index_tree(head, new_root_sec, new_root,
-                                 full_index_tree_bytes(old_height),
+                                 full_index_tree_bytes[old_height],
                                  exp_bytes - exp, &dexp, rt);
     *exp_rt = exp + dexp;
 
