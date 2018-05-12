@@ -17,7 +17,7 @@ void kset_cursor_row_col(uint8_t row, uint8_t col)
     kset_cursor_pos(80 * row + col);
 }
 
-uint16_t kget_cursor_pos(void)
+uint16_t kget_cursor_pos()
 {
     uint8_t high8;
     _out_byte_to_port(0x03d4, 0x0e);
@@ -26,7 +26,7 @@ uint16_t kget_cursor_pos(void)
     return (high8 << 8) | _in_byte_from_port(0x03d5);
 }
 
-uint16_t kget_cursor_row_col(void)
+uint16_t kget_cursor_row_col()
 {
     uint8_t row, col;
     uint16_t pos = kget_cursor_pos();
@@ -35,7 +35,7 @@ uint16_t kget_cursor_row_col(void)
     return (row << 8) | col;
 }
 
-void kroll_screen(void)
+void kroll_screen()
 {
     memcpy((char*)0xc00b8000, (char*)0xc00b80a0, 3840);
     memset((char*)(0xc00b8000 + 3840), 0x0, 160);

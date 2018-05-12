@@ -25,7 +25,7 @@ struct sysmsg_queue
 };
 
 /* 初始化内核进程消息管理系统 */
-void init_sysmsg(void);
+void init_sysmsg();
 
 /*
     初始化一个给定的内核消息队列

@@ -6,12 +6,12 @@
 /* 记录空闲rlist node的自由链表 */
 static freelist_handle unused_resident_rlist_nodes;
 
-void init_kernel_rlist_node_alloc(void)
+void init_kernel_rlist_node_alloc()
 {
     init_freelist(&unused_resident_rlist_nodes);
 }
 
-struct rlist_node *kernel_resident_rlist_node_alloc(void)
+struct rlist_node *kernel_resident_rlist_node_alloc()
 {
     if(is_freelist_empty(&unused_resident_rlist_nodes))
     {

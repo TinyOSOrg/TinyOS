@@ -57,12 +57,12 @@ static inline uint32_t _find_highest_nonzero_bit(uint32_t bits)
     return rt;
 }
 
-static inline void _enable_intr(void)
+static inline void _enable_intr()
 {
     asm volatile ("sti");
 }
 
-static inline void _disable_intr(void)
+static inline void _disable_intr()
 {
     asm volatile ("cli");
 }
@@ -77,21 +77,21 @@ static inline void _refresh_vir_addr_in_TLB(uint32_t vir_addr)
     asm volatile ("invlpg %0" : : "m" (vir_addr) : "memory");
 }
 
-static inline uint32_t _get_cr2(void)
+static inline uint32_t _get_cr2()
 {
     uint32_t rt;
     asm volatile ("movl %%cr2, %0" : "=r" (rt));
     return rt;
 }
 
-static inline uint32_t _get_cr3(void)
+static inline uint32_t _get_cr3()
 {
     uint32_t rt;
     asm volatile ("movl %%cr3, %0" : "=r" (rt));
     return rt;
 }
 
-static inline uint32_t _get_eflag(void)
+static inline uint32_t _get_eflag()
 {
     uint32_t rt;
     asm volatile ("pushfl; popl %0" : "=g" (rt));

@@ -27,7 +27,7 @@ typedef struct rlist_handle rlist;
 void init_rlist(rlist *L);
 
 /* 循环链表节点分配器 */
-typedef struct rlist_node *(*rlist_node_allocator)(void);
+typedef struct rlist_node *(*rlist_node_allocator)();
 /* 循环链表节点释放器 */
 typedef void (*rlist_node_deallocator)(struct rlist_node*);
 

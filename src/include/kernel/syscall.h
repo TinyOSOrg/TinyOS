@@ -30,6 +30,6 @@
 */
 
 /* 系统调用初始化，至少在中断初始化后调用 */
-void init_syscall(void);
+void init_syscall();
 
 #endif /* TINY_OS_SYSCALL_H */

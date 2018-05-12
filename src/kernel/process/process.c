@@ -42,7 +42,7 @@ struct TSS
 static struct TSS tss;
 
 /* 初始化TSS描述符 */
-static void init_TSS(void)
+static void init_TSS()
 {
     memset((char*)&tss, 0x0, sizeof(struct TSS));
     tss.ss0 = SEG_SEL_KERNEL_STACK;
@@ -53,7 +53,7 @@ static void init_TSS(void)
 }
 
 /* 初始化用户代码段和数据段描述符 */
-static void init_user_segments(void)
+static void init_user_segments()
 {
     make_iGDT((struct iGDT*)((char*)GDT_START + 4 * 8),
               0, 0xbffff,
@@ -102,7 +102,7 @@ struct PCB *pid_to_pcb[MAX_PROCESS_COUNT];
 static freelist_handle PCB_freelist;
 
 /* 申请一块PCB空间 */
-static struct PCB *alloc_PCB(void)
+static struct PCB *alloc_PCB()
 {
     if(is_freelist_empty(&PCB_freelist))
     {
@@ -148,7 +148,7 @@ static struct PCB *create_empty_process(const char *name, bool is_PL_0)
     此函数被调用时一定在用户虚拟地址空间中
     在最低地址的位图中查找一个空闲的用户栈空间
 */
-static void *alloc_thread_user_stack(void)
+static void *alloc_thread_user_stack()
 {
     uint32_t *usr_bmps = (uint32_t*)USER_STACK_BITMAP_ADDR;
     for(size_t i = 0;i != USER_THREAD_STACK_BITMAP_COUNT; ++i)
@@ -164,7 +164,7 @@ static void *alloc_thread_user_stack(void)
 }
 
 /* 初始化进程地址空间 */
-static void init_process_addr_space(void)
+static void init_process_addr_space()
 {
     // 填充线程栈位图
     for(size_t i = 0;i != USER_THREAD_STACK_BITMAP_COUNT; ++i)
@@ -212,7 +212,7 @@ static void process_thread_entry(process_exec_func func,
     intr_stack->esp = (uint32_t)alloc_thread_user_stack();
     intr_stack->ss = stack_seg_sel;
 
-    extern void intr_proc_end(void); // defined in interrupt.s
+    extern void intr_proc_end(); // defined in interrupt.s
     
     asm volatile ("movl %0, %%esp;"
                   "jmp intr_proc_end"
@@ -234,7 +234,7 @@ static void process_thread_entry_PL_3(process_exec_func func)
 }
 
 /* 把bootloader以来一直在跑的东西封装成进程 */
-static void init_bootloader_process(void)
+static void init_bootloader_process()
 {
     struct PCB *pcb = alloc_PCB();
     struct TCB *tcb = get_cur_TCB();
@@ -260,7 +260,7 @@ static void init_bootloader_process(void)
     tcb->pcb = pcb;
 }
 
-void init_process_man(void)
+void init_process_man()
 {
     for(size_t i = 0;i != MAX_PROCESS_COUNT; ++i)
         pid_to_pcb[i] = NULL;
@@ -292,7 +292,7 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0)
     set_intr_state(intr_s);
 }
 
-uint32_t syscall_get_cur_PID_impl(void)
+uint32_t syscall_get_cur_PID_impl()
 {
     return get_cur_TCB()->pcb->pid;
 }

@@ -10,7 +10,7 @@
 /* 用来分配sysmsg_rcv_src_list_node的自由链表 */
 static freelist_handle sysmsg_rcv_src_list_node_freelist;
 
-struct sysmsg_rcv_src_list_node *alloc_sysmsg_rcv_src_list_node(void)
+struct sysmsg_rcv_src_list_node *alloc_sysmsg_rcv_src_list_node()
 {
     if(is_freelist_empty(&sysmsg_rcv_src_list_node_freelist))
     {

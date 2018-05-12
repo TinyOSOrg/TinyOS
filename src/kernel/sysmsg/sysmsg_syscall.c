@@ -53,7 +53,7 @@ static uint32_t proc_sysmsg_syscall_block_onto_sysmsg(uint32_t a, uint32_t b)
     return 0;
 }
 
-void init_sysmsg_syscall(void)
+void init_sysmsg_syscall()
 {
     functions[SYSMSG_SYSCALL_FUNCTION_IS_EMPTY] =
         proc_sysmsg_syscall_is_empty;

@@ -16,13 +16,13 @@
     换句话说，内核层面没有malloc和free，只有alloc_page和free_page……
 */
 
-size_t get_mem_total_bytes(void);
+size_t get_mem_total_bytes();
 
 /* 分配一块固定大小的、在整个系统运行期间常驻的内核内存区域 */
 void *alloc_static_kernel_mem(size_t bytes, size_t align_bytes);
 
 /* 初始化整个页内存管理器 */
-void init_phy_mem_man(void);
+void init_phy_mem_man();
 
 /*
     分配一个物理页，返回值为物理地址
@@ -37,6 +37,6 @@ uint32_t alloc_phy_page(bool resident);
 void free_phy_page(uint32_t page_phy_addr);
 
 /* 还剩多少个物理页空闲 */
-uint32_t get_free_phy_page_count(void);
+uint32_t get_free_phy_page_count();
 
 #endif /* TINY_OS_PHY_MEM_MAN_H */

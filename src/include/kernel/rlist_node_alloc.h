@@ -10,10 +10,10 @@
 */
 
 /* 在虚拟内存管理系统初始化之后、用到rlist node allocator之前调用 */
-void init_kernel_rlist_node_alloc(void);
+void init_kernel_rlist_node_alloc();
 
 /* 申请一个常驻内存的rlist node */
-struct rlist_node *kernel_resident_rlist_node_alloc(void);
+struct rlist_node *kernel_resident_rlist_node_alloc();
 
 /* 释放一个常驻内存的rlist node */
 void kernel_resident_rlist_node_dealloc(struct rlist_node *node);

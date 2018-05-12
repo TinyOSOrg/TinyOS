@@ -10,7 +10,7 @@
 
 static struct dpt_unit *dpts;
 
-void init_dpt(void)
+void init_dpt()
 {
     // 这里直接申请一个扇区的大小，后面那点零头不用在意，主要是重写dpt的时候方便
     dpts = alloc_static_kernel_mem(512, sizeof(struct dpt_unit));
@@ -34,7 +34,7 @@ struct dpt_unit *get_dpt_unit(size_t idx)
     return &dpts[idx];
 }
 
-void restore_dpt(void)
+void restore_dpt()
 {
     struct disk_rw_task dpt_sec_task =
     {

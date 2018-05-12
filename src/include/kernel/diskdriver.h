@@ -27,7 +27,7 @@ struct disk_rw_task
     } addr;
 };
 
-void init_disk_driver(void);
+void init_disk_driver();
 
 /*
     执行一个无缓冲硬盘读写

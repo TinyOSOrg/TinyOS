@@ -36,7 +36,7 @@ struct intr_gate_desc
 extern uint32_t intr_entry_table[IDT_DESC_COUNT];
 
 /* 可注册的中断处理函数 */
-void (*volatile intr_function[IDT_DESC_COUNT])(void);
+void (*volatile intr_function[IDT_DESC_COUNT])();
 
 static struct intr_gate_desc IDT[IDT_DESC_COUNT];
 
@@ -48,7 +48,7 @@ void default_intr_function(uint32_t intr_number)
 }
 
 /* 初始化8259A */
-static void init_8259A(void)
+static void init_8259A()
 {
    // 主片
    _out_byte_to_port(PIC_M_CTRL, 0x11);
@@ -67,7 +67,7 @@ static void init_8259A(void)
    _out_byte_to_port(PIC_S_DATA, 0xbf);
 }
 
-void init_IDT(void)
+void init_IDT()
 {
     for(int i = 0;i < IDT_DESC_COUNT; ++i)
     {
@@ -78,12 +78,12 @@ void init_IDT(void)
         desc->attrib        = INTR_DESC_ATTRIB(INTR_DESC_DPL_0);
         desc->offset_high16 = intr_entry_table[i] >> 16;
 
-        intr_function[i] = (void(*)(void))default_intr_function;
+        intr_function[i] = (void(*)())default_intr_function;
     }
 
     // 初始化系统调用对应的IDT
 
-    extern uint32_t global_syscall_entry(void);
+    extern uint32_t global_syscall_entry();
     struct intr_gate_desc *syscall_desc = &IDT[INTR_NUMBER_SYSCALL];
     syscall_desc->offset_low16  = (uint32_t)&global_syscall_entry & 0xffff;
     syscall_desc->seg_sel       = SEG_SEL_KERNEL_CODE;
@@ -97,11 +97,11 @@ void init_IDT(void)
     _load_IDT(IDTarg);
 }
 
-void set_intr_function(uint8_t intr_number, void (*func)(void))
+void set_intr_function(uint8_t intr_number, void (*func)())
 {
     ASSERT_S(intr_number < IDT_DESC_COUNT);
     if(!func)
-        intr_function[intr_number] = (void(*)(void))default_intr_function;
+        intr_function[intr_number] = (void(*)())default_intr_function;
     else
         intr_function[intr_number] = func;
 }
@@ -122,7 +122,7 @@ bool is_intr_on(intr_state state)
     return (state & INTR_STATE_ON) != 0;
 }
 
-intr_state get_intr_state(void)
+intr_state get_intr_state()
 {
     return _get_eflag() & 0x00000200 ? INTR_STATE_ON : 0;
 }
@@ -135,14 +135,14 @@ void set_intr_state(intr_state state)
         _disable_intr();
 }
 
-intr_state fetch_and_disable_intr(void)
+intr_state fetch_and_disable_intr()
 {
     intr_state rt = get_intr_state();
     _disable_intr();
     return rt;
 }
 
-intr_state fetch_and_enable_intr(void)
+intr_state fetch_and_enable_intr()
 {
     intr_state rt = get_intr_state();
     _enable_intr();

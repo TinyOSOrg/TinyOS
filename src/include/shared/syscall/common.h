@@ -8,7 +8,7 @@
 
 /*
     取得当前进程ID
-    uint32_t impl(void);
+    uint32_t impl();
 */
 #define SYSCALL_GET_PROCESS_ID 0
 

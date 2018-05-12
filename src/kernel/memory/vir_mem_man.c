@@ -101,7 +101,7 @@ static inline struct PTE_struct *make_PTE_vir_addr(size_t PTE_idx)
 }
 
 /* 缺页中断处理 */
-void page_fault_handler(void)
+void page_fault_handler()
 {
     // 1. 取得是哪个页缺失了
     // 2. 看看页表是否缺失，缺了的话，给它分配一个物理页
@@ -142,7 +142,7 @@ void page_fault_handler(void)
 }
 
 /* 初始化内核虚拟页管理器 */
-static void init_ker_page_man(void)
+static void init_ker_page_man()
 {
     // 内核虚拟空间中，截止至静态内核存储区域都已经用了，后面的一直到4GB - 4KB都还空着
     size_t ker_page_begin = (STATIC_KERNEL_MEM_START +
@@ -185,7 +185,7 @@ static void insert_to_empty_usr_addr_space_rec(void *rec)
     在空闲的用户虚拟地址空间记录自由链表中取出一个元素
     若记录已满，返回NULL
 */
-static vir_addr_space *new_empty_usr_addr_space(void)
+static vir_addr_space *new_empty_usr_addr_space()
 {
     if(!empty_usr_addr_space_rec)
         return NULL;
@@ -200,7 +200,7 @@ static vir_addr_space *new_empty_usr_addr_space(void)
 }
 
 /* 初始化用户虚拟地址空间管理系统 */
-static void init_usr_vir_addr_space_man(void)
+static void init_usr_vir_addr_space_man()
 {
     // 获取记录首元素地址
     usr_addr_spaces_arr = alloc_static_kernel_mem(
@@ -224,7 +224,7 @@ static struct PDE_struct *get_page_of_usr_addr_space(vir_addr_space *addr_space)
     return usr_PDEs[get_usr_vir_addr_idx(addr_space)];
 }
 
-void init_vir_mem_man(void)
+void init_vir_mem_man()
 {
     // 内核页目录初始化
     ker_addr_space.vir_PDE = (struct PDE_struct*)KER_PDE_VIR_ADDR;
@@ -290,7 +290,7 @@ void free_ker_page(void *page)
     free_phy_page(phy_page);
 }
 
-vir_addr_space *create_vir_addr_space(void)
+vir_addr_space *create_vir_addr_space()
 {
     // 分配一个虚拟地址空间记录
     vir_addr_space *rec = new_empty_usr_addr_space();
@@ -325,12 +325,12 @@ void set_current_vir_addr_space(vir_addr_space *addr_space)
     _load_cr3(addr_space->phy_PDE);
 }
 
-vir_addr_space *get_current_vir_addr_space(void)
+vir_addr_space *get_current_vir_addr_space()
 {
     return cur_addr_space;
 }
 
-vir_addr_space *get_ker_vir_addr_space(void)
+vir_addr_space *get_ker_vir_addr_space()
 {
     return &ker_addr_space;
 }
