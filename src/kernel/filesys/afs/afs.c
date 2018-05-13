@@ -26,9 +26,45 @@ static bool match_dir_name(const char *dir_name, const char *path_name,
                                                  uint32_t path_name_len)
 {
     uint32_t i = 0;
-    while(i < path_name_len && dir_name[i] && dir_name[i] == path_name[i])
+    while(i < path_name_len && dir_name[i] &&
+          dir_name[i] == path_name[i])
         ++i;
     return i == path_name_len && dir_name[i] == '\0';
+}
+
+/* 给定一个目录文件，在其中查找给定的文件名 */
+static bool find_in_dir(struct afs_dp_head *head,
+                        struct afs_file_desc *dir,
+                        const char *name, uint32_t name_len,
+                        uint32_t *entry_idx,
+                        enum afs_file_operation_status *rt)
+{
+    ASSERT_S(head && dir && name && entry_idx);
+
+    // 取得目录项数量
+    uint32_t dir_unit_count;
+    if(!afs_read_binary(head, dir, 0, 4, &dir_unit_count, rt))
+        return false;
+    
+    struct dir_unit unit;
+    uint32_t fpos = 4;
+    for(uint32_t i = 0;i != dir_unit_count; ++i)
+    {
+        if(!afs_read_binary(head, dir, fpos,
+                sizeof(struct dir_unit), &unit, rt))
+            return false;
+        
+        fpos += sizeof(struct dir_unit);
+
+        if(match_dir_name(unit.name, name, name_len))
+        {
+            *entry_idx = unit.entry_index;
+            return true;
+        }
+    }
+
+    SET_RT(afs_file_opr_not_found);
+    return false;
 }
 
 struct afs_file_desc *afs_open_for_reading(
@@ -42,6 +78,7 @@ struct afs_file_desc *afs_open_for_reading(
         return NULL;
     }
 
+    // 取出第一截文件名
     const char *name_beg = path + 1; uint32_t name_len = 0;
     while(name_beg[name_len] && name_beg[name_len] != '/')
         ++name_len;
@@ -64,48 +101,18 @@ struct afs_file_desc *afs_open_for_reading(
             break;
         }
 
-        // 取得目录项数量
-        uint32_t dir_unit_count;
-        if(!afs_read_binary(head, dir, 0, 4, &dir_unit_count, rt))
-        {
-            afs_close_file_for_reading(head, dir);
-            return NULL;
-        }
-
-        // 遍历子项，取得下一个文件入口
-        struct dir_unit unit;
-        uint32_t fpos = 4;
-        bool found = false;
-        for(uint32_t i = 0;i != dir_unit_count; ++i)
-        {
-            if(!afs_read_binary(head, dir,
-                                fpos, sizeof(struct dir_unit),
-                                &unit, rt))
-            {
-                afs_close_file_for_reading(head, dir);
-                return NULL;
-            }
-
-            fpos += sizeof(struct dir_unit);
-            
-            if(!match_dir_name(unit.name, name_beg, name_len))
-            {
-                found = true;
-                break;
-            }
-        }
+        uint32_t next_entry = 0;
+        bool found = find_in_dir(head, dir, name_beg, name_len,
+                                 &next_entry, rt);
     
         afs_close_file_for_reading(head, dir);
 
         // 没找到入口
         if(!found)
-        {
-            SET_RT(afs_file_opr_not_found);
-            return NULL;
-        }
+            return NULL; // 若查找失败，rt由find_in_dir设置
 
         name_beg += name_len;
-        if(name_beg[0] == '\0') // 突然就没了（
+        if(name_beg[0] == '\0') // 找得好好的，突然就没了（
         {
             SET_RT(afs_file_opr_not_found);
             return NULL;
@@ -113,11 +120,12 @@ struct afs_file_desc *afs_open_for_reading(
         
         // 求出新的name_beg和name_len
         ASSERT_S(name_beg[0] == '/');
-        name_beg++; name_len = 0;
+        name_beg++;
+        name_len = 0;
         while(name_beg[name_len] && name_beg[name_len] != '/')
             ++name_len;
         
-        dir_entry_idx = unit.entry_index;
+        dir_entry_idx = next_entry;
     }
     ASSERT_S(file != NULL);
 
