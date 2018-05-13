@@ -24,11 +24,6 @@ struct afs_file_desc
     unsigned int wlock : 1;  // 写入锁
 };
 
-/* 已经被打开的文件构成的rbtree，从entry_index映射到afs_file_desc */
-static struct rb_tree opening_files;
-/* rbtree锁 */
-static spinlock opening_files_lock;
-
 #define KOF MEM_TO_MEM_OFFSET(struct afs_file_desc, tree_node, entry_idx)
 
 static bool rb_less(const void *L, const void *R)
@@ -90,9 +85,6 @@ static uint32_t full_index_tree_bytes[12];
 
 void init_afs_file()
 {
-    init_spinlock(&opening_files_lock);
-    rb_init(&opening_files);
-
     init_spinlock(&file_desc_freelist_lock);
     init_freelist(&file_desc_freelist);
 
@@ -207,9 +199,9 @@ RELEASE_ENTRY:
 
     afs_free_file_entry(head, entry_idx);
 
-    spinlock_lock(&opening_files_lock);
-    rb_erase(&opening_files, &file_desc->tree_node, KOF, rb_less);
-    spinlock_unlock(&opening_files_lock);
+    spinlock_lock(&head->opening_files_lock);
+    rb_erase(&head->opening_files, &file_desc->tree_node, KOF, rb_less);
+    spinlock_unlock(&head->opening_files_lock);
 
     free_file_desc(file_desc);
 }
@@ -219,12 +211,12 @@ struct afs_file_desc *afs_open_file_for_reading(
                                 uint32_t entry_idx,
                                 enum afs_file_operation_status *rt)
 {
-    spinlock_lock(&opening_files_lock);
+    spinlock_lock(&head->opening_files_lock);
 
     // 先看看是不是已经打开了
     // 如果是读模式打开的，计数++；写模式打开的，则因互斥而返回失败
     
-    struct rb_node *rbn = rb_find(&opening_files, KOF, &entry_idx, rb_less);
+    struct rb_node *rbn = rb_find(&head->opening_files, KOF, &entry_idx, rb_less);
     if(rbn)
     {
         struct afs_file_desc *desc = GET_STRUCT_FROM_MEMBER(
@@ -232,7 +224,7 @@ struct afs_file_desc *afs_open_file_for_reading(
         if(desc->wlock)
         {
             SET_RT(afs_file_opr_writing_lock);
-            spinlock_unlock(&opening_files_lock);
+            spinlock_unlock(&head->opening_files_lock);
             return NULL;
         }
         else
@@ -240,7 +232,7 @@ struct afs_file_desc *afs_open_file_for_reading(
             ASSERT_S(desc->rlock);
             desc->rlock++;
 
-            spinlock_unlock(&opening_files_lock);
+            spinlock_unlock(&head->opening_files_lock);
             SET_RT(afs_file_opr_success);
             return desc;
         }
@@ -254,9 +246,9 @@ struct afs_file_desc *afs_open_file_for_reading(
     desc->rlock     = 1;
     desc->wlock     = 0;
     afs_read_file_entry(head, entry_idx, &desc->entry);
-    rb_insert(&opening_files, &desc->tree_node, KOF, rb_less);
+    rb_insert(&head->opening_files, &desc->tree_node, KOF, rb_less);
 
-    spinlock_unlock(&opening_files_lock);
+    spinlock_unlock(&head->opening_files_lock);
 
     SET_RT(afs_file_opr_success);
     return desc;
@@ -268,11 +260,11 @@ struct afs_file_desc *afs_open_file_for_writing(
                                 uint32_t entry_idx,
                                 enum afs_file_operation_status *rt)
 {
-    spinlock_lock(&opening_files_lock);
+    spinlock_lock(&head->opening_files_lock);
 
     // 如果文件已经被打开，则因互斥而失败
     
-    struct rb_node *rbn = rb_find(&opening_files, KOF, &entry_idx, rb_less);
+    struct rb_node *rbn = rb_find(&head->opening_files, KOF, &entry_idx, rb_less);
     if(rbn)
     {
         struct afs_file_desc *desc = GET_STRUCT_FROM_MEMBER(
@@ -280,13 +272,13 @@ struct afs_file_desc *afs_open_file_for_writing(
         if(desc->wlock)
         {
             SET_RT(afs_file_opr_writing_lock);
-            spinlock_unlock(&opening_files_lock);
+            spinlock_unlock(&head->opening_files_lock);
             return NULL;
         }
         else
         {
             ASSERT_S(desc->rlock);
-            spinlock_unlock(&opening_files_lock);
+            spinlock_unlock(&head->opening_files_lock);
             SET_RT(afs_file_opr_reading_lock);
             return NULL;
         }
@@ -300,42 +292,78 @@ struct afs_file_desc *afs_open_file_for_writing(
     desc->rlock     = 0;
     desc->wlock     = 1;
     afs_read_file_entry(head, entry_idx, &desc->entry);
-    rb_insert(&opening_files, &desc->tree_node, KOF, rb_less);
+    rb_insert(&head->opening_files, &desc->tree_node, KOF, rb_less);
 
-    spinlock_unlock(&opening_files_lock);
+    spinlock_unlock(&head->opening_files_lock);
 
     SET_RT(afs_file_opr_success);
     return desc;
 }
 
+bool afs_convert_reading_to_writing(struct afs_dp_head *head,
+                                    struct afs_file_desc *desc)
+{
+    ASSERT_S(desc != NULL);
+    spinlock_lock(&head->opening_files_lock);
+
+    bool ret = false;
+    if(desc->rlock == 1)
+    {
+        desc->rlock = 0;
+        desc->wlock = 1;
+        ret = true;
+    }
+
+    spinlock_unlock(&head->opening_files_lock);
+    return ret;
+}
+
+bool afs_convert_writing_to_reading(struct afs_dp_head *head,
+                                    struct afs_file_desc *desc)
+{
+    ASSERT_S(desc != NULL);
+    spinlock_lock(&head->opening_files_lock);
+
+    bool ret = false;
+    if(desc->wlock == 1)
+    {
+        desc->wlock = 0;
+        desc->rlock = 1;
+        ret = true;
+    }
+
+    spinlock_unlock(&head->opening_files_lock);
+    return ret;
+}
+
 void afs_close_file_for_reading(struct afs_dp_head *head,
                                 struct afs_file_desc *file)
 {
-    spinlock_lock(&opening_files_lock);
+    spinlock_lock(&head->opening_files_lock);
 
     ASSERT_S(file->rlock);
 
     // 若自己是最后一个操作者，则应释放desc
     if(!--file->rlock)
     {
-        rb_erase(&opening_files, &file->tree_node, KOF, rb_less);
+        rb_erase(&head->opening_files, &file->tree_node, KOF, rb_less);
         free_file_desc(file);
     }
 
-    spinlock_unlock(&opening_files_lock);
+    spinlock_unlock(&head->opening_files_lock);
 }
 
 void afs_close_file_for_writing(struct afs_dp_head *head,
                                 struct afs_file_desc *file)
 {
-    spinlock_lock(&opening_files_lock);
+    spinlock_lock(&head->opening_files_lock);
 
     ASSERT_S(file->wlock && !file->rlock);
 
     // 写者一定是最后一个操作者，故应写回entry，释放desc
-    rb_erase(&opening_files, &file->tree_node, KOF, rb_less);
+    rb_erase(&head->opening_files, &file->tree_node, KOF, rb_less);
 
-    spinlock_unlock(&opening_files_lock);
+    spinlock_unlock(&head->opening_files_lock);
 
     afs_modify_file_entry(head, file->entry_idx, &file->entry);
     free_file_desc(file);
@@ -636,4 +664,20 @@ bool afs_expand_file(struct afs_dp_head *head,
     file->entry.byte_size += dexp;
 
     return true;
+}
+
+bool afs_is_file_open(struct afs_dp_head *head, uint32_t entry)
+{
+    spinlock_lock(&head->opening_files_lock);
+
+    struct rb_node *rbn = rb_find(&head->opening_files, KOF, &entry, rb_less);
+    bool ret = rbn != NULL;
+
+    spinlock_unlock(&head->opening_files_lock);
+    return ret;
+}
+
+struct afs_file_entry *afs_extract_file_entry(struct afs_file_desc *desc)
+{
+    return &desc->entry;
 }

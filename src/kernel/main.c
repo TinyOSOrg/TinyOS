@@ -155,7 +155,6 @@ int main()
     struct afs_dp_head dph;
     afs_init_dp_head(dp->sector_begin, &dph);
 
-    // 建立一个空文件
     uint32_t file_idx = afs_create_empty_file(
         &dph, AFS_FILE_TYPE_REGULAR, NULL);
     

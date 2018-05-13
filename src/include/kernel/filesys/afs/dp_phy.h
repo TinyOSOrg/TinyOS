@@ -4,9 +4,11 @@
 #include <kernel/assert.h>
 #include <kernel/diskdriver.h>
 #include <kernel/process/semaphore.h>
+#include <kernel/process/spinlock.h>
 
 #include <shared/bool.h>
 #include <shared/intdef.h>
+#include <shared/rbtree.h>
 
 /*======================================================
 分区格式描述：
@@ -33,6 +35,9 @@
 /* 一个block多少字节 */
 #define AFS_BLOCK_BYTE_SIZE (AFS_BLOCK_SECTOR_COUNT * AFS_SECTOR_BYTE_SIZE)
 
+/* 刚物理初始化的分区根目录入口 */
+#define AFS_INIT_ROOT_DIR_ENTERY 0
+
 /* 分区首个扇区的描述符 */
 struct afs_dp_head
 {
@@ -57,9 +62,16 @@ struct afs_dp_head
     // 首个空闲block group的下标
     uint32_t fst_avl_blkgrp_idx;
 
+    // 根目录entry_index
+    uint32_t root_dir_entry;
+
     // 分区头部锁
     // 注意到这个结构也会被顺带写入到头部扇区中，但是需要专门初始化
     struct semaphore lock;
+
+    // 分区活跃文件记录及其操作锁
+    struct rb_tree opening_files; // entry_index -> afs_file_desc (file.c)
+    spinlock opening_files_lock;
 };
 
 // 一个blkgrp至多包含多少block，由其head中的位图大小限制

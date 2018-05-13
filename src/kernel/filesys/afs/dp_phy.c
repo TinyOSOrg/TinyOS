@@ -145,6 +145,8 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
     dp_head->empty_block_cnt = total_empty_blk_cnt;
     dp_head->fst_blkgrp_sec = beg + 1 + entry_sec_cnt;
 
+    dp_head->root_dir_entry = AFS_INIT_ROOT_DIR_ENTERY;
+
     afs_write_sector_raw(beg, dp_head);
 
     afs_free_block_buffer(dp_head);
@@ -156,6 +158,9 @@ void afs_init_dp_head(uint32_t dp_beg, struct afs_dp_head *head)
 {
     afs_read_from_sector(dp_beg, 0, sizeof(struct afs_dp_head), head);
     init_semaphore(&head->lock, 1);
+    
+    rb_init(&head->opening_files);
+    init_spinlock(&head->opening_files_lock);
 }
 
 uint32_t afs_alloc_disk_block(struct afs_dp_head *head)
