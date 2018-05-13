@@ -67,7 +67,7 @@ static bool find_in_dir(struct afs_dp_head *head,
     return false;
 }
 
-struct afs_file_desc *afs_open_for_reading(
+struct afs_file_desc *afs_open_regular_file_for_reading(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt)
@@ -137,15 +137,16 @@ struct afs_file_desc *afs_open_for_reading(
         return NULL;
     }
 
+    SET_RT(afs_file_opr_success);
     return file;
 }
 
-struct afs_file_desc *afs_open_for_writing(
+struct afs_file_desc *afs_open_regular_file_for_writing(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt)
 {
-    struct afs_file_desc *desc = afs_open_for_reading(head, path, rt);
+    struct afs_file_desc *desc = afs_open_regular_file_for_reading(head, path, rt);
     if(!afs_convert_reading_to_writing(head, desc))
     {
         afs_close_file_for_reading(head, desc);
@@ -154,9 +155,92 @@ struct afs_file_desc *afs_open_for_writing(
     return desc;
 }
 
-void afs_close(struct afs_dp_head *head,
-               struct afs_file_desc *file,
-               enum afs_file_operation_status *rt)
+void afs_close_regular_file(struct afs_dp_head *head,
+                            struct afs_file_desc *file)
+{
+    afs_convert_writing_to_reading(head, file);
+    afs_close_file_for_reading(head, file);
+}
+
+struct afs_file_desc *afs_open_dir_file_for_reading(
+                            struct afs_dp_head *head,
+                            const char *path,
+                            enum afs_file_operation_status *rt)
+{
+    if(*path != '/')
+    {
+        SET_RT(afs_file_opr_not_found);
+        return NULL;
+    }
+
+    // 取出第一截文件名
+    const char *name_beg = path + 1; uint32_t name_len = 0;
+    while(name_beg[name_len] && name_beg[name_len] != '/')
+        ++name_len;
+    
+    uint32_t dir_entry_idx = head->root_dir_entry;
+
+    while(true)
+    {
+        struct afs_file_desc *dir =
+            afs_open_file_for_reading(head, dir_entry_idx, rt);
+        if(!dir)
+            return NULL;
+
+        // 遇到一个regular file，这是个错误……
+        if(afs_extract_file_entry(dir)->type == AFS_FILE_TYPE_REGULAR)
+        {
+            SET_RT(afs_file_opr_not_found);
+            afs_close_file_for_reading(head, dir);
+            return NULL;
+        }
+
+        // 路径正好没了，完美
+        if(name_beg[name_len] == '\0')
+        {
+            SET_RT(afs_file_opr_success);
+            return dir;
+        }
+
+        uint32_t next_entry = 0;
+        bool found = find_in_dir(head, dir, name_beg, name_len,
+                                 &next_entry, rt);
+        afs_close_file_for_reading(head, dir);
+
+        if(!found)
+            return NULL;
+        
+        name_beg += name_len;
+        if(name_beg[0] == '/')
+        {
+            name_beg++;
+            name_len = 0;
+            while(name_beg[name_len] && name_beg[name_len] != '/')
+                ++name_len;
+        }
+
+        dir_entry_idx = next_entry;
+    }
+
+    return NULL;
+}
+
+struct afs_file_desc *afs_open_dir_file_for_writing(
+                            struct afs_dp_head *head,
+                            const char *path,
+                            enum afs_file_operation_status *rt)
+{
+    struct afs_file_desc *desc = afs_open_dir_file_for_reading(head, path, rt);
+    if(!afs_convert_reading_to_writing(head, desc))
+    {
+        afs_close_file_for_reading(head, desc);
+        return NULL;
+    }
+    return desc;
+}
+
+void afs_close_dir_file(struct afs_dp_head *head,
+                        struct afs_file_desc *file)
 {
     afs_convert_writing_to_reading(head, file);
     afs_close_file_for_reading(head, file);

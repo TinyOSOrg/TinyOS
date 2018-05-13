@@ -21,18 +21,35 @@ void init_afs();
 /* 单个文件最大长度 */
 #define AFS_FILE_NAME_MAX_LENGTH 63
 
-struct afs_file_desc *afs_open_for_reading(
+/*
+    以下函数均为线程安全，遇到文件被其他线程使用时会打开失败
+    具体调用结果应通过rt获得。无rt表明合法参数下函数执行不可能失败。
+*/
+
+struct afs_file_desc *afs_open_regular_file_for_reading(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt);
 
-struct afs_file_desc * afs_open_for_writing(
+struct afs_file_desc * afs_open_regular_file_for_writing(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt);
 
-void afs_close(struct afs_dp_head *head,
-               struct afs_file_desc *file_desc,
-               enum afs_file_operation_status *rt);
+void afs_close_regular_file(struct afs_dp_head *head,
+                            struct afs_file_desc *file_desc);
+
+struct afs_file_desc *afs_open_dir_file_for_reading(
+                            struct afs_dp_head *head,
+                            const char *path,
+                            enum afs_file_operation_status *rt);
+
+struct afs_file_desc *afs_open_dir_file_for_writing(
+                            struct afs_dp_head *head,
+                            const char *path,
+                            enum afs_file_operation_status *rt);
+
+void afs_close_dir_file(struct afs_dp_head *head,
+                        struct afs_file_desc *file_desc);
 
 #endif /* TINY_OS_FILESYS_AFS_AFS_H */
