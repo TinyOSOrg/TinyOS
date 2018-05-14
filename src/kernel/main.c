@@ -149,7 +149,7 @@ int main()
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     
     struct dpt_unit *dp = get_dpt_unit(0);
-    afs_phy_reformat_dp(dp->sector_begin,
+    afs_reformat_dp(dp->sector_begin,
         dp->sector_end - dp->sector_begin);
 
     struct afs_dp_head dph;

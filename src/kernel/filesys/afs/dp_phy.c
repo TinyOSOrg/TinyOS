@@ -163,6 +163,12 @@ void afs_init_dp_head(uint32_t dp_beg, struct afs_dp_head *head)
     init_spinlock(&head->opening_files_lock);
 }
 
+void afs_restore_dp_head(struct afs_dp_head *head)
+{
+    afs_write_to_sector(head->dp_sec_beg, 0,
+            sizeof(struct afs_dp_head), head);
+}
+
 uint32_t afs_alloc_disk_block(struct afs_dp_head *head)
 {
     semaphore_wait(&head->lock);

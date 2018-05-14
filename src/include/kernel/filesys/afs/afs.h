@@ -3,6 +3,7 @@
 
 #include <kernel/filesys/afs/file_opr.h>
 
+#include <shared/bool.h>
 #include <shared/intdef.h>
 
 struct afs_dp_head;
@@ -22,9 +23,11 @@ void init_afs();
 #define AFS_FILE_NAME_MAX_LENGTH 63
 
 /*
-    以下函数均为线程安全，遇到文件被其他线程使用时会打开失败
-    具体调用结果应通过rt获得。无rt表明合法参数下函数执行不可能失败。
+    以下函数均为线程安全，遇到互斥时会操作失败
+    具体调用结果应通过rt获得，无rt形参表示在参数合法时函数执行不可能失败。
 */
+
+bool afs_reformat_dp(uint32_t beg, uint32_t cnt);
 
 struct afs_file_desc *afs_open_regular_file_for_reading(
                             struct afs_dp_head *head,
@@ -51,5 +54,25 @@ struct afs_file_desc *afs_open_dir_file_for_writing(
 
 void afs_close_dir_file(struct afs_dp_head *head,
                         struct afs_file_desc *file_desc);
+
+uint32_t afs_create_dir_file_raw(struct afs_dp_head *head,
+                                 uint32_t parent_dir, bool root,
+                                 enum afs_file_operation_status *rt);
+
+void afs_create_dir_file(struct afs_dp_head *head,
+                         const char *path,
+                         enum afs_file_operation_status *rt);
+
+void afs_remove_dir_file(struct afs_dp_head *head,
+                         const char *path,
+                         enum afs_file_operation_status *rt);
+
+void afs_create_regular_file(struct afs_dp_head *head,
+                             const char *path,
+                             enum afs_file_operation_status *rt);
+
+void afs_remove_regular_file(struct afs_dp_head *head,
+                             const char *path,
+                             enum afs_file_operation_status *rt);
 
 #endif /* TINY_OS_FILESYS_AFS_AFS_H */

@@ -153,6 +153,8 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt);
 
 void afs_init_dp_head(uint32_t dp_beg, struct afs_dp_head *head);
 
+void afs_restore_dp_head(struct afs_dp_head *head);
+
 /*
     分配一个空闲块，返回其首个扇区LBA
     分配失败时返回0

@@ -20,6 +20,22 @@ void init_afs()
     init_afs_file();
 }
 
+bool afs_reformat_dp(uint32_t beg, uint32_t cnt)
+{
+    if(!afs_phy_reformat_dp(beg, cnt))
+        return false;
+    
+    struct afs_dp_head head;
+    afs_init_dp_head(beg, &head);
+
+    enum afs_file_operation_status rt;
+    head.root_dir_entry = afs_create_dir_file_raw(&head, 0, true, &rt);
+
+    afs_restore_dp_head(&head);
+
+    return rt == afs_file_opr_success;
+}
+
 #define SET_RT(V) do { if(rt) *rt = (V); } while(0)
 
 static bool match_dir_name(const char *dir_name, const char *path_name,
@@ -244,4 +260,104 @@ void afs_close_dir_file(struct afs_dp_head *head,
 {
     afs_convert_writing_to_reading(head, file);
     afs_close_file_for_reading(head, file);
+}
+
+uint32_t afs_create_dir_file_raw(struct afs_dp_head *head,
+                                 uint32_t parent_dir, bool root,
+                                 enum afs_file_operation_status *rt)
+{
+    enum afs_file_operation_status trt;
+
+    uint32_t ret = afs_create_empty_file(head, AFS_FILE_TYPE_DIRECTORY, &trt);
+    if(trt != afs_file_opr_success)
+    {
+        SET_RT(trt);
+        return 0;
+    }
+    
+    struct afs_file_desc *dir = afs_open_file_for_writing(head, ret, NULL);
+    ASSERT_S(dir != NULL);
+
+    if(!afs_expand_file(head, dir,
+            sizeof(uint32_t) + 2 * sizeof(struct dir_unit),
+            &trt))
+        goto FAILED;
+
+    // 添加.和..文件
+
+    uint32_t dir_size = 2;
+    afs_write_binary(head, dir, 0, sizeof(uint32_t), &dir_size, &trt);
+    if(trt != afs_file_opr_success)
+        goto FAILED;
+    
+    uint32_t fpos = sizeof(uint32_t); struct dir_unit unit;
+
+    unit.entry_index = ret;
+    strcpy(unit.name, ".");
+    if(!afs_write_binary(head, dir, fpos,
+                         sizeof(struct dir_unit), &unit, &trt))
+        goto FAILED;
+    
+    fpos += sizeof(struct dir_unit);
+
+    unit.entry_index = root ? ret : parent_dir;
+    strcpy(unit.name, "..");
+    if(!afs_write_binary(head, dir, fpos,
+                         sizeof(struct dir_unit), &unit, &trt))
+        goto FAILED;
+    
+    afs_close_file_for_writing(head, dir);
+    SET_RT(afs_file_opr_success);
+    return ret;
+
+FAILED:
+
+    SET_RT(trt);
+    afs_close_file_for_writing(head, dir);
+    afs_remove_file(head, ret, NULL);
+
+    return 0;
+}
+
+static bool afs_remove_dir_file_raw(struct afs_dp_head *head,
+                                    uint32_t entry_idx,
+                                    enum afs_file_operation_status *rt)
+{
+    enum afs_file_operation_status trt;
+    struct afs_file_desc *dir = afs_open_file_for_reading(
+        head, entry_idx, &trt);
+    if(!dir)
+    {
+        SET_RT(trt);
+        return false;
+    }
+
+    uint32_t dir_size;
+    if(!afs_read_binary(head, dir, 0, 4, &dir_size, &trt))
+    {
+        afs_close_file_for_reading(head, dir);
+        SET_RT(trt);
+        return false;
+    }
+
+    if(dir_size > 2)
+    {
+        afs_close_file_for_reading(head, dir);
+        SET_RT(afs_file_opr_rm_nonempty);
+        return false;
+    }
+
+    afs_close_file_for_reading(head, dir);
+    afs_remove_file(head, entry_idx, &trt);
+
+    SET_RT(trt);
+    return trt == afs_file_opr_success;
+}
+
+void afs_create_dir_file(struct afs_dp_head *head,
+                         const char *path,
+                         enum afs_file_operation_status *rt)
+{
+    // TODO
+    afs_remove_dir_file_raw(head, 0, NULL);
 }
