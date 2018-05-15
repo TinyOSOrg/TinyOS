@@ -1,12 +1,10 @@
 #include <kernel/asm.h>
-#include <kernel/assert.h>
-#include <kernel/interrupt.h>
-#include <kernel/memory.h>
-#include <kernel/console/print.h>
 #include <kernel/console/console.h>
 #include <kernel/diskdriver.h>
+#include <kernel/filesys/dpt.h>
+#include <kernel/interrupt.h>
 #include <kernel/kbdriver.h>
-#include <kernel/process/semaphore.h>
+#include <kernel/memory.h>
 #include <kernel/process/process.h>
 #include <kernel/rlist_node_alloc.h>
 #include <kernel/syscall.h>
@@ -14,7 +12,6 @@
 #include <kernel/sysmsg/sysmsg.h>
 
 #include <kernel/filesys/afs/afs.h>
-#include <kernel/filesys/dpt.h>
 #include <kernel/filesys/afs/disk_cache.h>
 #include <kernel/filesys/afs/file.h>
 

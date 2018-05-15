@@ -48,6 +48,39 @@ static bool match_dir_name(const char *dir_name, const char *path_name,
     return i == path_name_len && dir_name[i] == '\0';
 }
 
+static const char *path_begin(const char *path, uint32_t *length)
+{
+    ASSERT_S(path && length);
+
+    if(*path++ != '/' || !*path || *path == '/')
+        return NULL;
+
+    unsigned int len = 0;
+    while(path[len] && path[len] != '/')
+        ++len;
+
+    *length = len;
+    return path;
+}
+
+static const char *path_next(const char *path, uint32_t *length)
+{
+    ASSERT_S(path && length);
+
+    while(*path && *path != '/')
+        ++path;
+    
+    if(*path++ != '/' || !*path || *path == '/')
+        return NULL;
+
+    unsigned int len = 0;
+    while(path[len] && path[len] != '/')
+        ++len;
+        
+    *length = len;
+    return path;
+}
+
 /* 给定一个目录文件，在其中查找给定的文件名 */
 static bool find_in_dir(struct afs_dp_head *head,
                         struct afs_file_desc *dir,
@@ -88,19 +121,16 @@ struct afs_file_desc *afs_open_regular_file_for_reading(
                             const char *path,
                             enum afs_file_operation_status *rt)
 {
-    if(*path != '/')
+    // 取出第一截文件名
+    uint32_t name_len = 0;
+    const char *name_beg = path_begin(path, &name_len);
+    if(!name_beg)
     {
         SET_RT(afs_file_opr_not_found);
         return NULL;
     }
-
-    // 取出第一截文件名
-    const char *name_beg = path + 1; uint32_t name_len = 0;
-    while(name_beg[name_len] && name_beg[name_len] != '/')
-        ++name_len;
     
     uint32_t dir_entry_idx = head->root_dir_entry;
-
     struct afs_file_desc *file = NULL;
     
     while(true)
@@ -127,19 +157,12 @@ struct afs_file_desc *afs_open_regular_file_for_reading(
         if(!found)
             return NULL; // 若查找失败，rt由find_in_dir设置
 
-        name_beg += name_len;
-        if(name_beg[0] == '\0') // 找得好好的，突然就没了（
+        // 取得下一截路径
+        if(!(name_beg = path_next(name_beg, &name_len)))
         {
             SET_RT(afs_file_opr_not_found);
             return NULL;
         }
-        
-        // 求出新的name_beg和name_len
-        ASSERT_S(name_beg[0] == '/');
-        name_beg++;
-        name_len = 0;
-        while(name_beg[name_len] && name_beg[name_len] != '/')
-            ++name_len;
         
         dir_entry_idx = next_entry;
     }
@@ -183,17 +206,15 @@ struct afs_file_desc *afs_open_dir_file_for_reading(
                             const char *path,
                             enum afs_file_operation_status *rt)
 {
-    if(*path != '/')
+    // 取出第一截文件名
+    uint32_t name_len;
+    const char *name_beg = path_begin(path, &name_len);
+    if(!name_beg)
     {
         SET_RT(afs_file_opr_not_found);
         return NULL;
     }
 
-    // 取出第一截文件名
-    const char *name_beg = path + 1; uint32_t name_len = 0;
-    while(name_beg[name_len] && name_beg[name_len] != '/')
-        ++name_len;
-    
     uint32_t dir_entry_idx = head->root_dir_entry;
 
     while(true)
@@ -225,14 +246,11 @@ struct afs_file_desc *afs_open_dir_file_for_reading(
 
         if(!found)
             return NULL;
-        
-        name_beg += name_len;
-        if(name_beg[0] == '/')
+
+        if(!(name_beg = path_next(name_beg, &name_len)))
         {
-            name_beg++;
-            name_len = 0;
-            while(name_beg[name_len] && name_beg[name_len] != '/')
-                ++name_len;
+            SET_RT(afs_file_opr_not_found);
+            return NULL;
         }
 
         dir_entry_idx = next_entry;
@@ -354,10 +372,139 @@ static bool afs_remove_dir_file_raw(struct afs_dp_head *head,
     return trt == afs_file_opr_success;
 }
 
+/*
+    在某个目录文件下添加一个新的空目录文件
+    会关闭parent_dir
+*/
+static void afs_create_dir_in(struct afs_dp_head *head,
+                              const char *name_beg, uint32_t name_len,
+                              uint32_t dir_entry_idx,
+                              struct afs_file_desc *parent_dir,
+                              enum afs_file_operation_status *rt)
+{
+    // 检查目标文件名字长度
+    if(name_len > AFS_FILE_NAME_MAX_LENGTH)
+    {
+        afs_close_file_for_reading(head, parent_dir);
+        SET_RT(afs_file_opr_limit_exceeded);
+        return;
+    }
+
+    // 尝试在父目录中查找当前文件名，避免文件重名
+    uint32_t dummy_entry;
+    bool found = find_in_dir(head, parent_dir, name_beg, name_len,
+                             &dummy_entry, NULL);
+    if(found)
+    {
+        afs_close_file_for_reading(head, parent_dir);
+        SET_RT(afs_file_opr_file_existed);
+        return;
+    }
+
+    // 将正打开的父目录文件转为可写模式
+    if(!afs_convert_reading_to_writing(head, parent_dir))
+    {
+        afs_close_file_for_reading(head, parent_dir);
+        SET_RT(afs_file_opr_reading_lock);
+        return;
+    }
+
+    // 创建子目录
+    enum afs_file_operation_status trt;
+    uint32_t entry = afs_create_dir_file_raw(
+        head, dir_entry_idx, false, &trt);
+    if(trt != afs_file_opr_success)
+    {
+        afs_close_file_for_writing(head, parent_dir);
+        SET_RT(trt);
+        return;
+    }
+
+    // 更新父目录文件
+    uint32_t old_size = afs_extract_file_entry(parent_dir)->byte_size;
+    uint32_t new_size = old_size + sizeof(struct dir_unit);
+
+    if(!afs_expand_file(head, parent_dir, new_size, rt))
+    {
+        afs_close_file_for_writing(head, parent_dir);
+        afs_remove_dir_file_raw(head, entry, NULL);
+        return;
+    }
+
+    uint32_t new_entry_count = (new_size - sizeof(uint32_t)) /
+                               sizeof(struct dir_unit);
+
+    struct dir_unit unit;
+    for(uint32_t i = 0;i != name_len; ++i)
+        unit.name[i] = name_beg[i];
+    unit.name[name_len] = '\0';
+    unit.entry_index = entry;
+    if(!afs_write_binary(head, parent_dir,
+                         old_size,
+                         sizeof(struct dir_unit), &unit, rt) ||
+       !afs_write_binary(head, parent_dir, 0, sizeof(uint32_t),
+                         &new_entry_count, rt))
+    {
+        afs_close_file_for_writing(head, parent_dir);
+        afs_remove_dir_file_raw(head, entry, NULL);
+        return;
+    }
+
+    afs_close_file_for_writing(head, parent_dir);
+    SET_RT(afs_file_opr_success);
+}
+
 void afs_create_dir_file(struct afs_dp_head *head,
                          const char *path,
                          enum afs_file_operation_status *rt)
 {
-    // TODO
-    afs_remove_dir_file_raw(head, 0, NULL);
+    uint32_t name_len, next_name_len;
+    const char *next_name_beg, *name_beg = path_begin(path, &name_len);
+
+    if(!name_beg)
+    {
+        SET_RT(afs_file_opr_not_found);
+        return;
+    }
+
+    uint32_t dir_entry_idx = head->root_dir_entry;
+
+    while(true)
+    {
+        // 先求下一截路径，如果没了，说明当前name就是要创建的目标
+        next_name_beg = path_next(name_beg, &next_name_len);
+
+        struct afs_file_desc *parent_dir =
+            afs_open_file_for_reading(head, dir_entry_idx, rt);
+        if(!parent_dir)
+            return;
+        
+        if(afs_extract_file_entry(parent_dir)->type
+                != AFS_FILE_TYPE_DIRECTORY)
+        {
+            afs_close_file_for_reading(head, parent_dir);
+            SET_RT(afs_file_opr_not_found);
+            return;
+        }
+        
+        // 当前文件名就是要创建的目标
+        if(!next_name_beg)
+        {
+            afs_create_dir_in(head, name_beg, name_len, dir_entry_idx, parent_dir, rt);
+            return;
+        }
+
+        uint32_t next_entry;
+        bool found = find_in_dir(head, parent_dir,
+                        name_beg, name_len, &next_entry, rt);
+        afs_close_file_for_reading(head, parent_dir);
+
+        if(!found)
+            return;
+        
+        dir_entry_idx = next_entry;
+
+        name_beg = next_name_beg;
+        name_len = next_name_len;
+    }
 }
