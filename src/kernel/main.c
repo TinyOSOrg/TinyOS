@@ -152,34 +152,27 @@ int main()
     struct afs_dp_head dph;
     afs_init_dp_head(dp->sector_begin, &dph);
 
-    uint32_t file_idx = afs_create_empty_file(
-        &dph, AFS_FILE_TYPE_REGULAR, NULL);
+    afs_create_regular_file(&dph, "/minecraft.txt", NULL);
+
+    struct afs_file_desc *fp =
+        afs_open_regular_file_for_writing(&dph, "/minecraft.txt", NULL);
+    printf("fp = %u\n", fp);
+
+    afs_expand_file(&dph, fp, 8, NULL);
+
+    uint32_t data = 5;
+
+    afs_write_binary(&dph, fp, 4, 4, &data, NULL);
+
+    afs_close_regular_file(&dph, fp);
+
+    fp = afs_open_regular_file_for_reading(&dph, "/minecraft.txt", NULL);
     
-    struct afs_file_desc *fp = afs_open_file_for_writing(
-        &dph, file_idx, NULL);
+    afs_read_binary(&dph, fp, 4, 4, &data, NULL);
 
-    printf("shit!\n");
-    
-    uint32_t file_size = 1024 * 5;
-    afs_expand_file(&dph, fp, file_size, NULL);
+    printf("data = %u\n", data);
 
-    printf("shit!\n");
-
-    for(uint32_t i = 0, j = 0;i < file_size; i += 4, ++j)
-        afs_write_binary(&dph, fp, 1024 + i, 4, &j, NULL);
-
-    printf("shit!\n");
-
-    for(uint32_t i = 12; i < 72; i += 4)
-    {
-        uint32_t j = 0;
-        afs_read_binary(&dph, fp, 1024 + i, 4, &j, NULL);
-        printf("j = %u ", j);
-    }
-
-    printf("shit!\n");
-
-    afs_close_file_for_writing(&dph, fp);
+    afs_close_regular_file(&dph, fp);
 
     while(1)
     {
