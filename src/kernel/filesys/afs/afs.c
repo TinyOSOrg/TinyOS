@@ -1,3 +1,5 @@
+#include <kernel/memory.h>
+
 #include <kernel/filesys/afs/afs.h>
 #include <kernel/filesys/afs/blk_mem_buf.h>
 #include <kernel/filesys/afs/disk_cache.h>
@@ -19,11 +21,43 @@ struct dir_unit
     uint32_t entry_index;
 };
 
+/* 用来记录空闲dp_head空间的自由链表 */
+static freelist_handle dp_head_fl;
+
+static spinlock dp_head_fl_lock;
+
+static struct afs_dp_head *alloc_dp_head(void)
+{
+    spinlock_lock(&dp_head_fl_lock);
+
+    if(is_freelist_empty(&dp_head_fl))
+    {
+        struct afs_dp_head *new_heads = alloc_ker_page(true);
+        uint32_t end = 4096 / sizeof(struct afs_dp_head);
+        for(size_t i = 0;i < end; ++i)
+            add_freelist(&dp_head_fl, &new_heads[i]);
+    }
+
+    struct afs_dp_head *ret = fetch_freelist(&dp_head_fl);
+    spinlock_unlock(&dp_head_fl_lock);
+    return ret;
+}
+
+static void free_dp_head(struct afs_dp_head *head)
+{
+    spinlock_lock(&dp_head_fl_lock);
+    add_freelist(&dp_head_fl, head);
+    spinlock_unlock(&dp_head_fl_lock);
+}
+
 void init_afs()
 {
     init_afs_buffer_allocator();
     init_afs_disk_cache();
     init_afs_file();
+
+    init_freelist(&dp_head_fl);
+    init_spinlock(&dp_head_fl_lock);
 }
 
 bool afs_reformat_dp(uint32_t beg, uint32_t cnt)
@@ -40,6 +74,20 @@ bool afs_reformat_dp(uint32_t beg, uint32_t cnt)
     afs_restore_dp_head(&head);
 
     return rt == afs_file_opr_success;
+}
+
+struct afs_dp_head *afs_init_dp_handler(uint32_t beg)
+{
+    struct afs_dp_head *ret = alloc_dp_head();
+    afs_init_dp_head(beg, ret);
+    return ret;
+}
+
+void afs_release_dp_handler(uint32_t handler)
+{
+    struct afs_dp_head *head = (struct afs_dp_head*)handler;
+    afs_restore_dp_head(head);
+    free_dp_head(head);
 }
 
 #define SET_RT(V) do { if(rt) *rt = (V); } while(0)

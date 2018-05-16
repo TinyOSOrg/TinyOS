@@ -145,40 +145,37 @@ int main()
     printf("main process, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
     
-    struct dpt_unit *dp = get_dpt_unit(0);
-    afs_reformat_dp(dp->sector_begin,
-        dp->sector_end - dp->sector_begin);
+    reformat_dp(0, DISK_PT_AFS);
 
-    struct afs_dp_head dph;
-    afs_init_dp_head(dp->sector_begin, &dph);
+    struct afs_dp_head *dph = (struct afs_dp_head*)get_dp_fs_handler(0);
 
-    afs_create_dir_file_by_path(&dph, "/ttt", NULL);
+    afs_create_dir_file_by_path(dph, "/ttt", NULL);
 
-    afs_create_regular_file_by_path(&dph, "/ttt/minecraft.txt", NULL);
+    afs_create_regular_file_by_path(dph, "/ttt/minecraft.txt", NULL);
 
     struct afs_file_desc *fp =
-        afs_open_regular_file_for_writing_by_path(&dph, "/ttt/minecraft.txt", NULL);
+        afs_open_regular_file_for_writing_by_path(dph, "/ttt/minecraft.txt", NULL);
     printf("fp = %u\n", fp);
 
-    afs_expand_file(&dph, fp, 8, NULL);
+    afs_expand_file(dph, fp, 8, NULL);
 
     uint32_t data = 5;
 
-    afs_write_binary(&dph, fp, 4, 4, &data, NULL);
+    afs_write_binary(dph, fp, 4, 4, &data, NULL);
 
-    afs_close_regular_file(&dph, fp);
+    afs_close_regular_file(dph, fp);
 
-    fp = afs_open_regular_file_for_reading_by_path(&dph, "/ttt/minecraft.txt", NULL);
+    fp = afs_open_regular_file_for_reading_by_path(dph, "/ttt/minecraft.txt", NULL);
     
-    afs_read_binary(&dph, fp, 4, 4, &data, NULL);
+    afs_read_binary(dph, fp, 4, 4, &data, NULL);
 
     printf("data = %u\n", data);
 
-    afs_close_regular_file(&dph, fp);
+    afs_close_regular_file(dph, fp);
 
-    afs_remove_file_by_path(&dph, "/ttt/minecraft.txt", AFS_FILE_TYPE_REGULAR, NULL);
+    afs_remove_file_by_path(dph, "/ttt/minecraft.txt", AFS_FILE_TYPE_REGULAR, NULL);
 
-    fp = afs_open_regular_file_for_reading_by_path(&dph, "/ttt/minecraft.txt", NULL);
+    fp = afs_open_regular_file_for_reading_by_path(dph, "/ttt/minecraft.txt", NULL);
     
     printf("fp = %u\n", fp);
 
