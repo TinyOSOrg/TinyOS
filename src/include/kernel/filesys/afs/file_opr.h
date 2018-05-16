@@ -16,6 +16,7 @@ enum afs_file_operation_status
     afs_file_opr_rm_nonempty,       // 试图删除一个非空文件夹
     afs_file_opr_file_existed,      // 试图创建一个与其他某个文件同名的文件
     afs_file_opr_rm_locked,         // 试图删除一个有人在用的文件
+    afs_file_opr_rm_wrong_type,     // 删除文件时指定的类型不匹配
 };
 
 #endif /* TINY_OS_FILESYS_AFS_FILE_OPR_H */

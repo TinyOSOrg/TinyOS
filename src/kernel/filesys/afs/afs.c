@@ -758,7 +758,23 @@ void afs_remove_file_by_path(struct afs_dp_head *head,
                 SET_RT(afs_file_opr_rm_locked);
                 return;
             }
+            // 检查文件类型
+            if(afs_extract_file_entry(dst)->type != type)
+            {
+                afs_close_file_for_writing(head, dst);
+                afs_close_file_for_writing(head, parent_dir);
+                SET_RT(afs_file_opr_rm_wrong_type);
+                return;
+            }
             afs_close_file_for_writing(head, dst);
+
+            if(type == AFS_FILE_TYPE_REGULAR)
+                afs_remove_file(head, next_entry, NULL);
+            else if(!afs_remove_dir_file_raw(head, next_entry, rt))
+            {
+                afs_close_file_for_writing(head, parent_dir);
+                return;
+            }
 
             // 把最后一个文件挪到inner_idx处，然后count--
             struct dir_head H;

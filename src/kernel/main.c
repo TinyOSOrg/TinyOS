@@ -176,6 +176,12 @@ int main()
 
     afs_close_regular_file(&dph, fp);
 
+    afs_remove_file_by_path(&dph, "/ttt/minecraft.txt", AFS_FILE_TYPE_REGULAR, NULL);
+
+    fp = afs_open_regular_file_for_reading_by_path(&dph, "/ttt/minecraft.txt", NULL);
+    
+    printf("fp = %u\n", fp);
+
     while(1)
     {
         do_releasing_thds_procs();
