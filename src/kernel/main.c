@@ -152,10 +152,12 @@ int main()
     struct afs_dp_head dph;
     afs_init_dp_head(dp->sector_begin, &dph);
 
-    afs_create_regular_file(&dph, "/minecraft.txt", NULL);
+    afs_create_dir_file_by_path(&dph, "/ttt", NULL);
+
+    afs_create_regular_file_by_path(&dph, "/ttt/minecraft.txt", NULL);
 
     struct afs_file_desc *fp =
-        afs_open_regular_file_for_writing(&dph, "/minecraft.txt", NULL);
+        afs_open_regular_file_for_writing_by_path(&dph, "/ttt/minecraft.txt", NULL);
     printf("fp = %u\n", fp);
 
     afs_expand_file(&dph, fp, 8, NULL);
@@ -166,7 +168,7 @@ int main()
 
     afs_close_regular_file(&dph, fp);
 
-    fp = afs_open_regular_file_for_reading(&dph, "/minecraft.txt", NULL);
+    fp = afs_open_regular_file_for_reading_by_path(&dph, "/ttt/minecraft.txt", NULL);
     
     afs_read_binary(&dph, fp, 4, 4, &data, NULL);
 

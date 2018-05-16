@@ -7,10 +7,12 @@
 #include <shared/intdef.h>
 
 struct afs_dp_head;
+struct afs_file_desc;
 
 /*======================================================
 目录文件格式描述：
     uint32_t count; // 目录项数量
+    uint32_t zone;  // 目录项空间大小
     {
         char name[MAX + 1];   // 文件名
         uint32_t entry_index; // 文件entry位置
@@ -29,12 +31,12 @@ void init_afs();
 
 bool afs_reformat_dp(uint32_t beg, uint32_t cnt);
 
-struct afs_file_desc *afs_open_regular_file_for_reading(
+struct afs_file_desc *afs_open_regular_file_for_reading_by_path(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt);
 
-struct afs_file_desc * afs_open_regular_file_for_writing(
+struct afs_file_desc * afs_open_regular_file_for_writing_by_path(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt);
@@ -42,12 +44,12 @@ struct afs_file_desc * afs_open_regular_file_for_writing(
 void afs_close_regular_file(struct afs_dp_head *head,
                             struct afs_file_desc *file_desc);
 
-struct afs_file_desc *afs_open_dir_file_for_reading(
+struct afs_file_desc *afs_open_dir_file_for_reading_by_path(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt);
 
-struct afs_file_desc *afs_open_dir_file_for_writing(
+struct afs_file_desc *afs_open_dir_file_for_writing_by_path(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt);
@@ -59,20 +61,17 @@ uint32_t afs_create_dir_file_raw(struct afs_dp_head *head,
                                  uint32_t parent_dir, bool root,
                                  enum afs_file_operation_status *rt);
 
-void afs_create_dir_file(struct afs_dp_head *head,
-                         const char *path,
-                         enum afs_file_operation_status *rt);
+void afs_create_dir_file_by_path(struct afs_dp_head *head,
+                                 const char *path,
+                                 enum afs_file_operation_status *rt);
 
-void afs_remove_dir_file(struct afs_dp_head *head,
-                         const char *path,
-                         enum afs_file_operation_status *rt);
-
-void afs_create_regular_file(struct afs_dp_head *head,
+void afs_create_regular_file_by_path(struct afs_dp_head *head,
                              const char *path,
                              enum afs_file_operation_status *rt);
 
-void afs_remove_regular_file(struct afs_dp_head *head,
+void afs_remove_file_by_path(struct afs_dp_head *head,
                              const char *path,
+                             uint32_t type,
                              enum afs_file_operation_status *rt);
 
 #endif /* TINY_OS_FILESYS_AFS_AFS_H */

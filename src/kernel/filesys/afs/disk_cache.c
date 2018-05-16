@@ -603,6 +603,8 @@ void afs_write_to_block_end(uint32_t sec)
     afs_access_block_exit(sec);
 }
 
+#undef KOF
+
 //=========================== 其他 ===========================
 
 void init_afs_disk_cache()

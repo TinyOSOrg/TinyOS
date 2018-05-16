@@ -7,6 +7,12 @@
 #include <shared/freelist.h>
 #include <shared/string.h>
 
+struct dir_head
+{
+    uint32_t count; // 有效的项数量
+    uint32_t zone;  // 项空间容量
+};
+
 struct dir_unit
 {
     char name[AFS_FILE_NAME_MAX_LENGTH + 1];
@@ -86,18 +92,19 @@ static bool find_in_dir(struct afs_dp_head *head,
                         struct afs_file_desc *dir,
                         const char *name, uint32_t name_len,
                         uint32_t *entry_idx,
+                        uint32_t *inner_idx,
                         enum afs_file_operation_status *rt)
 {
     ASSERT_S(head && dir && name && entry_idx);
 
     // 取得目录项数量
-    uint32_t dir_unit_count;
-    if(!afs_read_binary(head, dir, 0, 4, &dir_unit_count, rt))
+    struct dir_head H;
+    if(!afs_read_binary(head, dir, 0, sizeof(struct dir_head), &H, rt))
         return false;
     
     struct dir_unit unit;
-    uint32_t fpos = 4;
-    for(uint32_t i = 0;i != dir_unit_count; ++i)
+    uint32_t fpos = 0 + sizeof(struct dir_head);
+    for(uint32_t i = 0;i != H.count; ++i)
     {
         if(!afs_read_binary(head, dir, fpos,
                 sizeof(struct dir_unit), &unit, rt))
@@ -108,6 +115,8 @@ static bool find_in_dir(struct afs_dp_head *head,
         if(match_dir_name(unit.name, name, name_len))
         {
             *entry_idx = unit.entry_index;
+            if(inner_idx)
+                *inner_idx = i;
             return true;
         }
     }
@@ -116,8 +125,7 @@ static bool find_in_dir(struct afs_dp_head *head,
     return false;
 }
 
-#include <lib/conio.h>
-struct afs_file_desc *afs_open_regular_file_for_reading(
+struct afs_file_desc *afs_open_regular_file_for_reading_by_path(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt)
@@ -157,7 +165,7 @@ struct afs_file_desc *afs_open_regular_file_for_reading(
 
         uint32_t next_entry = 0;
         bool found = find_in_dir(head, dir, name_beg, name_len,
-                                 &next_entry, rt);
+                                 &next_entry, NULL, rt);
     
         afs_close_file_for_reading(head, dir);
 
@@ -184,12 +192,13 @@ struct afs_file_desc *afs_open_regular_file_for_reading(
     return file;
 }
 
-struct afs_file_desc *afs_open_regular_file_for_writing(
+struct afs_file_desc *afs_open_regular_file_for_writing_by_path(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt)
 {
-    struct afs_file_desc *desc = afs_open_regular_file_for_reading(head, path, rt);
+    struct afs_file_desc *desc =
+        afs_open_regular_file_for_reading_by_path(head, path, rt);
     if(!desc)
         return NULL;
     
@@ -208,7 +217,7 @@ void afs_close_regular_file(struct afs_dp_head *head,
     afs_close_file_for_reading(head, file);
 }
 
-struct afs_file_desc *afs_open_dir_file_for_reading(
+struct afs_file_desc *afs_open_dir_file_for_reading_by_path(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt)
@@ -248,7 +257,7 @@ struct afs_file_desc *afs_open_dir_file_for_reading(
 
         uint32_t next_entry = 0;
         bool found = find_in_dir(head, dir, name_beg, name_len,
-                                 &next_entry, rt);
+                                 &next_entry, NULL, rt);
         afs_close_file_for_reading(head, dir);
 
         if(!found)
@@ -266,12 +275,13 @@ struct afs_file_desc *afs_open_dir_file_for_reading(
     return NULL;
 }
 
-struct afs_file_desc *afs_open_dir_file_for_writing(
+struct afs_file_desc *afs_open_dir_file_for_writing_by_path(
                             struct afs_dp_head *head,
                             const char *path,
                             enum afs_file_operation_status *rt)
 {
-    struct afs_file_desc *desc = afs_open_dir_file_for_reading(head, path, rt);
+    struct afs_file_desc *desc =
+        afs_open_dir_file_for_reading_by_path(head, path, rt);
     if(!afs_convert_reading_to_writing(head, desc))
     {
         afs_close_file_for_reading(head, desc);
@@ -304,18 +314,21 @@ uint32_t afs_create_dir_file_raw(struct afs_dp_head *head,
     ASSERT_S(dir != NULL);
 
     if(!afs_expand_file(head, dir,
-            sizeof(uint32_t) + 2 * sizeof(struct dir_unit),
+            sizeof(struct dir_head) + 2 * sizeof(struct dir_unit),
             &trt))
         goto FAILED;
 
     // 添加.和..文件
 
-    uint32_t dir_size = 2;
-    afs_write_binary(head, dir, 0, sizeof(uint32_t), &dir_size, &trt);
+    struct dir_head H;
+    H.count = 2;
+    H.zone  = 2;
+
+    afs_write_binary(head, dir, 0, sizeof(struct dir_head), &H, &trt);
     if(trt != afs_file_opr_success)
         goto FAILED;
     
-    uint32_t fpos = sizeof(uint32_t); struct dir_unit unit;
+    uint32_t fpos = sizeof(struct dir_head); struct dir_unit unit;
 
     unit.entry_index = ret;
     strcpy(unit.name, ".");
@@ -357,15 +370,15 @@ static bool afs_remove_dir_file_raw(struct afs_dp_head *head,
         return false;
     }
 
-    uint32_t dir_size;
-    if(!afs_read_binary(head, dir, 0, 4, &dir_size, &trt))
+    struct dir_head H;
+    if(!afs_read_binary(head, dir, 0, sizeof(struct dir_head), &H, &trt))
     {
         afs_close_file_for_reading(head, dir);
         SET_RT(trt);
         return false;
     }
 
-    if(dir_size > 2)
+    if(H.count > 2)
     {
         afs_close_file_for_reading(head, dir);
         SET_RT(afs_file_opr_rm_nonempty);
@@ -400,7 +413,7 @@ static void afs_create_dir_in(struct afs_dp_head *head,
     // 尝试在父目录中查找当前文件名，避免文件重名
     uint32_t dummy_entry;
     bool found = find_in_dir(head, parent_dir, name_beg, name_len,
-                             &dummy_entry, NULL);
+                             &dummy_entry, NULL, NULL);
     if(found)
     {
         afs_close_file_for_reading(head, parent_dir);
@@ -428,18 +441,30 @@ static void afs_create_dir_in(struct afs_dp_head *head,
     }
 
     // 更新父目录文件
-    uint32_t old_size = afs_extract_file_entry(parent_dir)->byte_size;
-    uint32_t new_size = old_size + sizeof(struct dir_unit);
 
-    if(!afs_expand_file(head, parent_dir, new_size, rt))
+    struct dir_head H;
+    if(!afs_read_binary(head, parent_dir, 0, sizeof(struct dir_head), &H, rt))
     {
         afs_close_file_for_writing(head, parent_dir);
-        afs_remove_dir_file_raw(head, entry, NULL);
         return;
     }
 
-    uint32_t new_entry_count = (new_size - sizeof(uint32_t)) /
-                               sizeof(struct dir_unit);
+    if(H.zone == H.count)
+    {
+        uint32_t new_size = sizeof(struct dir_head) +
+                (H.zone + 1) * sizeof(struct dir_unit);
+
+        if(!afs_expand_file(head, parent_dir, new_size, rt))
+        {
+            afs_close_file_for_writing(head, parent_dir);
+            afs_remove_dir_file_raw(head, entry, NULL);
+            return;
+        }
+        ++H.count;
+        ++H.zone;
+    }
+    else
+        ++H.count;
 
     struct dir_unit unit;
     for(uint32_t i = 0;i != name_len; ++i)
@@ -447,15 +472,18 @@ static void afs_create_dir_in(struct afs_dp_head *head,
     unit.name[name_len] = '\0';
     unit.entry_index = entry;
     if(!afs_write_binary(head, parent_dir,
-                         old_size,
+                         sizeof(struct dir_head) + (H.count - 1) * sizeof(struct dir_unit),
                          sizeof(struct dir_unit), &unit, rt) ||
-       !afs_write_binary(head, parent_dir, 0, sizeof(uint32_t),
-                         &new_entry_count, rt))
+       !afs_write_binary(head, parent_dir, 0, sizeof(struct dir_head),
+                         &H, rt))
     {
         afs_close_file_for_writing(head, parent_dir);
         afs_remove_dir_file_raw(head, entry, NULL);
         return;
     }
+
+    afs_extract_file_entry(parent_dir)->byte_size =
+        sizeof(struct dir_head) + H.zone * sizeof(struct dir_unit);
 
     afs_close_file_for_writing(head, parent_dir);
     SET_RT(afs_file_opr_success);
@@ -481,7 +509,7 @@ static void afs_create_regular_in(struct afs_dp_head *head,
     // 尝试在父目录中查找当前文件名，避免文件重名
     uint32_t dummy_entry;
     bool found = find_in_dir(head, parent_dir, name_beg, name_len,
-                             &dummy_entry, NULL);
+                             &dummy_entry, NULL, NULL);
     if(found)
     {
         afs_close_file_for_reading(head, parent_dir);
@@ -509,18 +537,29 @@ static void afs_create_regular_in(struct afs_dp_head *head,
     }
 
     // 更新父目录文件
-    uint32_t old_size = afs_extract_file_entry(parent_dir)->byte_size;
-    uint32_t new_size = old_size + sizeof(struct dir_unit);
-
-    if(!afs_expand_file(head, parent_dir, new_size, rt))
+    struct dir_head H;
+    if(!afs_read_binary(head, parent_dir, 0, sizeof(struct dir_head), &H, rt))
     {
         afs_close_file_for_writing(head, parent_dir);
-        afs_remove_dir_file_raw(head, entry, NULL);
         return;
     }
 
-    uint32_t new_entry_count = (new_size - sizeof(uint32_t)) /
-                               sizeof(struct dir_unit);
+    if(H.zone == H.count)
+    {
+        uint32_t new_size = sizeof(struct dir_head) +
+                (H.zone + 1) * sizeof(struct dir_unit);
+
+        if(!afs_expand_file(head, parent_dir, new_size, rt))
+        {
+            afs_close_file_for_writing(head, parent_dir);
+            afs_remove_dir_file_raw(head, entry, NULL);
+            return;
+        }
+        ++H.count;
+        ++H.zone;
+    }
+    else
+        ++H.count;
 
     struct dir_unit unit;
     for(uint32_t i = 0;i != name_len; ++i)
@@ -528,23 +567,26 @@ static void afs_create_regular_in(struct afs_dp_head *head,
     unit.name[name_len] = '\0';
     unit.entry_index = entry;
     if(!afs_write_binary(head, parent_dir,
-                         old_size,
+                         sizeof(struct dir_head) + (H.count - 1) * sizeof(struct dir_unit),
                          sizeof(struct dir_unit), &unit, rt) ||
-       !afs_write_binary(head, parent_dir, 0, sizeof(uint32_t),
-                         &new_entry_count, rt))
+       !afs_write_binary(head, parent_dir, 0, sizeof(struct dir_head),
+                         &H, rt))
     {
         afs_close_file_for_writing(head, parent_dir);
         afs_remove_dir_file_raw(head, entry, NULL);
         return;
     }
 
+    afs_extract_file_entry(parent_dir)->byte_size =
+        sizeof(struct dir_head) + H.zone * sizeof(struct dir_unit);
+
     afs_close_file_for_writing(head, parent_dir);
     SET_RT(afs_file_opr_success);
 }
 
-void afs_create_dir_file(struct afs_dp_head *head,
-                         const char *path,
-                         enum afs_file_operation_status *rt)
+void afs_create_dir_file_by_path(struct afs_dp_head *head,
+                                 const char *path,
+                                 enum afs_file_operation_status *rt)
 {
     uint32_t name_len, next_name_len;
     const char *next_name_beg, *name_beg = path_begin(path, &name_len);
@@ -585,7 +627,7 @@ void afs_create_dir_file(struct afs_dp_head *head,
 
         uint32_t next_entry;
         bool found = find_in_dir(head, parent_dir,
-                        name_beg, name_len, &next_entry, rt);
+                        name_beg, name_len, &next_entry, NULL, rt);
         afs_close_file_for_reading(head, parent_dir);
 
         if(!found)
@@ -598,9 +640,9 @@ void afs_create_dir_file(struct afs_dp_head *head,
     }
 }
 
-void afs_create_regular_file(struct afs_dp_head *head,
-                             const char *path,
-                             enum afs_file_operation_status *rt)
+void afs_create_regular_file_by_path(struct afs_dp_head *head,
+                                     const char *path,
+                                     enum afs_file_operation_status *rt)
 {
     uint32_t name_len, next_name_len;
     const char *next_name_beg, *name_beg = path_begin(path, &name_len);
@@ -640,12 +682,104 @@ void afs_create_regular_file(struct afs_dp_head *head,
 
         uint32_t next_entry;
         bool found = find_in_dir(head, parent_dir,
-                        name_beg, name_len, &next_entry, rt);
+                        name_beg, name_len, &next_entry, NULL, rt);
         afs_close_file_for_reading(head, parent_dir);
 
         if(!found)
             return;
         
+        dir_entry_idx = next_entry;
+
+        name_beg = next_name_beg;
+        name_len = next_name_len;
+    }
+}
+
+void afs_remove_file_by_path(struct afs_dp_head *head,
+                             const char *path,
+                             uint32_t type,
+                             enum afs_file_operation_status *rt)
+{
+    uint32_t next_name_len, name_len;
+    const char *next_name_beg, *name_beg = path_begin(path, &name_len);
+
+    if(!name_beg)
+    {
+        SET_RT(afs_file_opr_not_found);
+        return;
+    }
+
+    uint32_t dir_entry_idx = head->root_dir_entry;
+
+    while(true)
+    {
+        next_name_beg = path_next(name_beg, &next_name_len);
+
+        struct afs_file_desc *parent_dir =
+            afs_open_file_for_reading(head, dir_entry_idx, rt);
+        if(!parent_dir)
+            return;
+        
+        if(afs_extract_file_entry(parent_dir)->type
+            != AFS_FILE_TYPE_DIRECTORY)
+        {
+            afs_close_file_for_reading(head, parent_dir);
+            SET_RT(afs_file_opr_not_found);
+            return;
+        }
+
+        uint32_t next_entry;
+        uint32_t inner_idx;
+        bool found = find_in_dir(head, parent_dir,
+            name_beg, name_len, &next_entry, &inner_idx, rt);
+        
+        if(!found)
+        {
+            afs_close_file_for_reading(head, parent_dir);
+            return;
+        }
+
+        // 当前文件名就是要删除的文件
+        if(!next_name_beg)
+        {
+            if(!afs_convert_reading_to_writing(head, parent_dir))
+            {
+                afs_close_file_for_reading(head, parent_dir);
+                SET_RT(afs_file_opr_writing_lock);
+                return;
+            }
+            
+            // 看看有没有人在用，如果没有，因为父目录被锁了，以后也不会有了
+            struct afs_file_desc *dst = afs_open_file_for_writing(
+                head, next_entry, NULL);
+            if(!dst)
+            {
+                afs_close_file_for_writing(head, parent_dir);
+                SET_RT(afs_file_opr_rm_locked);
+                return;
+            }
+            afs_close_file_for_writing(head, dst);
+
+            // 把最后一个文件挪到inner_idx处，然后count--
+            struct dir_head H;
+            afs_read_binary(head, parent_dir, 0, sizeof(struct dir_head), &H, NULL);
+
+            struct dir_unit last_unit;
+            afs_read_binary(head, parent_dir,
+                sizeof(struct dir_head) + (H.count - 1) * sizeof(struct dir_unit),
+                sizeof(struct dir_unit), &last_unit, NULL);
+            afs_write_binary(head, parent_dir,
+                sizeof(struct dir_head) + inner_idx * sizeof(struct dir_unit),
+                sizeof(struct dir_unit), &last_unit, NULL);
+
+            H.count--;
+            afs_write_binary(head, parent_dir, 0, sizeof(struct dir_head), &H, NULL);
+
+            afs_close_file_for_writing(head, parent_dir);
+            SET_RT(afs_file_opr_success);
+            return;
+        }
+
         dir_entry_idx = next_entry;
 
         name_beg = next_name_beg;
