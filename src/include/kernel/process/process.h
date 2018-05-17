@@ -7,7 +7,6 @@
 #include <kernel/sysmsg/sysmsg.h>
 #include <kernel/sysmsg/sysmsg_src.h>
 
-#include <shared/alloc_arr.h>
 #include <shared/ptrlist.h>
 
 /*
@@ -77,10 +76,6 @@ struct PCB
     // 各种侵入式链表节点
 
     struct ilist_node processes_node; // 所有进程的链表
-
-    // 文件句柄表及其锁
-    struct alloc_ptr_arr file_handles;
-    spinlock file_handles_lock;
 };
 
 /* 进程入口函数签名 */
@@ -97,22 +92,6 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0);
 
 /* 干掉一个进程 */
 void kill_process(struct PCB *pcb);
-
-/* 文件句柄记录 */
-struct file_handle_record
-{
-    uint32_t dp_idx;
-    uint32_t file_desc;
-};
-
-/*
-    给当前进程添加一个打开的文件记录，返回一个记录句柄
-    失败时返回负数
-*/
-int32_t add_process_file_record(struct PCB *pcb, uint32_t dp_idx, uint32_t file_handle);
-
-/* 释放一个PCB中的文件记录，并不负责对应文件的关闭 */
-void release_process_file_record(struct PCB *pcb, int32_t handle);
 
 /*=====================================================================
     下面的东西是给thread.c用的

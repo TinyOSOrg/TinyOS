@@ -102,68 +102,6 @@ struct PCB *pid_to_pcb[MAX_PROCESS_COUNT];
 /* PCB空间自由链表 */
 static freelist_handle PCB_freelist;
 
-/* 文件分配表空间自由链表 */
-static freelist_handle file_handles_zone_fl;
-static spinlock file_handles_zone_fl_lock;
-
-/* 文件句柄记录自由链表 */
-static freelist_handle file_handle_record_fl;
-static spinlock file_handle_record_fl_lock;
-
-static struct file_handle_record *alloc_file_handle_record(void)
-{
-    spinlock_lock(&file_handle_record_fl);
-
-    if(is_freelist_empty(&file_handle_record_fl))
-    {
-        char *data = (char*)alloc_ker_page(false);
-        for(size_t i = 0;i < 4096 / sizeof(struct file_handle_record); ++i)
-        {
-            add_freelist(&file_handle_record_fl, data);
-            data += sizeof(struct file_handle_record);
-        }
-    }
-
-    void *ret = fetch_freelist(&file_handle_record_fl);
-    spinlock_unlock(&file_handle_record_fl_lock);
-    return ret;
-}
-
-static void free_file_handle_record(struct file_handle_record *rcd)
-{
-    spinlock_lock(&file_handle_record_fl_lock);
-    add_freelist(&file_handle_record_fl, rcd);
-    spinlock_unlock(&file_handle_record_fl_lock);
-}
-
-#define FILE_HANDLES_ZONE_BYTE_SIZE (4096 / 4)
-
-static void *alloc_file_handles_zone(void)
-{
-    spinlock_lock(&file_handles_zone_fl_lock);
-
-    if(is_freelist_empty(&file_handles_zone_fl))
-    {
-        char *data = (char*)alloc_ker_page(false);
-        for(size_t i = 0;i < 4096 / FILE_HANDLES_ZONE_BYTE_SIZE; ++i)
-        {
-            add_freelist(&file_handles_zone_fl, data);
-            data += FILE_HANDLES_ZONE_BYTE_SIZE;
-        }
-    }
-
-    void *ret = fetch_freelist(&file_handles_zone_fl);
-    spinlock_unlock(&file_handles_zone_fl_lock);
-    return ret;
-}
-
-static void free_file_handles_zone(void *zone)
-{
-    spinlock_lock(&file_handles_zone_fl_lock);
-    add_freelist(&file_handles_zone_fl, zone);
-    spinlock_unlock(&file_handles_zone_fl_lock);
-}
-
 /* 申请一块PCB空间 */
 static struct PCB *alloc_PCB()
 {
@@ -201,12 +139,6 @@ static struct PCB *create_empty_process(const char *name, bool is_PL_0)
     for(;i_name != PROCESS_NAME_MAX_LENGTH && name[i_name]; ++i_name)
         pcb->name[i_name] = name[i_name];
     pcb->name[i_name] = '\0';
-
-    // 准备文件句柄分配表
-    void *fh_zone = alloc_file_handles_zone();
-    init_alloc_ptr_arr(&pcb->file_handles, fh_zone,
-                       FILE_HANDLES_ZONE_BYTE_SIZE);
-    init_spinlock(&pcb->file_handles_lock);
 
     push_back_ilist(&processes, &pcb->processes_node);
     
@@ -324,12 +256,6 @@ static void init_bootloader_process()
 
     init_ilist(&pcb->threads_list);
 
-    // 准备文件句柄分配表
-    void *fh_zone = alloc_file_handles_zone();
-    init_alloc_ptr_arr(&pcb->file_handles, fh_zone,
-                       FILE_HANDLES_ZONE_BYTE_SIZE);
-    init_spinlock(&pcb->file_handles_lock);
-
     push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
         
     tcb->pcb = pcb;
@@ -394,35 +320,6 @@ void kill_process(struct PCB *pcb)
     set_intr_state(intr_s);
 }
 
-int32_t add_process_file_record(struct PCB *pcb, uint32_t dp_idx, uint32_t file_handle)
-{
-    spinlock_lock(&pcb->file_handles_lock);
-
-    struct file_handle_record *rcd = alloc_file_handle_record();
-    rcd->dp_idx = dp_idx;
-    rcd->file_desc = file_handle;
-
-    int32_t ret = new_alloc_ptr_arr_unit(&pcb->file_handles, rcd);
-    if(ret < 0)
-        free_file_handle_record(rcd);
-
-    spinlock_unlock(&pcb->file_handles_lock);
-    return ret;
-}
-
-void release_process_file_record(struct PCB *pcb, int32_t handle)
-{
-    spinlock_lock(&pcb->file_handles_lock);
-
-    struct file_handle_record *rcd = get_alloc_ptr_arr_ptr(
-        &pcb->file_handles, handle);
-
-    free_file_handle_record(rcd);
-    free_alloc_ptr_arr_unit(&pcb->file_handles, handle);
-
-    spinlock_unlock(&pcb->file_handles_lock);
-}
-
 void _set_tss_esp0(uint32_t esp0)
 {
     tss.esp0 = esp0;
@@ -434,22 +331,6 @@ void release_process_resources(struct PCB *pcb)
     erase_from_ilist(&pcb->processes_node);
     destroy_sysmsg_queue(&pcb->sys_msgs);
     destroy_sysmsg_source_list(&pcb->sys_msg_srcs);
-
-    // 关闭所有打开的文件句柄
-    for(int32_t i = 0;i < MAX_ALLOC_PTR_ARR_UNIT_COUNT(
-                            FILE_HANDLES_ZONE_BYTE_SIZE); ++i)
-    {
-        if(is_alloc_ptr_arr_unit_used(&pcb->file_handles, i))
-        {
-            struct file_handle_record *rcd =
-                get_alloc_ptr_arr_ptr(&pcb->file_handles, i);
-            close_file(rcd->dp_idx, rcd->file_desc);
-            free_file_handle_record(rcd);
-        }
-    }
-
-    // 释放文件句柄分配表空间
-    free_file_handles_zone(pcb->file_handles.units);
 }
 
 void release_PCB(struct PCB *pcb)
