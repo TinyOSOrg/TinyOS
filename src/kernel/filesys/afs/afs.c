@@ -258,13 +258,6 @@ struct afs_file_desc *afs_open_regular_file_for_writing_by_path(
     return desc;
 }
 
-void afs_close_regular_file(struct afs_dp_head *head,
-                            struct afs_file_desc *file)
-{
-    afs_convert_writing_to_reading(head, file);
-    afs_close_file_for_reading(head, file);
-}
-
 struct afs_file_desc *afs_open_dir_file_for_reading_by_path(
                             struct afs_dp_head *head,
                             const char *path,
@@ -338,8 +331,8 @@ struct afs_file_desc *afs_open_dir_file_for_writing_by_path(
     return desc;
 }
 
-void afs_close_dir_file(struct afs_dp_head *head,
-                        struct afs_file_desc *file)
+void afs_close_file(struct afs_dp_head *head,
+                    struct afs_file_desc *file)
 {
     afs_convert_writing_to_reading(head, file);
     afs_close_file_for_reading(head, file);

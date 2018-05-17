@@ -2,10 +2,12 @@
 #define TINY_OS_PROCESS_H
 
 #include <kernel/memory/vir_mem_man.h>
+#include <kernel/process/spinlock.h>
 #include <kernel/process/thread.h>
 #include <kernel/sysmsg/sysmsg.h>
 #include <kernel/sysmsg/sysmsg_src.h>
 
+#include <shared/alloc_arr.h>
 #include <shared/ptrlist.h>
 
 /*
@@ -75,6 +77,10 @@ struct PCB
     // 各种侵入式链表节点
 
     struct ilist_node processes_node; // 所有进程的链表
+
+    // 文件句柄表及其锁
+    struct alloc_ptr_arr file_handles;
+    spinlock file_handles_lock;
 };
 
 /* 进程入口函数签名 */
@@ -92,6 +98,22 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0);
 /* 干掉一个进程 */
 void kill_process(struct PCB *pcb);
 
+/* 文件句柄记录 */
+struct file_handle_record
+{
+    uint32_t dp_idx;
+    uint32_t file_desc;
+};
+
+/*
+    给当前进程添加一个打开的文件记录，返回一个记录句柄
+    失败时返回负数
+*/
+int32_t add_process_file_record(struct PCB *pcb, uint32_t dp_idx, uint32_t file_handle);
+
+/* 释放一个PCB中的文件记录，并不负责对应文件的关闭 */
+void release_process_file_record(struct PCB *pcb, int32_t handle);
+
 /*=====================================================================
     下面的东西是给thread.c用的
 =====================================================================*/
@@ -99,11 +121,11 @@ void kill_process(struct PCB *pcb);
 /* 设置tss中的esp0字段 */
 void _set_tss_esp0(uint32_t esp0);
 
-/* PCB自由链表 */
-void _add_PCB_mem(struct PCB *pcb);
+/* 释放进程占用的各种资源，虚拟地址空间和PCB除外 */
+void release_process_resources(struct PCB *pcb);
 
-/* 清空PID到PCB映射中的某一项 */
-void _clr_PID_to_PCB(uint32_t pid);
+/* 释放进程虚拟地址空间和PCB */
+void release_PCB(struct PCB *pcb);
 
 /*=====================================================================
     进程相关系统调用实现

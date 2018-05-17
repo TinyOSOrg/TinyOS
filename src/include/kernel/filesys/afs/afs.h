@@ -1,7 +1,7 @@
 #ifndef TINY_OS_FILESYS_AFS_AFS_H
 #define TINY_OS_FILESYS_AFS_AFS_H
 
-#include <kernel/filesys/afs/file_opr.h>
+#include <shared/filesys/afs/file_opr.h>
 
 #include <shared/bool.h>
 #include <shared/intdef.h>
@@ -45,9 +45,6 @@ struct afs_file_desc * afs_open_regular_file_for_writing_by_path(
                             const char *path,
                             enum afs_file_operation_status *rt);
 
-void afs_close_regular_file(struct afs_dp_head *head,
-                            struct afs_file_desc *file_desc);
-
 struct afs_file_desc *afs_open_dir_file_for_reading_by_path(
                             struct afs_dp_head *head,
                             const char *path,
@@ -58,8 +55,8 @@ struct afs_file_desc *afs_open_dir_file_for_writing_by_path(
                             const char *path,
                             enum afs_file_operation_status *rt);
 
-void afs_close_dir_file(struct afs_dp_head *head,
-                        struct afs_file_desc *file_desc);
+void afs_close_file(struct afs_dp_head *head,
+                    struct afs_file_desc *file_desc);
 
 uint32_t afs_create_dir_file_raw(struct afs_dp_head *head,
                                  uint32_t parent_dir, bool root,

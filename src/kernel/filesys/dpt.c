@@ -95,3 +95,17 @@ void restore_dpt()
     };
     disk_rw_raw(&dpt_sec_task);
 }
+
+void close_file(size_t dp_idx, uint32_t file_handle)
+{
+    struct dpt_unit *u = get_dpt_unit(dp_idx);
+    switch(u->type)
+    {
+    case DISK_PT_AFS:
+        afs_close_file((struct afs_dp_head*)dp_fs_handles[dp_idx],
+                       (struct afs_file_desc*)file_handle);
+        break;
+    default:
+        FATAL_ERROR("invalid file handle");
+    }
+}

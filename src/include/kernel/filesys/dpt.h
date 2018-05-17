@@ -19,4 +19,7 @@ uint32_t get_dp_fs_handler(size_t idx);
 /* 将分区表写回到磁盘 */
 void restore_dpt();
 
+/* 关闭一个文件 */
+void close_file(size_t dp_idx, uint32_t file_handle);
+
 #endif /* TINY_OS_DISK_PARTITION_TABLE_H */

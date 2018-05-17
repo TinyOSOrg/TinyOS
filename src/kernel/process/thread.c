@@ -146,17 +146,14 @@ static void erase_thread_in_process(struct TCB *tcb)
     erase_from_ilist(&tcb->threads_in_proc_node);
     if(is_ilist_empty(&pcb->threads_list))
     {
-        _clr_PID_to_PCB(pcb->pid);
-        erase_from_ilist(&pcb->processes_node);
-        destroy_sysmsg_queue(&pcb->sys_msgs);
-        destroy_sysmsg_source_list(&pcb->sys_msg_srcs);
+        release_process_resources(pcb);
 
         push_back_rlist(&waiting_release_processes,
             pcb, kernel_resident_rlist_node_alloc);
     }
 
     // tcb本身占的资源也要释放了，但现在不太合适，这个内核栈还在用呢……
-    // 所以延迟到之后进行
+    // 所以也延迟到之后进行
     push_back_rlist(&waiting_release_threads,
         tcb, kernel_resident_rlist_node_alloc);
     
@@ -359,10 +356,7 @@ void do_releasing_thds_procs()
     {
         struct PCB *pcb = pop_front_rlist(&waiting_release_processes,
             kernel_resident_rlist_node_dealloc);
-        // 虚拟地址空间
-        destroy_vir_addr_space(pcb->addr_space);
-        // pcb空间
-        _add_PCB_mem(pcb);
+        release_PCB(pcb);
     }
 
     set_intr_state(intr_s);
