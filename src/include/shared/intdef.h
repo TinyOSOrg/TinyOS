@@ -21,6 +21,4 @@ typedef uint32_t size_t;
     #define NULL ((void*)0)
 #endif
 
-#define ARRAY_SIZE(A) (sizeof(A)/sizeof(A[0]))
-
 #endif /* TINY_OS_LIB_INT_DEF_H */

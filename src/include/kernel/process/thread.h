@@ -4,6 +4,9 @@
 #include <shared/intdef.h>
 #include <shared/ptrlist.h>
 
+/* 操作实现在spinlock.h中，TCB要用这个所以提前声明在这了…… */
+typedef volatile uint32_t spinlock;
+
 /* process control block */
 struct PCB;
 
@@ -42,6 +45,12 @@ struct TCB
 
     struct ilist_node ready_block_threads_node;   //就绪线程队列、信号量阻塞队列
     struct ilist_node threads_in_proc_node;       // 每个进程的线程表
+
+    // 线程销毁标记
+    // 用于保护特定的系统调用不因线程销毁而被打断
+    spinlock syscall_protector_lock;
+    uint32_t syscall_protector_count;
+    bool thread_kill_flag;
 };
 
 /*
@@ -110,5 +119,11 @@ void do_releasing_thds_procs();
     好人才会做的事
 */
 void yield_CPU();
+
+/* 进入系统调用保护模式，由可能被打断的系统调用实现负责调用 */
+void thread_syscall_protector_entry(void);
+
+/* 离开系统调用保护模式，由可能被打断的系统调用实现负责调用 */
+void thread_syscall_protector_exit(void);
 
 #endif /* TINY_OS_THREAD_H */

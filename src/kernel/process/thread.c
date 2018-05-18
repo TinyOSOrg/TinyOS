@@ -86,12 +86,22 @@ static void kernel_thread_entry(thread_exec_func func, void *params)
 /* 从开机以来就一直在跑的家伙也是个线程 */
 static void init_bootloader_thread()
 {
-    struct TCB *tcb = alloc_TCB();
-    tcb->state = thread_state_running;
-    tcb->ker_stack = (void*)KER_STACK_INIT_VAL;
-    tcb->init_ker_stack = tcb->ker_stack;
-    tcb->pcb = NULL;
-    tcb->blocked_sph = NULL;
+    struct TCB *tcb       = alloc_TCB();
+
+    tcb->state            = thread_state_running;
+
+    tcb->ker_stack        = (void*)KER_STACK_INIT_VAL;
+    tcb->init_ker_stack   = tcb->ker_stack;
+
+    tcb->pcb              = NULL;
+    tcb->ready_block_threads_node.last =
+    tcb->ready_block_threads_node.next = NULL;
+    tcb->blocked_sph      = NULL;
+
+    tcb->syscall_protector_count = 0;
+    tcb->thread_kill_flag = false;
+    init_spinlock(&tcb->syscall_protector_lock);
+
     cur_running_TCB = tcb;
 }
 
@@ -114,6 +124,10 @@ static void init_idle_thread()
                           - INTR_BAK_DATA_SIZE
                           - sizeof(struct thread_init_stack);
     idle_TCB->init_ker_stack = idle_TCB->ker_stack;
+
+    idle_TCB->syscall_protector_count = 0;
+    idle_TCB->thread_kill_flag = false;
+    init_spinlock(&idle_TCB->syscall_protector_lock);
 
     // 初始化内核栈顶端信息
 
@@ -245,6 +259,10 @@ struct TCB *create_thread(thread_exec_func func, void *params,
                    - sizeof(struct thread_init_stack);
     tcb->init_ker_stack = tcb->ker_stack;
 
+    tcb->syscall_protector_count = 0;
+    tcb->thread_kill_flag = false;
+    init_spinlock(&tcb->syscall_protector_lock);
+
     // 初始化内核栈顶端信息
 
     struct thread_init_stack *init_stack =
@@ -301,7 +319,7 @@ void awake_thread(struct TCB *tcb)
     set_intr_state(intr_s);
 }
 
-void kill_thread(struct TCB *tcb)
+static void do_kill_thread(struct TCB *tcb)
 {
     intr_state intr_s = fetch_and_disable_intr();
 
@@ -324,6 +342,19 @@ void kill_thread(struct TCB *tcb)
     }
 
     set_intr_state(intr_s);
+}
+
+void kill_thread(struct TCB *tcb)
+{
+    spinlock_lock(&tcb->syscall_protector_lock);
+
+    if(tcb->syscall_protector_count) // 处在关键系统调用中，延迟销毁
+    {
+        tcb->thread_kill_flag = true;
+        spinlock_unlock(&tcb->syscall_protector_lock);
+    }
+    else
+        do_kill_thread(tcb); //即刻处刑
 }
 
 void exit_thread()
@@ -368,4 +399,31 @@ void yield_CPU()
     intr_state is = fetch_and_disable_intr();
     thread_scheduler();
     set_intr_state(is);
+}
+
+void thread_syscall_protector_entry(void)
+{
+    struct TCB *tcb = get_cur_TCB();
+    spinlock_lock(&tcb->syscall_protector_lock);
+
+    if(tcb->thread_kill_flag)
+    {
+        while(1)
+            ;
+    }
+
+    tcb->syscall_protector_count++;
+
+    spinlock_unlock(&tcb->syscall_protector_lock);
+}
+
+void thread_syscall_protector_exit(void)
+{
+    struct TCB *tcb = get_cur_TCB();
+    spinlock_lock(&tcb->syscall_protector_lock);
+
+    if(!--tcb->syscall_protector_count && tcb->thread_kill_flag)
+        do_kill_thread(tcb);
+    else
+        spinlock_unlock(&tcb->syscall_protector_lock);
 }

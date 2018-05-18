@@ -24,4 +24,6 @@
 #define GET_STRUCT_FROM_MEMBER(STU, MEM, p_mem) \
     ((STU*)((char*)(p_mem) - (char*)(&((STU*)0)->MEM)))
 
+#define ARRAY_SIZE(A) (sizeof(A) / sizeof(A[0]))
+
 #endif /* TINY_OS_SHARED_UTILITY_H */

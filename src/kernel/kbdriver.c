@@ -7,6 +7,7 @@
 
 #include <shared/keycode.h>
 #include <shared/sysmsg/kbmsg.h>
+#include <shared/utility.h>
 
 /* 按键位图数量 */
 #define KB_PRESSED_BITMAP_COUNT (256 / 32)

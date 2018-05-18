@@ -8,7 +8,7 @@
 
 /* 自旋锁实现的互斥量，不解释 */
 
-typedef volatile uint32_t spinlock;
+// typedef volatile uint32_t spinlock; in thread.h
 
 static inline void init_spinlock(spinlock *lock)
 {
