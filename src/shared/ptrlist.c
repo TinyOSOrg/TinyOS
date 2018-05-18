@@ -105,4 +105,5 @@ void erase_from_ilist(struct ilist_node *node)
 {
     node->last->next = node->next;
     node->next->last = node->last;
+    node->last = node->next = NULL;
 }

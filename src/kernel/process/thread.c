@@ -315,7 +315,8 @@ void kill_thread(struct TCB *tcb)
     }
     else // 在ready队列中或被阻塞
     {
-        erase_from_ilist(&tcb->ready_block_threads_node);
+        if(tcb->ready_block_threads_node.next)
+            erase_from_ilist(&tcb->ready_block_threads_node);
         // 信号量
         if(tcb->blocked_sph)
             tcb->blocked_sph->val++;
