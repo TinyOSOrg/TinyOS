@@ -2,6 +2,7 @@
 #include <kernel/console/console.h>
 #include <kernel/diskdriver.h>
 #include <kernel/filesys/dpt.h>
+#include <kernel/filesys/filesys.h>
 #include <kernel/interrupt.h>
 #include <kernel/kbdriver.h>
 #include <kernel/memory.h>
@@ -10,10 +11,6 @@
 #include <kernel/syscall.h>
 #include <kernel/sysmsg/sysmsg_syscall.h>
 #include <kernel/sysmsg/sysmsg.h>
-
-#include <kernel/filesys/afs/afs.h>
-#include <kernel/filesys/afs/disk_cache.h>
-#include <kernel/filesys/afs/file.h>
 
 #include <lib/conio.h>
 
@@ -144,7 +141,7 @@ int main()
 
     printf("main process, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
-
+    
     while(1)
     {
         do_releasing_thds_procs();
