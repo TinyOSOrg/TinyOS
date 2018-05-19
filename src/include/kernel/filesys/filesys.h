@@ -32,6 +32,14 @@ file_handle open_writing(filesys_dp_handle dp, const char *path,
 enum filesys_opr_result close_file(filesys_dp_handle dp,
                                    file_handle file);
 
+/* 创建一个空文件 */
+enum filesys_opr_result make_regular(filesys_dp_handle dp,
+                                     const char *path);
+
+/* 删除一个文件 */
+enum filesys_opr_result remove_regular(filesys_dp_handle dp,
+                                       const char *path);
+
 /* 创建一个空目录 */
 enum filesys_opr_result make_directory(filesys_dp_handle dp,
                                        const char *path);
@@ -39,8 +47,5 @@ enum filesys_opr_result make_directory(filesys_dp_handle dp,
 /* 删除一个空目录 */
 enum filesys_opr_result remove_directory(filesys_dp_handle dp,
                                          const char *path);
-
-/* 判断一个文件是否存在 */
-bool is_file_existing(filesys_dp_handle dp, const char *path);
 
 #endif /* TINY_OS_FILESYS_FILESYS_H */

@@ -5,6 +5,7 @@
 #include <kernel/filesys/afs/disk_cache.h>
 #include <kernel/filesys/afs/dp_phy.h>
 #include <kernel/filesys/afs/file.h>
+#include <kernel/filesys/afs/file_type.h>
 
 #include <shared/freelist.h>
 #include <shared/string.h>

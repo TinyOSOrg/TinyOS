@@ -132,9 +132,6 @@ struct afs_file_entry
 STATIC_ASSERT(sizeof(struct afs_file_entry) == 12,
               invalid_size_of_afs_file_entry);
 
-#define AFS_FILE_TYPE_REGULAR   1
-#define AFS_FILE_TYPE_DIRECTORY 2
-
 /* 一个扇区至多包含多少个file entry */
 #define AFS_SECTOR_MAX_FILE_ENTRY_COUNT \
     (AFS_SECTOR_BYTE_SIZE / sizeof(struct afs_file_entry))
