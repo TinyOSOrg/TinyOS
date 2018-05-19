@@ -3,9 +3,21 @@
 #include <kernel/filesys/filesys.h>
 
 #include <kernel/filesys/afs/afs.h>
+#include <kernel/filesys/afs/file.h>
 #include <kernel/filesys/afs/file_type.h>
 
 #include <shared/utility.h>
+
+void init_filesys(void)
+{
+    init_afs();
+}
+
+/*
+    IMPROVE：这里的文件操作函数基本是switch把不同类型文件系统的操作
+        分派到不同具体函数，可能会很慢而且还不灵活
+        有时间优化成跳转表的形式
+*/
 
 static enum filesys_opr_result trans_afs_file_result(
     enum afs_file_operation_status rt)
@@ -34,8 +46,8 @@ static enum filesys_opr_result trans_afs_file_result(
 
 #define SET_RT(V) do { if(rt) *rt = (V); } while(0)
 
-file_handle open_reading(filesys_dp_handle dp, const char *path,
-                         enum filesys_opr_result *rt)
+file_handle open_regular_reading(filesys_dp_handle dp, const char *path,
+                                 enum filesys_opr_result *rt)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -51,14 +63,17 @@ file_handle open_reading(filesys_dp_handle dp, const char *path,
         }
     
     default:
-        FATAL_ERROR("invalid file handle");
+        {
+            SET_RT(filesys_opr_invalid_dp);
+            return 0;
+        }
     }
 
-    return filesys_opr_others;
+    return 0;
 }
 
-file_handle open_writing(filesys_dp_handle dp, const char *path,
-                         enum filesys_opr_result *rt)
+file_handle open_regular_writing(filesys_dp_handle dp, const char *path,
+                                 enum filesys_opr_result *rt)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -74,14 +89,16 @@ file_handle open_writing(filesys_dp_handle dp, const char *path,
         }
     
     default:
-        FATAL_ERROR("invalid file handle");
+        {
+            SET_RT(filesys_opr_invalid_dp);
+            return 0;
+        }
     }
 
     return filesys_opr_others;
 }
 
-enum filesys_opr_result close_file(filesys_dp_handle dp,
-                                  file_handle file_handle)
+enum filesys_opr_result close_file(filesys_dp_handle dp, file_handle file_handle)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -92,14 +109,13 @@ enum filesys_opr_result close_file(filesys_dp_handle dp,
         return trans_afs_file_result(afs_file_opr_success);
 
     default:
-        FATAL_ERROR("invalid file handle");
+        return filesys_opr_invalid_dp;
     }
 
     return filesys_opr_others;
 }
 
-enum filesys_opr_result make_regular(filesys_dp_handle dp,
-                                     const char *path)
+enum filesys_opr_result make_regular(filesys_dp_handle dp, const char *path)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -114,14 +130,13 @@ enum filesys_opr_result make_regular(filesys_dp_handle dp,
         }
     
     default:
-        FATAL_ERROR("invalid file handle");
+        return filesys_opr_invalid_dp;
     }
 
     return filesys_opr_others;
 }
 
-enum filesys_opr_result remove_regular(filesys_dp_handle dp,
-                                       const char *path)
+enum filesys_opr_result remove_regular(filesys_dp_handle dp, const char *path)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -136,14 +151,13 @@ enum filesys_opr_result remove_regular(filesys_dp_handle dp,
         }
     
     default:
-        FATAL_ERROR("invalid file handle");
+        return filesys_opr_invalid_dp;
     }
 
     return filesys_opr_others;
 }
 
-enum filesys_opr_result make_directory(filesys_dp_handle dp,
-                                       const char *path)
+enum filesys_opr_result make_directory(filesys_dp_handle dp, const char *path)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -158,14 +172,13 @@ enum filesys_opr_result make_directory(filesys_dp_handle dp,
         }
     
     default:
-        FATAL_ERROR("invalid file handle");
+        return filesys_opr_invalid_dp;
     }
 
     return filesys_opr_others;
 }
 
-enum filesys_opr_result remove_directory(filesys_dp_handle dp,
-                                         const char *path)
+enum filesys_opr_result remove_directory(filesys_dp_handle dp, const char *path)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -180,7 +193,90 @@ enum filesys_opr_result remove_directory(filesys_dp_handle dp,
         }
     
     default:
-        FATAL_ERROR("invalid file handle");
+        return filesys_opr_invalid_dp;
+    }
+
+    return filesys_opr_others;
+}
+
+/* 取得一个文件的字节数 */
+uint32_t get_regular_size(filesys_dp_handle dp, file_handle file)
+{
+    struct dpt_unit *u = get_dpt_unit(dp);
+    switch(u->type)
+    {
+    case DISK_PT_AFS:
+        {
+            return afs_get_file_byte_size((struct afs_file_desc*)file);
+        }
+    
+    default:
+        return 0;
+    }
+
+    return 0;
+}
+
+enum filesys_opr_result write_to_regular(
+                            filesys_dp_handle dp, file_handle file,
+                            uint32_t fpos, uint32_t size,
+                            const void *data)
+{
+    uint32_t old_size = get_regular_size(dp, file);
+    if(!size || fpos > old_size)
+        return filesys_opr_out_of_range;
+
+    struct dpt_unit *u = get_dpt_unit(dp);
+    switch(u->type)
+    {
+    case DISK_PT_AFS:
+        {
+            struct afs_dp_head *head =
+                (struct afs_dp_head*)get_dp_fs_handler(dp);
+            struct afs_file_desc *fp =
+                (struct afs_file_desc*)file;
+
+            enum afs_file_operation_status trt;
+
+            uint32_t pot_new_size = fpos + size;
+            if(pot_new_size > old_size)
+            {
+                if(!afs_expand_file(head, fp, pot_new_size, &trt))
+                    return trans_afs_file_result(trt);
+            }
+
+            if(!afs_write_binary(head, fp, fpos, size, data, &trt))
+                return trans_afs_file_result(trt);
+            
+            return filesys_opr_success;
+        }
+
+    default:
+        return filesys_opr_invalid_dp;
+    }
+
+    return filesys_opr_others;
+}
+
+enum filesys_opr_result read_from_regular(
+                            filesys_dp_handle dp, file_handle file,
+                            uint32_t fpos, uint32_t size,
+                            void *data)
+{
+    struct dpt_unit *u = get_dpt_unit(dp);
+    switch(u->type)
+    {
+    case DISK_PT_AFS:
+        {
+            enum afs_file_operation_status trt;
+            afs_read_binary((struct afs_dp_head*)get_dp_fs_handler(dp),
+                            (struct afs_file_desc*)file,
+                            fpos, size, data, &trt);
+            return trans_afs_file_result(trt);
+        }
+    
+    default:
+        return filesys_opr_invalid_dp;
     }
 
     return filesys_opr_others;

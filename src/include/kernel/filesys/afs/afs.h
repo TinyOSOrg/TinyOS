@@ -76,4 +76,11 @@ void afs_remove_file_by_path(struct afs_dp_head *head,
                              uint32_t type,
                              enum afs_file_operation_status *rt);
 
+uint32_t afs_get_file_byte_size(struct afs_file_desc *file);
+
+void afs_expand_regular_file(struct afs_dp_head *head,
+                             struct afs_file_desc *file,
+                             uint32_t new_size,
+                             enum afs_file_operation_status *rt);
+
 #endif /* TINY_OS_FILESYS_AFS_AFS_H */

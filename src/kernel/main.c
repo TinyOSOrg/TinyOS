@@ -126,7 +126,7 @@ void init_kernel()
     init_dpt();
 
     /* afs文件系统 */
-    init_afs();
+    init_filesys();
 }
 
 int main()
@@ -141,6 +141,25 @@ int main()
 
     printf("main process, pid = %u\n",
         syscall_param0(SYSCALL_GET_PROCESS_ID));
+    
+    reformat_dp(0, DISK_PT_AFS);
+
+    make_regular(0, "/minecraft.txt");
+
+    file_handle fp = open_regular_writing(0, "/minecraft.txt", NULL);
+
+    printf("File handle = %u\n", fp);
+
+    printf("Origin file size = %u\n", get_regular_size(0, fp));
+
+    write_to_regular(0, fp, 0, 4, &fp);
+
+    printf("After writing, file size = %u\n", get_regular_size(0, fp));
+
+    uint32_t rfp;
+    read_from_regular(0, fp, 0, 4, &rfp);
+
+    printf("File handle read = %u\n", rfp);
     
     while(1)
     {

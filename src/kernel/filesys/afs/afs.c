@@ -844,3 +844,8 @@ void afs_remove_file_by_path(struct afs_dp_head *head,
         name_len = next_name_len;
     }
 }
+
+uint32_t afs_get_file_byte_size(struct afs_file_desc *file)
+{
+    return afs_extract_file_entry(file)->byte_size;
+}
