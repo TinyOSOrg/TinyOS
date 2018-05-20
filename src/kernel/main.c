@@ -13,6 +13,7 @@
 #include <kernel/sysmsg/sysmsg.h>
 
 #include <lib/conio.h>
+#include <lib/filesys.h>
 
 #include <shared/keycode.h>
 #include <shared/rbtree.h>
@@ -20,38 +21,6 @@
 #include <shared/syscall/common.h>
 #include <shared/syscall/sysmsg.h>
 #include <shared/sysmsg/kbmsg.h>
-
-#define syscall_param0(N) \
-    ({ uint32_t r; \
-       asm volatile ("int $0x80;" \
-                     : "=a" (r) \
-                     : "a" (N) \
-                     : "memory"); \
-       r; })
-
-#define syscall_param1(N, arg1) \
-    ({ uint32_t r; \
-       asm volatile ("int $0x80" \
-                     : "=a" (r) \
-                     : "a" (N), "b" (arg1) \
-                     : "memory"); \
-       r; })
-
-#define syscall_param2(N, arg1, arg2) \
-    ({ uint32_t r; \
-       asm volatile ("int $0x80" \
-                     : "=a" (r) \
-                     : "a" (N), "b" (arg1), "c" (arg2) \
-                     : "memory"); \
-       r; })
-
-#define syscall_param3(N, arg1, arg2, arg3) \
-    ({ uint32_t r; \
-       asm volatile ("int $0x80" \
-                     : "=a" (r) \
-                     : "a" (N), "b" (arg1), "c" (arg2), "d" (arg3) \
-                     : "memory"); \
-       r; })
 
 void PL0_thread()
 {
@@ -144,20 +113,21 @@ int main()
     
     reformat_dp(0, DISK_PT_AFS);
 
-    make_regular(0, "/minecraft.txt");
+    mkfile(0, "/minecraft.txt");
 
-    file_handle fp = open_regular_writing(0, "/minecraft.txt", NULL);
+    usr_file_handle fp;
+    open_file(0, "/minecraft.txt", true, &fp);
 
     printf("File handle = %u\n", fp);
 
-    printf("Origin file size = %u\n", get_regular_size(0, fp));
+    printf("Origin file size = %u\n", get_file_size(fp));
 
-    write_to_regular(0, fp, 0, 4, &fp);
+    write_file(fp, 0, 4, &fp);
 
-    printf("After writing, file size = %u\n", get_regular_size(0, fp));
+    printf("After writing, file size = %u\n", get_file_size(fp));
 
     uint32_t rfp;
-    read_from_regular(0, fp, 0, 4, &rfp);
+    read_file(fp, 0, 4, &rfp);
 
     printf("File handle read = %u\n", rfp);
     

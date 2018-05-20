@@ -380,7 +380,7 @@ void release_process_resources(struct PCB *pcb)
                         &pcb->file_table,
                         ATRC_ELEM_SIZE(struct pcb_file_record),
                         i);
-        close_file(rcd->dp, rcd->file);
+        kclose_file(rcd->dp, rcd->file);
     }
     free_file_table_zone(pcb->file_table.data);
 

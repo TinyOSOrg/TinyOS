@@ -49,4 +49,36 @@
 #define SYSCALL_FILESYS_READ  11
 #define SYSCALL_FILESYS_WRITE 12
 
+#define syscall_param0(N) \
+    ({ uint32_t r; \
+       asm volatile ("int $0x80;" \
+                     : "=a" (r) \
+                     : "a" (N) \
+                     : "memory"); \
+       r; })
+
+#define syscall_param1(N, arg1) \
+    ({ uint32_t r; \
+       asm volatile ("int $0x80" \
+                     : "=a" (r) \
+                     : "a" (N), "b" (arg1) \
+                     : "memory"); \
+       r; })
+
+#define syscall_param2(N, arg1, arg2) \
+    ({ uint32_t r; \
+       asm volatile ("int $0x80" \
+                     : "=a" (r) \
+                     : "a" (N), "b" (arg1), "c" (arg2) \
+                     : "memory"); \
+       r; })
+
+#define syscall_param3(N, arg1, arg2, arg3) \
+    ({ uint32_t r; \
+       asm volatile ("int $0x80" \
+                     : "=a" (r) \
+                     : "a" (N), "b" (arg1), "c" (arg2), "d" (arg3) \
+                     : "memory"); \
+       r; })
+
 #endif /* TINY_OS_SHARED_SYSCALL_COMMON_H */

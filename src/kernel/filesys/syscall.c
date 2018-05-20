@@ -70,9 +70,9 @@ enum filesys_opr_result syscall_filesys_open_impl(
 
     intr_state is = fetch_and_enable_intr();
     file_handle handle = params->writing ?
-        open_regular_writing(
+        kopen_regular_writing(
             params->dp, params->path, &ret) :
-        open_regular_reading(
+        kopen_regular_reading(
             params->dp, params->path, &ret);
     set_intr_state(is);
 
@@ -124,7 +124,7 @@ enum filesys_opr_result syscall_filesys_close_impl(usr_file_handle file)
     }
 
     intr_state is = fetch_and_enable_intr();
-    enum filesys_opr_result ret = close_file(dp, handle);
+    enum filesys_opr_result ret = kclose_file(dp, handle);
     set_intr_state(is);
 
     free_atrc_unit(&pcb->file_table,
@@ -142,7 +142,7 @@ enum filesys_opr_result syscall_filesys_mkfile_impl(filesys_dp_handle dp,
     thread_syscall_protector_entry();
 
     intr_state is = fetch_and_enable_intr();
-    enum filesys_opr_result ret = make_regular(dp, path);
+    enum filesys_opr_result ret = kmake_regular(dp, path);
     set_intr_state(is);
 
     thread_syscall_protector_exit();
@@ -155,7 +155,7 @@ enum filesys_opr_result syscall_filesys_rmfile_impl(filesys_dp_handle dp,
     thread_syscall_protector_entry();
 
     intr_state is = fetch_and_enable_intr();
-    enum filesys_opr_result ret = remove_regular(dp, path);
+    enum filesys_opr_result ret = kremove_regular(dp, path);
     set_intr_state(is);
 
     thread_syscall_protector_exit();
@@ -168,7 +168,7 @@ enum filesys_opr_result syscall_filesys_mkdir_impl(filesys_dp_handle dp,
     thread_syscall_protector_entry();
 
     intr_state is = fetch_and_enable_intr();
-    enum filesys_opr_result ret = make_directory(dp, path);
+    enum filesys_opr_result ret = kmake_directory(dp, path);
     set_intr_state(is);
 
     thread_syscall_protector_exit();
@@ -181,7 +181,7 @@ enum filesys_opr_result syscall_filesys_rmdir_impl(filesys_dp_handle dp,
     thread_syscall_protector_entry();
 
     intr_state is = fetch_and_enable_intr();
-    enum filesys_opr_result ret = remove_directory(dp, path);
+    enum filesys_opr_result ret = kremove_directory(dp, path);
     set_intr_state(is);
 
     thread_syscall_protector_exit();
@@ -201,7 +201,7 @@ uint32_t syscall_filesys_get_file_size_impl(usr_file_handle handle)
     }
 
     intr_state is = fetch_and_enable_intr();
-    uint32_t ret = get_regular_size(dp, file);
+    uint32_t ret = kget_regular_size(dp, file);
     set_intr_state(is);
 
     thread_syscall_protector_exit();
@@ -222,7 +222,7 @@ enum filesys_opr_result syscall_filesys_write_impl(
     }
 
     intr_state is = fetch_and_enable_intr();
-    enum filesys_opr_result ret = write_to_regular(
+    enum filesys_opr_result ret = kwrite_to_regular(
                     dp, file,
                     params->fpos, params->byte_size,
                     params->data_src);
@@ -246,7 +246,7 @@ enum filesys_opr_result syscall_filesys_read_impl(
     }
 
     intr_state is = fetch_and_enable_intr();
-    enum filesys_opr_result ret = read_from_regular(
+    enum filesys_opr_result ret = kread_from_regular(
                     dp, file,
                     params->fpos, params->byte_size,
                     params->data_dst);

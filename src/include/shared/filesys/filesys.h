@@ -1,6 +1,7 @@
 #ifndef TINY_OS_SHARED_FILESYS_FILESYS_H
 #define TINY_OS_SHARED_FILESYS_FILESYS_H
 
+#include <shared/atrc.h>
 #include <shared/intdef.h>
 
 /*
@@ -26,5 +27,7 @@ enum filesys_opr_result
 typedef uint32_t file_handle;
 
 typedef uint32_t filesys_dp_handle;
+
+typedef atrc_elem_handle usr_file_handle;
 
 #endif /* TINY_OS_SHARED_FILESYS_FILESYS_H */

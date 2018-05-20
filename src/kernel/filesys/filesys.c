@@ -46,7 +46,7 @@ static enum filesys_opr_result trans_afs_file_result(
 
 #define SET_RT(V) do { if(rt) *rt = (V); } while(0)
 
-file_handle open_regular_reading(filesys_dp_handle dp, const char *path,
+file_handle kopen_regular_reading(filesys_dp_handle dp, const char *path,
                                  enum filesys_opr_result *rt)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
@@ -72,7 +72,7 @@ file_handle open_regular_reading(filesys_dp_handle dp, const char *path,
     return 0;
 }
 
-file_handle open_regular_writing(filesys_dp_handle dp, const char *path,
+file_handle kopen_regular_writing(filesys_dp_handle dp, const char *path,
                                  enum filesys_opr_result *rt)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
@@ -98,7 +98,7 @@ file_handle open_regular_writing(filesys_dp_handle dp, const char *path,
     return filesys_opr_others;
 }
 
-enum filesys_opr_result close_file(filesys_dp_handle dp, file_handle file_handle)
+enum filesys_opr_result kclose_file(filesys_dp_handle dp, file_handle file_handle)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -115,7 +115,7 @@ enum filesys_opr_result close_file(filesys_dp_handle dp, file_handle file_handle
     return filesys_opr_others;
 }
 
-enum filesys_opr_result make_regular(filesys_dp_handle dp, const char *path)
+enum filesys_opr_result kmake_regular(filesys_dp_handle dp, const char *path)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -136,7 +136,7 @@ enum filesys_opr_result make_regular(filesys_dp_handle dp, const char *path)
     return filesys_opr_others;
 }
 
-enum filesys_opr_result remove_regular(filesys_dp_handle dp, const char *path)
+enum filesys_opr_result kremove_regular(filesys_dp_handle dp, const char *path)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -157,7 +157,7 @@ enum filesys_opr_result remove_regular(filesys_dp_handle dp, const char *path)
     return filesys_opr_others;
 }
 
-enum filesys_opr_result make_directory(filesys_dp_handle dp, const char *path)
+enum filesys_opr_result kmake_directory(filesys_dp_handle dp, const char *path)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -178,7 +178,7 @@ enum filesys_opr_result make_directory(filesys_dp_handle dp, const char *path)
     return filesys_opr_others;
 }
 
-enum filesys_opr_result remove_directory(filesys_dp_handle dp, const char *path)
+enum filesys_opr_result kremove_directory(filesys_dp_handle dp, const char *path)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -200,7 +200,7 @@ enum filesys_opr_result remove_directory(filesys_dp_handle dp, const char *path)
 }
 
 /* 取得一个文件的字节数 */
-uint32_t get_regular_size(filesys_dp_handle dp, file_handle file)
+uint32_t kget_regular_size(filesys_dp_handle dp, file_handle file)
 {
     struct dpt_unit *u = get_dpt_unit(dp);
     switch(u->type)
@@ -217,12 +217,12 @@ uint32_t get_regular_size(filesys_dp_handle dp, file_handle file)
     return 0;
 }
 
-enum filesys_opr_result write_to_regular(
+enum filesys_opr_result kwrite_to_regular(
                             filesys_dp_handle dp, file_handle file,
                             uint32_t fpos, uint32_t size,
                             const void *data)
 {
-    uint32_t old_size = get_regular_size(dp, file);
+    uint32_t old_size = kget_regular_size(dp, file);
     if(!size || fpos > old_size)
         return filesys_opr_out_of_range;
 
@@ -258,7 +258,7 @@ enum filesys_opr_result write_to_regular(
     return filesys_opr_others;
 }
 
-enum filesys_opr_result read_from_regular(
+enum filesys_opr_result kread_from_regular(
                             filesys_dp_handle dp, file_handle file,
                             uint32_t fpos, uint32_t size,
                             void *data)

@@ -8,8 +8,6 @@
     文件系统相关的系统调用的参数结构体
 */
 
-typedef atrc_elem_handle usr_file_handle;
-
 struct syscall_filesys_open_params
 {
     bool writing;
