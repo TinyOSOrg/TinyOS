@@ -43,7 +43,9 @@ void init_atrc(struct atrc *a, size_t elem_size,
 
 /* 取得一个atrc容器中以UNIT为句柄的元素地址 */
 #define get_atrc_unit(A, ELEM_SIZE, UNIT) \
-    ((void*)((uint32_t)A->data + ELEM_SIZE * UNIT))
+    ((void*)((uint32_t)((A)->data) + (ELEM_SIZE) * (UNIT)))
+
+bool is_atrc_unit_valid(struct atrc *a, size_t elem_size, atrc_elem_handle unit);
 
 /* 在一个atrc容器中申请一个元素，返回其句柄。失败时返回ATRC_ELEM_HANDLE_NULL */
 atrc_elem_handle alloc_atrc_unit(struct atrc *a, size_t elem_size);

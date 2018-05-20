@@ -1,6 +1,7 @@
 #include <kernel/asm.h>
 #include <kernel/boot.h>
 #include <kernel/filesys/dpt.h>
+#include <kernel/filesys/filesys.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
 #include <kernel/process/process.h>
@@ -102,6 +103,32 @@ struct PCB *pid_to_pcb[MAX_PROCESS_COUNT];
 /* PCB空间自由链表 */
 static freelist_handle PCB_freelist;
 
+#define FILE_TABLE_ZONE_BYTE_SIZE (4096 / 4)
+
+/* 空闲的文件表空间自由链表 */
+static freelist_handle file_table_fl;
+
+/* 申请一块file table zone */
+static void *alloc_file_table_zone()
+{
+    if(is_freelist_empty(&file_table_fl))
+    {
+        char *data = alloc_ker_page(false);
+        uint32_t end = 4096 / sizeof(FILE_TABLE_ZONE_BYTE_SIZE);
+        for(uint32_t i = 0; i < end; ++i)
+        {
+            add_freelist(&file_table_fl, data);
+            data += FILE_TABLE_ZONE_BYTE_SIZE;
+        }
+    }
+    return fetch_freelist(&file_table_fl);
+}
+
+static void free_file_table_zone(void *zone)
+{
+    add_freelist(&file_table_fl, zone);
+}
+
 /* 申请一块PCB空间 */
 static struct PCB *alloc_PCB()
 {
@@ -112,7 +139,13 @@ static struct PCB *alloc_PCB()
         for(size_t i = 0;i != end; ++i)
             add_freelist(&PCB_freelist, &new_PCBs[i]);
     }
-    return fetch_freelist(&PCB_freelist);
+    struct PCB *ret = fetch_freelist(&PCB_freelist);
+
+    init_atrc(&ret->file_table, ATRC_ELEM_SIZE(struct pcb_file_record),
+              alloc_file_table_zone(), FILE_TABLE_ZONE_BYTE_SIZE);
+    init_spinlock(&ret->file_table_lock);
+
+    return ret;
 }
 
 /* 创建一个进程，但是不包含任何线程（ */
@@ -327,10 +360,31 @@ void _set_tss_esp0(uint32_t esp0)
 
 void release_process_resources(struct PCB *pcb)
 {
+    intr_state is = fetch_and_disable_intr();
+
     pid_to_pcb[pcb->pid] = NULL;
     erase_from_ilist(&pcb->processes_node);
     destroy_sysmsg_queue(&pcb->sys_msgs);
     destroy_sysmsg_source_list(&pcb->sys_msg_srcs);
+
+    // 关闭所有文件
+    for(atrc_elem_handle i = atrc_begin(&pcb->file_table,
+                                        ATRC_ELEM_SIZE(struct pcb_file_record));
+        i != atrc_end();
+        i = atrc_next(&pcb->file_table,
+                      ATRC_ELEM_SIZE(struct pcb_file_record),
+                      i))
+    {
+        struct pcb_file_record *rcd =
+            (struct pcb_file_record*)get_atrc_unit(
+                        &pcb->file_table,
+                        ATRC_ELEM_SIZE(struct pcb_file_record),
+                        i);
+        close_file(rcd->dp, rcd->file);
+    }
+    free_file_table_zone(pcb->file_table.data);
+
+    set_intr_state(is);
 }
 
 void release_PCB(struct PCB *pcb)

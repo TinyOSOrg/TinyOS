@@ -2,7 +2,7 @@
 #define TINY_OS_SHARED_SYSCALL_COMMON_H
 
 /* 系统调用入口数量 */
-#define SYSCALL_COUNT 4
+#define SYSCALL_COUNT 13
 
 /* 一个合法的系统调用应返回void或uint32_t，有0~3个uint32_t大小的参数 */
 

@@ -7,6 +7,9 @@
 #include <kernel/sysmsg/sysmsg.h>
 #include <kernel/sysmsg/sysmsg_src.h>
 
+#include <shared/atrc.h>
+#include <shared/filesys/dpt.h>
+#include <shared/filesys/filesys.h>
 #include <shared/ptrlist.h>
 
 /*
@@ -76,6 +79,17 @@ struct PCB
     // 各种侵入式链表节点
 
     struct ilist_node processes_node; // 所有进程的链表
+
+    // 文件分配表及其锁
+    struct atrc file_table;
+    spinlock file_table_lock;
+};
+
+/* 进程文件记录 */
+struct pcb_file_record
+{
+    filesys_dp_handle dp;
+    file_handle file;
 };
 
 /* 进程入口函数签名 */

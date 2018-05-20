@@ -22,6 +22,12 @@ void init_atrc(struct atrc *a, size_t elem_size,
     IDX_FIELD(d) = ATRC_ELEM_HANDLE_NULL;
 }
 
+bool is_atrc_unit_valid(struct atrc *a, size_t elem_size, atrc_elem_handle unit)
+{
+    return 0 <= unit && unit < a->total_size &&
+            IDX_FIELD(get_atrc_unit(a, elem_size, unit)) == ATRC_ELEM_USED;
+}
+
 atrc_elem_handle alloc_atrc_unit(struct atrc *a, size_t elem_size)
 {
     if(is_atrc_full(a))

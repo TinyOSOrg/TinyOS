@@ -2,196 +2,208 @@
 #include <kernel/filesys/dpt.h>
 #include <kernel/filesys/filesys.h>
 #include <kernel/filesys/syscall.h>
-#include <kernel/process/thread.h>
+#include <kernel/interrupt.h>
+#include <kernel/process/process.h>
 
 #include <shared/ctype.h>
 #include <shared/filesys/dpt.h>
 #include <shared/string.h>
 
-static filesys_dp_handle get_dp_handle_from_path(const char **_path, bool *error)
+static bool get_file_from_usr_handle(usr_file_handle handle,
+                                    filesys_dp_handle *dp,
+                                    file_handle *file)
 {
-    ASSERT_S(_path && error);
+    ASSERT_S(dp && file);
 
-    const char *path = *_path;
+    struct PCB *pcb = get_cur_TCB()->pcb;
+    spinlock_lock(&pcb->file_table_lock);
 
-    if(!path)
+    if(!is_atrc_unit_valid(&pcb->file_table,
+                           ATRC_ELEM_SIZE(struct pcb_file_record),
+                           handle))
     {
-        *error = true;
-        return 0;
+        spinlock_unlock(&pcb->file_table_lock);
+        return false;
     }
 
-    // 取得分区名字长度
+    struct pcb_file_record *rcd = get_atrc_unit(
+                                    &pcb->file_table,
+                                    ATRC_ELEM_SIZE(struct pcb_file_record),
+                                    handle);
+    *dp   = rcd->dp;
+    *file = rcd->file;
 
-    uint32_t dp_name_len = 0;
-    while(path[dp_name_len] && path[dp_name_len] != '/' &&
-          dp_name_len <= (DP_NAME_BUF_SIZE - 1))
-        ++dp_name_len;
+    spinlock_unlock(&pcb->file_table_lock);
 
-    if(!dp_name_len || !path[dp_name_len] ||
-       dp_name_len > DP_NAME_BUF_SIZE - 1)
+    return true;
+}
+
+enum filesys_opr_result syscall_filesys_open_impl(
+        struct syscall_filesys_open_params *params)
+{
+    // 检查参数合法性
+
+    if(params->dp >= DPT_UNIT_COUNT || !params->path)
+        return filesys_opr_others;
+
+    thread_syscall_protector_entry();
+
+    struct PCB *pcb = get_cur_TCB()->pcb;
+
+    // 申请一个进程文件记录
+
+    spinlock_lock(&pcb->file_table_lock);
+    usr_file_handle usr_handle = alloc_atrc_unit(
+        &get_cur_TCB()->pcb->file_table,
+        ATRC_ELEM_SIZE(struct pcb_file_record));
+    spinlock_unlock(&pcb->file_table_lock);
+
+    if(usr_handle == ATRC_ELEM_HANDLE_NULL)
     {
-        *error = true;
-        return 0;
+        thread_syscall_protector_exit();
+        return filesys_opr_file_table_full;
     }
 
-    // 若分区名字最后一个字符是':'，则按数字寻址
-    if(path[dp_name_len - 1] == ':')
+    // 尝试打开文件
+
+    enum filesys_opr_result ret;
+
+    intr_state is = fetch_and_enable_intr();
+    file_handle handle = params->writing ?
+        open_regular_writing(
+            params->dp, params->path, &ret) :
+        open_regular_reading(
+            params->dp, params->path, &ret);
+    set_intr_state(is);
+
+    // 若打开失败，回滚操作
+
+    if(ret != filesys_opr_success)
     {
-        filesys_dp_handle ret = 0;
-        uint32_t end = dp_name_len - 1;
+        spinlock_lock(&pcb->file_table_lock);
+        free_atrc_unit(&pcb->file_table,
+                       ATRC_ELEM_SIZE(struct pcb_file_record),
+                       usr_handle);
+        spinlock_unlock(&pcb->file_table_lock);
 
-        if(!end)
-        {
-            *error = true;
-            return 0;
-        }
-
-        for(uint32_t i = 0; i < end; ++i)
-        {
-            if(!isdigit(path[i]))
-            {
-                *error = true;
-                return 0;
-            }
-            ret = 10 * ret + (path[i] - '0');
-        }
-
-        *error = false;
-        *_path += dp_name_len;
+        thread_syscall_protector_exit();
         return ret;
     }
 
-    // 老老实实在分区表中查找
-    for(size_t i = 0; i != DPT_UNIT_COUNT; ++i)
-    {
-        const char *dp_name = get_dpt_unit(i)->name;
-        uint32_t j = 0;
-        while(j < dp_name_len)
-        {
-            if(path[j] != dp_name[j])
-                goto next_dp_unit;
-        }
+    // 录入进程文件记录内容
 
-        if(dp_name[j] == '\0')
-        {
-            *error = false;
-            *_path += dp_name_len;
-            return i;
-        }
+    spinlock_lock(&pcb->file_table_lock);
+    struct pcb_file_record *rcd = get_atrc_unit(
+                                    &pcb->file_table,
+                                    ATRC_ELEM_SIZE(struct pcb_file_record),
+                                    usr_handle);
+    rcd->dp   = params->dp;
+    rcd->file = handle;
+    spinlock_unlock(&pcb->file_table_lock);
 
-next_dp_unit:
+    if(params->result)
+        *params->result = usr_handle;
 
-        // 避免 label next_dp_unit 编译不过
-        (void)0;
-    }
+    thread_syscall_protector_exit();
 
-    *error = true;
-    return 0;
+    return ret;
 }
 
-#define SET_RT(V) do { if(rt) *rt = (V); } while(0)
-
-file_handle syscall_filesys_open_impl(bool writing, const char *path,
-                                      enum filesys_opr_result *rt)
+enum filesys_opr_result syscall_filesys_close_impl(usr_file_handle file)
 {
-    // 取得分区号
-    bool dp_error;
-    filesys_dp_handle dp = get_dp_handle_from_path(&path, &dp_error);
-    if(dp_error)
+    thread_syscall_protector_entry();
+
+    struct PCB *pcb = get_cur_TCB()->pcb;
+
+    filesys_dp_handle dp;
+    file_handle handle;
+    if(!get_file_from_usr_handle(file, &dp, &handle))
     {
-        SET_RT(filesys_opr_others);
+        thread_syscall_protector_exit();
+        return filesys_opr_invalid_args;
+    }
+
+    intr_state is = fetch_and_enable_intr();
+    enum filesys_opr_result ret = close_file(dp, handle);
+    set_intr_state(is);
+
+    free_atrc_unit(&pcb->file_table,
+        ATRC_ELEM_SIZE(struct pcb_file_record), file);
+
+    spinlock_unlock(&pcb->file_table_lock);
+
+    thread_syscall_protector_exit();
+    return ret;
+}
+
+enum filesys_opr_result syscall_filesys_mkfile_impl(filesys_dp_handle dp,
+                                                    const char *path)
+{
+    thread_syscall_protector_entry();
+
+    intr_state is = fetch_and_enable_intr();
+    enum filesys_opr_result ret = make_regular(dp, path);
+    set_intr_state(is);
+
+    thread_syscall_protector_exit();
+    return ret;
+}
+
+enum filesys_opr_result syscall_filesys_rmfile_impl(filesys_dp_handle dp,
+													const char *path)
+{
+    thread_syscall_protector_entry();
+
+    intr_state is = fetch_and_enable_intr();
+    enum filesys_opr_result ret = remove_regular(dp, path);
+    set_intr_state(is);
+
+    thread_syscall_protector_exit();
+    return ret;
+}
+
+enum filesys_opr_result syscall_filesys_mkdir_impl(filesys_dp_handle dp,
+												   const char *path)
+{
+    thread_syscall_protector_entry();
+
+    intr_state is = fetch_and_enable_intr();
+    enum filesys_opr_result ret = make_directory(dp, path);
+    set_intr_state(is);
+
+    thread_syscall_protector_exit();
+    return ret;
+}
+
+enum filesys_opr_result syscall_filesys_rmdir_impl(filesys_dp_handle dp,
+												   const char *path)
+{
+    thread_syscall_protector_entry();
+
+    intr_state is = fetch_and_enable_intr();
+    enum filesys_opr_result ret = remove_directory(dp, path);
+    set_intr_state(is);
+
+    thread_syscall_protector_exit();
+    return ret;
+}
+
+uint32_t syscall_filesys_get_file_size_impl(usr_file_handle handle)
+{
+    thread_syscall_protector_entry();
+
+    filesys_dp_handle dp;
+    file_handle file;
+    if(!get_file_from_usr_handle(handle, &dp, &file))
+    {
+        thread_syscall_protector_exit();
         return 0;
     }
 
-    thread_syscall_protector_entry();
-
-    file_handle ret = writing ? open_regular_writing(dp, path, rt) :
-                                open_regular_reading(dp, path, rt);
-
-    thread_syscall_protector_exit();
-    return ret;
-}
-
-enum filesys_opr_result syscall_filesys_close_impl(filesys_dp_handle dp,
-                                                   file_handle file)
-{
-    thread_syscall_protector_entry();
-
-    enum filesys_opr_result ret = close_file(dp, file);
-
-    thread_syscall_protector_exit();
-    return ret;
-}
-
-enum filesys_opr_result syscall_filesys_mkfile_impl(const char *path)
-{
-    // 取得分区号
-    bool dp_error;
-    filesys_dp_handle dp = get_dp_handle_from_path(&path, &dp_error);
-    if(dp_error)
-        return filesys_opr_others;
-
-    thread_syscall_protector_entry();
-
-    enum filesys_opr_result ret = make_regular(dp, path);
-
-    thread_syscall_protector_exit();
-    return ret;
-}
-
-enum filesys_opr_result syscall_filesys_rmfile_impl(const char *path)
-{
-    // 取得分区号
-    bool dp_error;
-    filesys_dp_handle dp = get_dp_handle_from_path(&path, &dp_error);
-    if(dp_error)
-        return filesys_opr_others;
-
-    thread_syscall_protector_entry();
-
-    enum filesys_opr_result ret = remove_regular(dp, path);
-
-    thread_syscall_protector_exit();
-    return ret;
-}
-
-enum filesys_opr_result syscall_filesys_mkdir_impl(const char *path)
-{
-    // 取得分区号
-    bool dp_error;
-    filesys_dp_handle dp = get_dp_handle_from_path(&path, &dp_error);
-    if(dp_error)
-        return filesys_opr_others;
-
-    thread_syscall_protector_entry();
-
-    enum filesys_opr_result ret = make_directory(dp, path);
-
-    thread_syscall_protector_exit();
-    return ret;
-}
-
-enum filesys_opr_result syscall_filesys_rmdir_impl(const char *path)
-{
-    // 取得分区号
-    bool dp_error;
-    filesys_dp_handle dp = get_dp_handle_from_path(&path, &dp_error);
-    if(dp_error)
-        return filesys_opr_others;
-
-    thread_syscall_protector_entry();
-
-    enum filesys_opr_result ret = remove_directory(dp, path);
-
-    thread_syscall_protector_exit();
-    return ret;
-}
-
-uint32_t syscall_filesys_get_file_size_impl(filesys_dp_handle dp,
-                                            file_handle file)
-{
-    thread_syscall_protector_entry();
+    intr_state is = fetch_and_enable_intr();
     uint32_t ret = get_regular_size(dp, file);
+    set_intr_state(is);
+
     thread_syscall_protector_exit();
     return ret;
 }
@@ -200,10 +212,22 @@ enum filesys_opr_result syscall_filesys_write_impl(
         struct syscall_filesys_write_params *params)
 {
     thread_syscall_protector_entry();
+
+    filesys_dp_handle dp;
+    file_handle file;
+    if(!get_file_from_usr_handle(params->file, &dp, &file))
+    {
+        thread_syscall_protector_exit();
+        return filesys_opr_invalid_args;
+    }
+
+    intr_state is = fetch_and_enable_intr();
     enum filesys_opr_result ret = write_to_regular(
-                    params->dp, params->file,
+                    dp, file,
                     params->fpos, params->byte_size,
                     params->data_src);
+    set_intr_state(is);
+
     thread_syscall_protector_exit();
     return ret;
 }
@@ -212,10 +236,22 @@ enum filesys_opr_result syscall_filesys_read_impl(
         struct syscall_filesys_read_params *params)
 {
     thread_syscall_protector_entry();
+
+    filesys_dp_handle dp;
+    file_handle file;
+    if(!get_file_from_usr_handle(params->file, &dp, &file))
+    {
+        thread_syscall_protector_exit();
+        return filesys_opr_invalid_args;
+    }
+
+    intr_state is = fetch_and_enable_intr();
     enum filesys_opr_result ret = read_from_regular(
-                    params->dp, params->file,
+                    dp, file,
                     params->fpos, params->byte_size,
                     params->data_dst);
+    set_intr_state(is);
+
     thread_syscall_protector_exit();
     return ret;
 }
