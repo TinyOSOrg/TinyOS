@@ -1,7 +1,7 @@
 #ifndef TINY_OS_FILESYS_AFS_AFS_H
 #define TINY_OS_FILESYS_AFS_AFS_H
 
-#include <shared/filesys/afs/file_opr.h>
+#include <kernel/filesys/afs/file_opr.h>
 #include <kernel/filesys/afs/file_type.h>
 
 #include <shared/bool.h>
