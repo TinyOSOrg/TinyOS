@@ -20,26 +20,26 @@ enum filesys_opr_result close_file(usr_file_handle file)
     return syscall_param1(SYSCALL_FILESYS_CLOSE, file);
 }
 
-enum filesys_opr_result mkfile(filesys_dp_handle dp,
-                               const char *path)
+enum filesys_opr_result make_file(filesys_dp_handle dp,
+                                  const char *path)
 {
     return syscall_param2(SYSCALL_FILESYS_MKFILE, dp, path);
 }
 
-enum filesys_opr_result rmfile(filesys_dp_handle dp,
-                               const char *path)
+enum filesys_opr_result remove_file(filesys_dp_handle dp,
+                                    const char *path)
 {
     return syscall_param2(SYSCALL_FILESYS_RMFILE, dp, path);
 }
 
-enum filesys_opr_result mkdir(filesys_dp_handle dp,
-                              const char *path)
+enum filesys_opr_result make_directory(filesys_dp_handle dp,
+                                       const char *path)
 {
     return syscall_param2(SYSCALL_FILESYS_MKDIR, dp, path);
 }
 
-enum filesys_opr_result rmdir(filesys_dp_handle dp,
-                              const char *path)
+enum filesys_opr_result remove_directory(filesys_dp_handle dp,
+                                         const char *path)
 {
     return syscall_param2(SYSCALL_FILESYS_RMDIR, dp, path);
 }

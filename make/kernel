@@ -1,0 +1,48 @@
+# 写入磁盘映像的文件列表
+BOOTBIN_FILE = src/boot/mbr.bootbin \
+			   src/boot/bootloader.bootbin \
+			   src/boot/kernel.bootbin
+
+KER_C_FILES =  $(shell find ./src/kernel/ -name "*.c")
+
+KER_O_FILES = $(patsubst %.c, %.o, $(KER_C_FILES))
+KER_D_FILES = $(patsubst %.c, %.d, $(KER_C_FILES))
+
+KER_S_FILES =  $(shell find ./src/kernel/ -name "*.s")
+
+KER_BIN_FILES = $(patsubst %.s, %.bin, $(KER_S_FILES))
+
+KER_ENTRY_ADDR = 0xc0002000
+
+$(HD) : $(BOOTBIN_FILE)
+	dd if=src/boot/mbr.bootbin of=$(HD) bs=512 count=1 conv=notrunc
+	dd if=src/boot/bootloader.bootbin of=$(HD) bs=512 count=4 seek=1 conv=notrunc
+	dd if=src/boot/kernel.bootbin of=$(HD) bs=512 count=200 seek=9 conv=notrunc
+
+# MBR编译
+src/boot/mbr.bootbin : src/boot/mbr.s src/boot/boot.s
+	$(ASM) $(ASM_FLAGS) $< -o $@
+
+# bootloader
+src/boot/bootloader.bootbin : src/boot/bootloader.s src/boot/boot.s
+	$(ASM) $(ASM_FLAGS) $< -o $@
+
+src/boot/kernel.bootbin : $(KER_O_FILES) $(KER_BIN_FILES) $(LIB_O_FILES) $(SHARED_O_FILES)
+	$(LD) $(LD_FLAGS) $^ -Ttext $(KER_ENTRY_ADDR) -e main -o $@
+
+$(KER_O_FILES) : %.o : %.c
+	$(CC) $(CC_FLAGS) -c $< -o $@
+
+%.bin : %.s
+	$(ASM) $(ASM_FLAGS) -f elf $< -o $@
+
+# 头文件依赖
+
+$(KER_D_FILES) : %.d : %.c
+	@set -e; \
+	rm -f $@; \
+	$(CC) -MM $(CC_FLAGS) $< $(CC_INCLUDE_FLAGS) > $@.$$$$.dtmp; \
+	sed 's,\(.*\)\.o\:,$*\.o $*\.d\:,g' < $@.$$$$.dtmp > $@; \
+	rm -f $@.$$$$.dtmp
+
+-include $(KER_D_FILES)

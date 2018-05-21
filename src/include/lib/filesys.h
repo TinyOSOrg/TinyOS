@@ -11,17 +11,17 @@ enum filesys_opr_result open_file(filesys_dp_handle dp,
 
 enum filesys_opr_result close_file(usr_file_handle file);
 
-enum filesys_opr_result mkfile(filesys_dp_handle dp,
-                               const char *path);
+enum filesys_opr_result make_file(filesys_dp_handle dp,
+                                  const char *path);
 
-enum filesys_opr_result rmfile(filesys_dp_handle dp,
-                               const char *path);
+enum filesys_opr_result remove_file(filesys_dp_handle dp,
+                                    const char *path);
 
-enum filesys_opr_result mkdir(filesys_dp_handle dp,
-                              const char *path);
+enum filesys_opr_result make_directory(filesys_dp_handle dp,
+                                       const char *path);
 
-enum filesys_opr_result rmdir(filesys_dp_handle dp,
-                              const char *path);
+enum filesys_opr_result remove_directory(filesys_dp_handle dp,
+                                         const char *path);
 
 uint32_t get_file_size(usr_file_handle file);
 

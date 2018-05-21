@@ -1,0 +1,15 @@
+LIB_C_FILES = $(shell find ./src/lib/ -name "*.c")
+LIB_O_FILES = $(patsubst %.c, %.o, $(LIB_C_FILES))
+LIB_D_FILES = $(patsubst %.c, %.d, $(LIB_C_FILES))
+
+$(LIB_O_FILES) : %.o : %.c
+	$(CC) $(CC_FLAGS) -c $< -o $@
+
+$(LIB_D_FILES) : %.d : %.c
+	@set -e; \
+	rm -f $@; \
+	$(CC) -MM $(CC_FLAGS) $< $(CC_INCLUDE_FLAGS) > $@.$$$$.dtmp; \
+	sed 's,\(.*\)\.o\:,$*\.o $*\.d\:,g' < $@.$$$$.dtmp > $@; \
+	rm -f $@.$$$$.dtmp
+
+-include $(LIB_D_FILES)

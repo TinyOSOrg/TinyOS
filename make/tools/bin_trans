@@ -1,0 +1,19 @@
+BINTRANS_CPP_FILES = $(shell find ./src/tools/bin_trans/ -name "*.cpp")
+
+BINTRANS_O_FILES = $(patsubst %.cpp, %.o, $(BINTRANS_CPP_FILES))
+BINTRANS_D_FILES = $(patsubst %.cpp, %.d, $(BINTRANS_CPP_FILES))
+
+$(BINTRANS) : $(BINTRANS_O_FILES)
+	$(CPPC) $< -o $@
+
+$(BINTRANS_O_FILES) : %.o : %.cpp
+	$(CPPC) $(CPPC_FLAGS) -c $< -o $@
+
+$(BINTRANS_D_FILES) : %.d : %.cpp
+	@set -e; \
+	rm -f $@; \
+	$(CPPC) -MM $(CPPC_FLAGS) $< $(CPPC_INCLUDE_FLAGS) > $@.$$$$.dtmp; \
+	sed 's,\(.*\)\.o\:,$*\.o $*\.d\:,g' < $@.$$$$.dtmp > $@; \
+	rm -f $@.$$$$.dtmp
+
+-include $(BINTRANS_D_FILES)

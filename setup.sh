@@ -1,7 +1,7 @@
-rm -rf tools
+rm -rf build
 rm -rf hd.img
 bximage -mode=create -hd=128M -imgmode=flat -q hd.img
-mkdir tools
+mkdir build
 make mkdpt
-./tools/mkdpt hd.img
+./build/mkdpt hd.img
 make clean

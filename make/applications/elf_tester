@@ -1,0 +1,19 @@
+ELF_C_FILES  = $(shell find ./src/applications/elf_tester/ -name "*.c")
+
+ELF_O_FILES = $(patsubst %.c, %.o, $(ELF_C_FILES))
+ELF_D_FILES = $(patsubst %.c, %.d, $(ELF_C_FILES))
+
+$(ELF_TESTER) : $(ELF_O_FILES) $(LIB_O_FILES) $(SHARED_O_FILES)
+	$(LD) $(LD_FLAGS) $^ -e main -o $@
+
+$(ELF_O_FILES) : %.o : %.c
+	$(CC) $(CC_FLAGS) -c $< -o $@
+
+$(ELF_D_FILES) : %.d : %.c
+	@set -e; \
+	rm -f $@; \
+	$(CC) -MM $(CC_FLAGS) $< $(CC_INCLUDE_FLAGS) > $@.$$$$.dtmp; \
+	sed 's,\(.*\)\.o\:,$*\.o $*\.d\:,g' < $@.$$$$.dtmp > $@; \
+	rm -f $@.$$$$.dtmp
+
+-include $(ELF_D_FILES)

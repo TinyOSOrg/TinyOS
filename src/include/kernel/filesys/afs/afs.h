@@ -22,7 +22,7 @@ struct afs_file_desc;
 
 void init_afs();
 
-/* 单个文件最大长度 */
+/* 单个文件名最大长度 */
 #define AFS_FILE_NAME_MAX_LENGTH 63
 
 /*

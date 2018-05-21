@@ -1,0 +1,15 @@
+SHARED_C_FILES = $(shell find ./src/shared/ -name "*.c")
+SHARED_O_FILES = $(patsubst %.c, %.o, $(SHARED_C_FILES))
+SHARED_D_FILES = $(patsubst %.c, %.d, $(SHARED_C_FILES))
+
+$(SHARED_O_FILES) : %.o : %.c
+	$(CC) $(CC_FLAGS) -c $< -o $@
+
+$(SHARED_D_FILES) : %.d : %.c
+	@set -e; \
+	rm -f $@; \
+	$(CC) -MM $(CC_FLAGS) $< $(CC_INCLUDE_FLAGS) > $@.$$$$.dtmp; \
+	sed 's,\(.*\)\.o\:,$*\.o $*\.d\:,g' < $@.$$$$.dtmp > $@; \
+	rm -f $@.$$$$.dtmp
+
+-include $(SHARED_D_FILES)
