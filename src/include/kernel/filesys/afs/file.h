@@ -88,4 +88,6 @@ bool afs_is_file_open(struct afs_dp_head *head, uint32_t entry);
 
 struct afs_file_entry *afs_extract_file_entry(struct afs_file_desc *desc);
 
+bool afs_is_file_wlocked(struct afs_file_desc *desc);
+
 #endif /* TINY_OS_FILESYS_AFS_FILE_H */

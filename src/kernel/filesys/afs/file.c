@@ -455,6 +455,7 @@ static void write_to_index_tree(uint32_t block_sec,
     while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
     {
         uint32_t local_write_bytes = MIN(remain_bytes, bytes_per_child);
+
         writer(block->child_sec[ch_idx], offset_bytes, local_write_bytes, data);
         
         remain_bytes -= local_write_bytes;
@@ -493,7 +494,7 @@ bool afs_write_binary(struct afs_dp_head *head,
         SET_RT(afs_file_opr_success);
         return true;
     }
-
+    
     write_to_index_tree(file->entry.sec_beg, fpos, bytes, data);
     SET_RT(afs_file_opr_success);
     return true;
@@ -529,7 +530,7 @@ static bool expand_index_tree(struct afs_dp_head *head,
         // 最后一个孩子节点已经用了多少字节
         uint32_t content_used = used_bytes -
             (block->child_count - 1) * AFS_BLOCK_BYTE_SIZE;
-
+            
         while(exp < exp_bytes &&
               ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
         {
@@ -541,8 +542,10 @@ static bool expand_index_tree(struct afs_dp_head *head,
 
             uint32_t dexp = MIN(AFS_BLOCK_BYTE_SIZE - content_used,
                                 exp_bytes - exp);
+                                
             exp += dexp;
             content_used = 0;
+            ++ch_idx;
         }
     }
     else
@@ -580,6 +583,7 @@ static bool expand_index_tree(struct afs_dp_head *head,
 
             exp += dexp;
             child_used = 0;
+            ++ch_idx;
         }
     }
 
@@ -653,8 +657,9 @@ bool afs_expand_file(struct afs_dp_head *head,
 
         afs_write_to_block_end(new_root);
 
-        file->entry.sec_beg = new_root;
-        file->entry.index = 1;
+        file->entry.sec_beg   = new_root;
+        file->entry.index     = 1;
+        file->entry.byte_size = AFS_BLOCK_BYTE_SIZE;
     }
 
     uint32_t dexp;
@@ -680,4 +685,9 @@ bool afs_is_file_open(struct afs_dp_head *head, uint32_t entry)
 struct afs_file_entry *afs_extract_file_entry(struct afs_file_desc *desc)
 {
     return &desc->entry;
+}
+
+bool afs_is_file_wlocked(struct afs_file_desc *desc)
+{
+    return desc->wlock != 0;
 }

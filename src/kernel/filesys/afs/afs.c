@@ -338,8 +338,10 @@ struct afs_file_desc *afs_open_dir_file_for_writing_by_path(
 void afs_close_file(struct afs_dp_head *head,
                     struct afs_file_desc *file)
 {
-    afs_convert_writing_to_reading(head, file);
-    afs_close_file_for_reading(head, file);
+    if(afs_is_file_wlocked(file))
+        afs_close_file_for_writing(head, file);
+    else
+        afs_close_file_for_reading(head, file);
 }
 
 uint32_t afs_create_dir_file_raw(struct afs_dp_head *head,

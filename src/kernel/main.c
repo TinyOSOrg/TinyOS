@@ -119,20 +119,6 @@ int main()
     usr_file_handle fp;
     open_file(0, "/minecraft.txt", true, &fp);
 
-    printf("File handle = %u\n", fp);
-
-    printf("Origin file size = %u\n", get_file_size(fp));
-
-    uint32_t data = 565;
-    write_file(fp, 0, 4, &data);
-
-    printf("After writing, file size = %u\n", get_file_size(fp));
-
-    uint32_t rdata;
-    read_file(fp, 0, 4, &rdata);
-
-    printf("File handle read = %u\n", rdata);
-
     uint8_t elf_data[] =
     {
         127, 
@@ -567,6 +553,16 @@ int main()
         0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 29, 0, 0, -7, 
         2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0
     };
+
+    write_file(fp, 0, sizeof(elf_data), elf_data);
+
+    close_file(fp);
+
+    memset((char*)elf_data, 0x0, sizeof(elf_data));
+
+    open_file(0, "/minecraft.txt", false, &fp);
+
+    read_file(fp, 0, sizeof(elf_data), elf_data);
 
     int (*entry_addr)(void) = (int(*)(void))load_elf(elf_data);
     entry_addr();
