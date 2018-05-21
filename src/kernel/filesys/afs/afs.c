@@ -126,7 +126,10 @@ static const char *path_next(const char *path, uint32_t *length)
         ++path;
     
     if(*path++ != '/' || !*path || *path == '/')
+    {
+        *length = 0;
         return NULL;
+    }
 
     unsigned int len = 0;
     while(path[len] && path[len] != '/')
@@ -743,7 +746,7 @@ void afs_remove_file_by_path(struct afs_dp_head *head,
                              enum afs_file_operation_status *rt)
 {
     uint32_t next_name_len, name_len;
-    const char *next_name_beg, *name_beg = path_begin(path, &name_len);
+    const char *next_name_beg = NULL, *name_beg = path_begin(path, &name_len);
 
     if(!name_beg)
     {

@@ -1,21 +1,11 @@
 #ifndef TINY_OS_READELF_H
 #define TINY_OS_READELF_H
 
-/*class Elfloader
-{
-public:
-        Elfloader(const char *);
-        bool load_elf();
-        void testout();//need deleted
-private:
-        ELF32_Addr Base;
-        Elf32_Ehdr Elfheader;
-        Elf32_Phdr * Programheader;
-        char * filestart;
-        void load_ph(ELF32_Addr address);
-        //ool map_elf();//link file adress with virtual adress.
-};*/
-
+/*
+    装载一个32位elf程序
+    elf_addr为文件内容在内存中的地址
+    返回值为程序入口指针
+*/
 void *load_elf(const void *elf_addr);
 
 #endif /* TINY_OS_READELF_H */
