@@ -559,13 +559,15 @@ int main()
     close_file(fp);
 
     memset((char*)elf_data, 0x0, sizeof(elf_data));
-
+    
     open_file(0, "/minecraft.txt", false, &fp);
 
     read_file(fp, 0, sizeof(elf_data), elf_data);
 
     int (*entry_addr)(void) = (int(*)(void))load_elf(elf_data);
     entry_addr();
+
+    close_file(fp);
     
     while(1)
     {

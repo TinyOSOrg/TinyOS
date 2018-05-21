@@ -318,24 +318,6 @@ bool afs_convert_reading_to_writing(struct afs_dp_head *head,
     return ret;
 }
 
-bool afs_convert_writing_to_reading(struct afs_dp_head *head,
-                                    struct afs_file_desc *desc)
-{
-    ASSERT_S(desc != NULL);
-    spinlock_lock(&head->opening_files_lock);
-
-    bool ret = false;
-    if(desc->wlock == 1)
-    {
-        desc->wlock = 0;
-        desc->rlock = 1;
-        ret = true;
-    }
-
-    spinlock_unlock(&head->opening_files_lock);
-    return ret;
-}
-
 void afs_close_file_for_reading(struct afs_dp_head *head,
                                 struct afs_file_desc *file)
 {

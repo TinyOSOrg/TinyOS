@@ -84,6 +84,11 @@ struct afs_dp_head *afs_init_dp_handler(uint32_t beg)
     return ret;
 }
 
+void afs_restore_dp_handler(uint32_t handler)
+{
+    afs_restore_dp_head((struct afs_dp_head*)handler);
+}
+
 void afs_release_dp_handler(uint32_t handler)
 {
     struct afs_dp_head *head = (struct afs_dp_head*)handler;

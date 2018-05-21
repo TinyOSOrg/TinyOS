@@ -43,9 +43,6 @@ struct afs_file_desc *afs_open_file_for_writing(
 bool afs_convert_reading_to_writing(struct afs_dp_head *head,
                                     struct afs_file_desc *desc);
 
-bool afs_convert_writing_to_reading(struct afs_dp_head *head,
-                                    struct afs_file_desc *desc);
-
 /* 关闭一个以只读方式打开的文件 */
 void afs_close_file_for_reading(struct afs_dp_head *head,
                                 struct afs_file_desc *file);

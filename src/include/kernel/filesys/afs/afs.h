@@ -34,6 +34,8 @@ bool afs_reformat_dp(uint32_t beg, uint32_t cnt);
 
 struct afs_dp_head *afs_init_dp_handler(uint32_t beg);
 
+void afs_restore_dp_handler(uint32_t handler);
+
 void afs_release_dp_handler(uint32_t handler);
 
 struct afs_file_desc *afs_open_regular_file_for_reading_by_path(

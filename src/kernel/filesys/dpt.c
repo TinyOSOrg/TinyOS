@@ -23,15 +23,8 @@ void init_dpt()
     
     // dpt_sec_data在内核进程栈上，不用担心缺页，所以直接无缓冲读取
     uint8_t dpt_sec_data[512];
-    struct disk_rw_task dpt_sec_task =
-    {
-        .type          = DISK_RW_TASK_TYPE_READ,
-        .sector_base   = DPT_SECTOR_POSITION,
-        .sector_cnt    = 1,
-        .addr.read_dst = dpt_sec_data
-    };
-    disk_rw_raw(&dpt_sec_task);
-    memcpy((char*)dpts, (char*)dpt_sec_data, DPT_BYTE_SIZE);
+    disk_read(DPT_SECTOR_POSITION, 1, dpt_sec_data);
+    memcpy((char*)dpts, (const char*)dpt_sec_data, DPT_BYTE_SIZE);
 
     for(size_t i = 0;i != DPT_UNIT_COUNT; ++i)
     {
@@ -86,12 +79,5 @@ uint32_t get_dp_fs_handler(size_t idx)
 
 void restore_dpt()
 {
-    struct disk_rw_task dpt_sec_task =
-    {
-        .type           = DISK_RW_TASK_TYPE_WRITE,
-        .sector_base    = DPT_SECTOR_POSITION,
-        .sector_cnt     = 1,
-        .addr.write_src = dpts
-    };
-    disk_rw_raw(&dpt_sec_task);
+    disk_write(DPT_SECTOR_POSITION, 1, dpts);
 }
