@@ -127,6 +127,15 @@ static void set_key_pressed(uint8_t vk, bool pressed)
         key_pressed[idx] &= ~(1 << off);
 }
 
+/*
+    键盘消息屏蔽函数
+    只有前台的、接管了输入输出的进程可以获得键盘消息
+*/
+static bool kb_masker(const struct PCB *pcb)
+{
+    return pcb->pis == pis_foreground;
+}
+
 /* 键盘中断处理 */
 static void kb_intr_handler()
 {
@@ -144,7 +153,7 @@ static void kb_intr_handler()
     else if(scancode_e0)
     {
         scancode_e0 = false;
-        if(sc == 0x1d) // R CTRL down
+        if(sc == 0x1d)      // R CTRL down
             vk = VK_RCTRL;
         else if(sc == 0x38) // R ALT down
             vk = VK_RALT;
@@ -181,7 +190,7 @@ static void kb_intr_handler()
     // 大写锁定
     if(vk == VK_CAPS && !up)
         caps_lock = !caps_lock;
-
+    
     // 按键消息发布
     if(vk != VK_NULL)
     {
@@ -191,7 +200,7 @@ static void kb_intr_handler()
         kbmsg.type = SYSMSG_TYPE_KEYBOARD;
         kbmsg.key  = vk;
         kbmsg.flags = up ? 1 : 0;
-        send_msg_to_procs(&kb_receivers, (struct sysmsg*)&kbmsg);
+        send_msg_to_procs(&kb_receivers, (struct sysmsg*)&kbmsg, kb_masker);
     }
 
     // 字符消息发布
@@ -200,7 +209,7 @@ static void kb_intr_handler()
         struct kbchar_msg_struct msg;
         msg.type = SYSMSG_TYPE_CHAR;
         msg.ch = ch;
-        send_msg_to_procs(&char_receivers, (struct sysmsg*)&msg);
+        send_msg_to_procs(&char_receivers, (struct sysmsg*)&msg, kb_masker);
     }
 }
 

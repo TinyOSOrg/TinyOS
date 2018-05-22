@@ -145,6 +145,8 @@ static struct PCB *alloc_PCB()
               alloc_file_table_zone(), FILE_TABLE_ZONE_BYTE_SIZE);
     init_spinlock(&ret->file_table_lock);
 
+    ret->pis = pis_background_delegated;
+
     return ret;
 }
 
@@ -366,6 +368,16 @@ void kill_all_processes()
     }
 
     set_intr_state(is);
+}
+
+struct PCB *get_cur_PCB()
+{
+    return get_cur_TCB()->pcb;
+}
+
+ilist *get_all_processes()
+{
+    return &processes;
 }
 
 void _set_tss_esp0(uint32_t esp0)

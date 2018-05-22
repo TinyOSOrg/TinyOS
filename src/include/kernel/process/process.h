@@ -34,6 +34,13 @@
 /* 用户栈位图起始地址 */
 #define USER_STACK_BITMAP_ADDR 0x100000
 
+/* 显示缓存大小 */
+#define USER_DISPLAYING_BUFFER_SIZE (80 * 25 * 2)
+
+/* 显示缓存起始地址 */
+#define USER_DISPLAYING_BUFFER_ADDR \
+    (USER_STACK_BITMAP_ADDR - USER_DISPLAYING_BUFFER_SIZE)
+
 /* 用户栈最高地址 */
 #define USER_STACK_TOP_ADDR ((uint32_t)0xbffff * (uint32_t)0x1000)
 
@@ -45,6 +52,15 @@
 
 /* 进程名字最大长度 */
 #define PROCESS_NAME_MAX_LENGTH 31
+
+/* 进程前后台状态，影响进程IO方式 */
+enum process_interfacing_state
+{
+    pis_foreground_delegated,
+    pis_background_delegated,
+    pis_foreground,
+    pis_background
+};
 
 /* process control block */
 struct PCB
@@ -83,6 +99,9 @@ struct PCB
     // 文件分配表及其锁
     struct atrc file_table;
     spinlock file_table_lock;
+
+    // 前后台状态
+    enum process_interfacing_state pis;
 };
 
 /* 进程文件记录 */
@@ -109,6 +128,12 @@ void kill_process(struct PCB *pcb);
 
 /* 干掉所有进程（除了bootloader进程） */
 void kill_all_processes();
+
+/* 取得当前线程所处进程 */
+struct PCB *get_cur_PCB();
+
+/* 获得进程链表，注意bootloader进程不在这里面 */
+ilist *get_all_processes();
 
 /*=====================================================================
     下面的东西是给thread.c用的

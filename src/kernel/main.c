@@ -137,6 +137,8 @@ int main()
     entry_addr();
 
     close_file(fp);
+
+    get_cur_TCB()->pcb->pis = pis_foreground;
     
     while(1)
     {

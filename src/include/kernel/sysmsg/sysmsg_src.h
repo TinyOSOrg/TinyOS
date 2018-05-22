@@ -45,7 +45,7 @@ void destroy_sysmsg_receiver_list(struct sysmsg_receiver_list *receiver_list);
 void destroy_sysmsg_source_list(struct sysmsg_source_list *source_list);
 
 /* 把某条消息发送到一组进程 */
-void send_msg_to_procs(struct sysmsg_receiver_list *rcv, const struct sysmsg *msg);
+void send_msg_to_procs(struct sysmsg_receiver_list *rcv, const struct sysmsg *msg, bool (*mask_func)(const struct PCB*));
 
 /* 把进程注册到消息源，提供A、B链表即可，会建立起其间的链接 */
 void register_sysmsg_source(struct PCB *pcb,

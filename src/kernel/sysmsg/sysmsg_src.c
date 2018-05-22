@@ -53,14 +53,15 @@ void destroy_sysmsg_source_list(struct sysmsg_source_list *L)
     }
 }
 
-void send_msg_to_procs(struct sysmsg_receiver_list *rcv, const struct sysmsg *msg)
+void send_msg_to_procs(struct sysmsg_receiver_list *rcv, const struct sysmsg *msg, bool (*mask_func)(const struct PCB*))
 {
     for(struct ilist_node *n = rcv->processes.next;
         n != &rcv->processes; n = n->next)
     {
         struct PCB *pcb = GET_STRUCT_FROM_MEMBER(struct sysmsg_rcv_src_list_node,
                                                  rcv_node, n)->pcb;
-        send_sysmsg(&pcb->sys_msgs, msg);
+        if(mask_func(pcb))
+            send_sysmsg(&pcb->sys_msgs, msg);
     }
 }
 
