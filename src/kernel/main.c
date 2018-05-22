@@ -7,6 +7,7 @@
 #include <kernel/kbdriver.h>
 #include <kernel/memory.h>
 #include <kernel/process/process.h>
+#include <kernel/process/thread.h>
 #include <kernel/readelf.h>
 #include <kernel/rlist_node_alloc.h>
 #include <kernel/syscall.h>
@@ -29,7 +30,7 @@
 
 void PL0_thread()
 {
-    printf("hahaha process, pid = %u\n", get_pid());
+    printf("keyboard process, pid = %u\n", get_pid());
     register_char_msg();
 
     while(true)
@@ -124,13 +125,11 @@ int main()
 
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
 
-    uint8_t elf_data[9000];
-
     usr_file_handle fp;
     
     open_file(0, "/minecraft.txt", false, &fp);
 
-    printf("file size = %u\n", get_file_size(fp));
+    uint8_t elf_data[get_file_size(fp)];
 
     read_file(fp, 0, get_file_size(fp), elf_data);
 

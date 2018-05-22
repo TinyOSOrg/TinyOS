@@ -83,11 +83,6 @@ void *load_elf(const void *_filestart)
 
         if(header.p_type != PT_LOAD)
             continue;
-        
-        printf("program segment loaded: \n");
-        printf("\tp_vaddr     = %u\n", header.p_vaddr);
-        printf("\tp_offset    = %u\n", header.p_offset);
-        printf("\tp_memsize   = %u\n", header.p_memsz);
 
         memcpy((char*)header.p_vaddr, (const char *)(filestart + header.p_offset),
                header.p_filesz);

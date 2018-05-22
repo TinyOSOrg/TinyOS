@@ -50,7 +50,7 @@ static uint8_t ipt_next(struct ipt_context *ctx)
 
     return ret;
 }
-#include <lib/conio.h>
+
 /* 结束对import分区的扫描，释放临时空间 */
 static void ipt_end(struct ipt_context *ctx)
 {
@@ -98,7 +98,7 @@ void ipt_import_from_dp(uint32_t dp_beg)
         remove_file(dp, path);
         make_file(dp, path);
         open_file(dp, path, true, &fp);
-        printf("file size = %u\n", file_size);
+        
         for(uint32_t i = 0; i < file_size; ++i)
         {
             uint8_t b;
