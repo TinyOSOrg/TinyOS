@@ -15,6 +15,8 @@
 
 #include <lib/conio.h>
 #include <lib/filesys.h>
+#include <lib/keyboard.h>
+#include <lib/proc.h>
 
 #include <shared/keycode.h>
 #include <shared/rbtree.h>
@@ -27,10 +29,8 @@
 
 void PL0_thread()
 {
-    printf("hahaha process, pid = %u\n",
-        syscall_param0(SYSCALL_GET_PROCESS_ID));
-    syscall_param1(SYSCALL_SYSMSG_OPERATION,
-                   SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG);
+    printf("hahaha process, pid = %u\n", get_pid());
+    register_char_msg();
 
     while(true)
     {
@@ -105,6 +105,7 @@ void destroy_kernel()
 {
     kill_all_processes();
     destroy_dpt();
+    destroy_filesys();
 }
 
 int main()
@@ -117,8 +118,7 @@ int main()
 
     _enable_intr();
 
-    printf("main process, pid = %u\n",
-        syscall_param0(SYSCALL_GET_PROCESS_ID));
+    printf("main process, pid = %u\n", get_pid());
     
     reformat_dp(0, DISK_PT_AFS);
 
@@ -138,11 +138,16 @@ int main()
     entry_addr();
 
     close_file(fp);
-
-    destroy_kernel();
     
     while(1)
     {
+        if(is_key_pressed(VK_ESCAPE))
+        {
+            destroy_kernel();
+            while(1)
+                ;
+        }
+
         do_releasing_thds_procs();
         yield_CPU();
     }

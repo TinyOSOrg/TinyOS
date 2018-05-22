@@ -6,6 +6,8 @@
 
 void init_filesys();
 
+void destroy_filesys();
+
 /* （只读模式）打开一个文件 */
 file_handle kopen_regular_reading(filesys_dp_handle dp, const char *path,
                                  enum filesys_opr_result *rt);

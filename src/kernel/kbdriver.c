@@ -7,6 +7,7 @@
 
 #include <shared/keycode.h>
 #include <shared/sysmsg/kbmsg.h>
+#include <shared/syscall/keyboard.h>
 #include <shared/utility.h>
 
 /* 按键位图数量 */
@@ -171,7 +172,7 @@ static void kb_intr_handler()
 
         uint32_t idx = sc - 1;
         vk = scancode_translator[idx].vk;
-        if((is_key_pressed(VK_LSHIFT) || is_key_pressed(VK_RSHIFT)) ^ caps_lock)
+        if((kis_key_pressed(VK_LSHIFT) || kis_key_pressed(VK_RSHIFT)) ^ caps_lock)
             ch = scancode_translator[idx].upch;
         else
             ch = scancode_translator[idx].ch;
@@ -229,7 +230,7 @@ void subscribe_char(struct PCB *pcb)
     register_sysmsg_source(pcb, &char_receivers, &pcb->sys_msg_srcs);
 }
 
-bool is_key_pressed(uint8_t keycode)
+bool kis_key_pressed(uint8_t keycode)
 {
     return (key_pressed[keycode >> 5] & (1 << (keycode &0x1f))) != 0;
 }
@@ -240,7 +241,7 @@ uint32_t syscall_keyboard_query_impl(uint32_t func, uint32_t arg)
     {
     case KEYBOARD_SYSCALL_FUNCTION_IS_KEY_PRESSED:
         if(arg < ARRAY_SIZE(scancode_translator))
-            return is_key_pressed(arg);
+            return kis_key_pressed(arg);
         return false;
     }
     return false;

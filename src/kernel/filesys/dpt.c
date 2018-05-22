@@ -95,7 +95,5 @@ void destroy_dpt()
         }
     }
 
-    destroy_afs();
-
     restore_dpt();
 }
