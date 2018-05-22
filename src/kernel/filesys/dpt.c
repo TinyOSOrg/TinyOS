@@ -81,3 +81,21 @@ void restore_dpt()
 {
     disk_write(DPT_SECTOR_POSITION, 1, dpts);
 }
+
+void destroy_dpt()
+{
+    for(uint32_t i = 0; i < DPT_UNIT_COUNT; ++i)
+    {
+        struct dpt_unit *u = get_dpt_unit(i);
+        switch(u->type)
+        {
+        case DISK_PT_AFS:
+            afs_release_dp_handler(get_dp_fs_handler(i));
+            break;
+        }
+    }
+
+    destroy_afs();
+
+    restore_dpt();
+}

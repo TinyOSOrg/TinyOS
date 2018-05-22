@@ -94,11 +94,17 @@ void init_kernel()
     /* 硬盘驱动 */
     init_disk_driver();
 
-    /* 磁盘分区 */
-    init_dpt();
-
     /* 文件系统 */
     init_filesys();
+
+    /* 磁盘分区 */
+    init_dpt();
+}
+
+void destroy_kernel()
+{
+    kill_all_processes();
+    destroy_dpt();
 }
 
 int main()
@@ -132,6 +138,8 @@ int main()
     entry_addr();
 
     close_file(fp);
+
+    destroy_kernel();
     
     while(1)
     {

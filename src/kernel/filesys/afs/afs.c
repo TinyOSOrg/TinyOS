@@ -61,6 +61,12 @@ void init_afs()
     init_spinlock(&dp_head_fl_lock);
 }
 
+void destroy_afs()
+{
+    afs_release_all_sector_cache();
+    afs_release_all_block_cache();
+}
+
 bool afs_reformat_dp(uint32_t beg, uint32_t cnt)
 {
     if(!afs_phy_reformat_dp(beg, cnt))

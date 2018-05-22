@@ -353,6 +353,21 @@ void kill_process(struct PCB *pcb)
     set_intr_state(intr_s);
 }
 
+void kill_all_processes()
+{
+    intr_state is = fetch_and_disable_intr();
+
+    while(!is_ilist_empty(&processes))
+    {
+        struct ilist_node *node = processes.next;
+        struct PCB *pcb = GET_STRUCT_FROM_MEMBER(
+            struct PCB, processes_node, node);
+        kill_process(pcb);
+    }
+
+    set_intr_state(is);
+}
+
 void _set_tss_esp0(uint32_t esp0)
 {
     tss.esp0 = esp0;

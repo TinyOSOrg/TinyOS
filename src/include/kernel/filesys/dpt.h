@@ -19,4 +19,7 @@ uint32_t get_dp_fs_handler(size_t idx);
 /* 将分区表写回到磁盘 */
 void restore_dpt();
 
+/* 销毁分区模块内容，顺带会销毁文件系统句柄 */
+void destroy_dpt();
+
 #endif /* TINY_OS_DISK_PARTITION_TABLE_H */

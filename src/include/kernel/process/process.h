@@ -107,6 +107,9 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0);
 /* 干掉一个进程 */
 void kill_process(struct PCB *pcb);
 
+/* 干掉所有进程（除了bootloader进程） */
+void kill_all_processes();
+
 /*=====================================================================
     下面的东西是给thread.c用的
 =====================================================================*/
