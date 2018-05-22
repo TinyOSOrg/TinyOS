@@ -121,9 +121,9 @@ void do_releasing_thds_procs();
 void yield_CPU();
 
 /* 进入系统调用保护模式，由可能被打断的系统调用实现负责调用 */
-void thread_syscall_protector_entry(void);
+void thread_syscall_protector_entry();
 
 /* 离开系统调用保护模式，由可能被打断的系统调用实现负责调用 */
-void thread_syscall_protector_exit(void);
+void thread_syscall_protector_exit();
 
 #endif /* TINY_OS_THREAD_H */

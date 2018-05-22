@@ -401,7 +401,7 @@ void yield_CPU()
     set_intr_state(is);
 }
 
-void thread_syscall_protector_entry(void)
+void thread_syscall_protector_entry()
 {
     struct TCB *tcb = get_cur_TCB();
     spinlock_lock(&tcb->syscall_protector_lock);
@@ -417,7 +417,7 @@ void thread_syscall_protector_entry(void)
     spinlock_unlock(&tcb->syscall_protector_lock);
 }
 
-void thread_syscall_protector_exit(void)
+void thread_syscall_protector_exit()
 {
     struct TCB *tcb = get_cur_TCB();
     spinlock_lock(&tcb->syscall_protector_lock);

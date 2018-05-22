@@ -4,7 +4,7 @@
 #include <shared/intdef.h>
 #include <shared/filesys/filesys.h>
 
-void init_filesys(void);
+void init_filesys();
 
 /* （只读模式）打开一个文件 */
 file_handle kopen_regular_reading(filesys_dp_handle dp, const char *path,

@@ -8,7 +8,7 @@
 
 #include <shared/utility.h>
 
-void init_filesys(void)
+void init_filesys()
 {
     init_afs();
 }

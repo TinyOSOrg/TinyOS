@@ -27,7 +27,7 @@ static freelist_handle dp_head_fl;
 
 static spinlock dp_head_fl_lock;
 
-static struct afs_dp_head *alloc_dp_head(void)
+static struct afs_dp_head *alloc_dp_head()
 {
     spinlock_lock(&dp_head_fl_lock);
 

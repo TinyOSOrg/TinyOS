@@ -564,7 +564,7 @@ int main()
 
     read_file(fp, 0, sizeof(elf_data), elf_data);
 
-    int (*entry_addr)(void) = (int(*)(void))load_elf(elf_data);
+    int (*entry_addr)() = (int(*)())load_elf(elf_data);
     entry_addr();
 
     close_file(fp);
