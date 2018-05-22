@@ -7,7 +7,7 @@ CC_FLAGS = -m32 $(CC_INCLUDE_FLAGS) \
 		   -fno-builtin -Werror -Wall -O2
 
 CPPC = g++
-CPPC_INCLUDE_FLAGS = -I src/include/
+CPPC_INCLUDE_FLAGS = -I src/include/ -I .
 CPPC_FLAGS = -std=c++14 -Werror -Wall -O2 $(CPPC_INCLUDE_FLAGS)
 
 LD = ld
@@ -30,6 +30,9 @@ BINTRANS = build/bin_trans
 # elf装载器测试程序
 ELF_TESTER = build/elf_tester
 
+# 外部文件导入工具
+DISK_IPT = build/disk_ipt
+
 .PHONY : all
 all : $(HD) tools applications
 
@@ -39,11 +42,14 @@ mkdpt : $(MKDPT)
 .PHONY : bin_trans
 bin_trans : $(BINTRANS)
 
+.PHONY : disk_ipt
+disk_ipt : $(DISK_IPT)
+
 .PHONY : elf_tester
 elf_tester : $(ELF_TESTER)
 
 .PHONY : tools
-tools : mkdpt bin_trans
+tools : mkdpt bin_trans disk_ipt
 
 .PHONY : applications
 applications : elf_tester
@@ -65,6 +71,8 @@ include ./make/kernel
 include ./make/tools/mkdpt
 
 include ./make/tools/bin_trans
+
+include ./make/tools/disk_ipt
 
 include ./make/applications/elf_tester
 
@@ -93,6 +101,10 @@ clean :
 	rm -f $(BINTRANS)
 	rm -f $(BINTRANS_O_FILES)
 	rm -f $(BINTRANS_D_FILES)
+
+	rm -f $(DISK_IPT)
+	rm -f $(DISK_IPT_O_FILES)
+	rm -f $(DISK_IPT_D_FILES)
 
 	rm -f $(ELF_TESTER)
 	rm -f $(ELF_O_FILES)

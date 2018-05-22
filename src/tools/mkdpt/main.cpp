@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 
-using namespace std;
+#include <src/tools/disk.h>
 
 extern "C"
 {
@@ -17,6 +17,8 @@ dpt_unit dpts[DPT_UNIT_COUNT];
 
 int main(int argc, const char *argv[])
 {
+    using namespace std;
+
     if(argc != 2)
     {
         cout << "Usage: mkdpt [disk image file name]" << endl;
@@ -31,10 +33,20 @@ int main(int argc, const char *argv[])
         dpt.sector_end   = 0;
         strcpy(dpt.name, ("init-pt-" + to_string(i)).c_str());
     }
+
+    // 第一个分区用作afs分区
     dpts[0].type         = DISK_PT_NOFS;
     dpts[0].sector_begin = DPT_SECTOR_POSITION + 1;
-    dpts[0].sector_end   = 262143;
+    dpts[0].sector_end   = (DISK_IMPORT_DP_BEGIN - 1);
     strcpy(dpts[0].name, "init-pt-0");
+
+#define LAST_DPT_IDX (DPT_UNIT_COUNT - 1)
+    // 最后一个分区用作import分区
+    dpts[LAST_DPT_IDX].type = DISK_PT_IMPORT;
+    dpts[LAST_DPT_IDX].sector_begin = DISK_IMPORT_DP_BEGIN;
+    dpts[LAST_DPT_IDX].sector_end = DISK_IMPORT_DP_END;
+    strcpy(dpts[LAST_DPT_IDX].name, "import");
+#undef LAST_DPT_IDX
 
     ofstream fout("mkdpttmp", ofstream::binary | ofstream::out);
     if(!fout)

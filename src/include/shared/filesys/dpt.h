@@ -12,7 +12,8 @@ typedef uint32_t disk_partition_type;
 #define DISK_PT_NONEXISTENT 0   /* 不存在（分区表项无效） */
 #define DISK_PT_NOFS        1   /* 存在但未格式化 */
 #define DISK_PT_SWAP        2   /* 交换分区 */
-#define DISK_PT_AFS         3   /* 建立了AFS */
+#define DISK_PT_IMPORT      3   /* 文件交换分区，用于测试时从外部将文件导入虚拟机 */
+#define DISK_PT_AFS         4   /* 建立了AFS */
 
 #define DISK_PT_FORMATTING  255 /* 格式化中，禁止访问 */
 
