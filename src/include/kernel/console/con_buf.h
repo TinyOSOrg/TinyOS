@@ -19,4 +19,8 @@ struct con_buf
     uint16_t cursor;
 };
 
+struct con_buf *alloc_con_buf();
+
+void free_con_buf(struct con_buf *buf);
+
 #endif /* TINY_OS_CONSOLE_CON_BUF_H */

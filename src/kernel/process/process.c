@@ -1,5 +1,6 @@
 #include <kernel/asm.h>
 #include <kernel/boot.h>
+#include <kernel/console/con_buf.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/filesys/filesys.h>
 #include <kernel/interrupt.h>
@@ -397,6 +398,9 @@ void release_process_resources(struct PCB *pcb)
     erase_from_ilist(&pcb->processes_node);
     destroy_sysmsg_queue(&pcb->sys_msgs);
     destroy_sysmsg_source_list(&pcb->sys_msg_srcs);
+
+    if(pcb->disp_buf)
+        free_con_buf(pcb->disp_buf);
 
     // 关闭所有文件
     for(atrc_elem_handle i = atrc_begin(&pcb->file_table,

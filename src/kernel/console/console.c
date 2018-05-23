@@ -152,11 +152,6 @@ void init_console()
     _out_byte_to_port(0x03d5, 2000 & 0xff);
 }
 
-struct con_buf *get_sys_con_buf()
-{
-    return (struct con_buf*)0xc00b8000;
-}
-
 uint32_t syscall_console_impl(uint32_t func, uint32_t arg)
 {
     if(func >= CONSOLE_SYSCALL_FUNCTION_COUNT)
