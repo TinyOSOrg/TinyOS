@@ -30,6 +30,9 @@
 
 void PL0_thread()
 {
+    get_cur_PCB()->disp_buf = get_sys_con_buf();
+    get_cur_PCB()->pis      = pis_foreground;
+    
     printf("keyboard process, pid = %u\n", get_pid());
     register_char_msg();
 
@@ -113,7 +116,8 @@ int main()
 {
     init_kernel();
 
-    set_cursor_row_col(0, 0);
+    get_cur_PCB()->disp_buf = get_sys_con_buf();
+    get_cur_PCB()->pis      = pis_foreground;
 
     create_process("another process", PL0_thread, true);
 
@@ -137,8 +141,6 @@ int main()
     entry_addr();
 
     close_file(fp);
-
-    get_cur_TCB()->pcb->pis = pis_foreground;
     
     while(1)
     {

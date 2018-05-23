@@ -1,6 +1,7 @@
 #ifndef TINY_OS_PROCESS_H
 #define TINY_OS_PROCESS_H
 
+#include <kernel/console/con_buf.h>
 #include <kernel/memory/vir_mem_man.h>
 #include <kernel/process/spinlock.h>
 #include <kernel/process/thread.h>
@@ -56,8 +57,6 @@
 /* 进程前后台状态，影响进程IO方式 */
 enum process_interfacing_state
 {
-    pis_foreground_delegated,
-    pis_background_delegated,
     pis_foreground,
     pis_background
 };
@@ -102,6 +101,9 @@ struct PCB
 
     // 前后台状态
     enum process_interfacing_state pis;
+
+    // 显示缓存
+    struct con_buf *disp_buf;
 };
 
 /* 进程文件记录 */
