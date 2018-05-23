@@ -100,8 +100,8 @@ void block_cur_thread_onto_sysmsg();
 /* 唤醒一个blocked线程，将其变为ready */
 void awake_thread(struct TCB *tcb);
 
-/* 干掉一个线程 */
-void kill_thread(struct TCB *tcb);
+/* 干掉一个线程，若触发了延时销毁，返回false */
+bool kill_thread(struct TCB *tcb);
 
 /*
     每个线程结束的时候自己调用

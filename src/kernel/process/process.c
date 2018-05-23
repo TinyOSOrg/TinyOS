@@ -344,7 +344,10 @@ void kill_process(struct PCB *pcb)
         struct TCB *tcb = GET_STRUCT_FROM_MEMBER(
             struct TCB, threads_in_proc_node, pop_front_ilist(&pcb->threads_list));
         if(tcb != this)
-            kill_thread(tcb);
+        {
+            if(!kill_thread(tcb))
+                yield_CPU(); // 延时销毁依赖于线程调度，故主动让出CPU，否则会在这里死循环
+        }
         else
             kill_this = true;
     }

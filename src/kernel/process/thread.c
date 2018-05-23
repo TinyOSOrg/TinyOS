@@ -344,7 +344,7 @@ static void do_kill_thread(struct TCB *tcb)
     set_intr_state(intr_s);
 }
 
-void kill_thread(struct TCB *tcb)
+bool kill_thread(struct TCB *tcb)
 {
     spinlock_lock(&tcb->syscall_protector_lock);
 
@@ -352,9 +352,11 @@ void kill_thread(struct TCB *tcb)
     {
         tcb->thread_kill_flag = true;
         spinlock_unlock(&tcb->syscall_protector_lock);
+        return false;
     }
-    else
-        do_kill_thread(tcb); //即刻处刑
+    
+    do_kill_thread(tcb); //即刻处刑
+    return true;
 }
 
 void exit_thread()
