@@ -1,4 +1,4 @@
-#include <kernel/readelf.h>
+#include <kernel/exec_elf/readelf.h>
 
 #include <shared/intdef.h>
 #include <shared/string.h>

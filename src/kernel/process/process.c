@@ -152,14 +152,18 @@ static struct PCB *alloc_PCB()
     return ret;
 }
 
-/* 创建一个进程，但是不包含任何线程（ */
-static struct PCB *create_empty_process(const char *name, bool is_PL_0)
+/*
+    用一个已有的虚拟地址空间创建一个不包含任何线程的进程记录
+    进程不包含任何线程是invalid的，所以这么创建出的进程记录是不完整的
+*/
+static struct PCB *create_empty_process_with_addr_space(
+        const char *name, vir_addr_space *addr_space, bool is_PL_0)
 {
     struct PCB *pcb = alloc_PCB();
 
     // 虚拟地址空间初始化
 
-    pcb->addr_space = create_vir_addr_space();
+    pcb->addr_space = addr_space;
     pcb->pid = get_usr_vir_addr_idx(pcb->addr_space) + 1;
     pcb->is_PL_0 = is_PL_0;
     pcb->addr_space_inited = false;
@@ -180,6 +184,13 @@ static struct PCB *create_empty_process(const char *name, bool is_PL_0)
     push_back_ilist(&processes, &pcb->processes_node);
     
     return pcb;
+}
+
+/* 创建一个进程记录，但是不包含任何线程 */
+static struct PCB *create_empty_process(const char *name, bool is_PL_0)
+{
+    return create_empty_process_with_addr_space(
+                name, create_vir_addr_space(), is_PL_0);
 }
 
 /*
@@ -333,6 +344,22 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0)
     intr_state intr_s = fetch_and_disable_intr();
 
     struct PCB *pcb = create_empty_process(name, is_PL_0);
+
+    thread_exec_func thread_entry = (thread_exec_func)(is_PL_0 ? process_thread_entry_PL_0 :
+                                                                 process_thread_entry_PL_3);
+
+    struct TCB *tcb = create_thread(thread_entry, func, pcb);
+    push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
+
+    set_intr_state(intr_s);
+}
+
+void create_process_with_addr_space(const char *name, process_exec_func func,
+                                    vir_addr_space *addr_space, bool is_PL_0)
+{
+    intr_state intr_s = fetch_and_disable_intr();
+
+    struct PCB *pcb = create_empty_process_with_addr_space(name, addr_space, is_PL_0);
 
     thread_exec_func thread_entry = (thread_exec_func)(is_PL_0 ? process_thread_entry_PL_0 :
                                                                  process_thread_entry_PL_3);

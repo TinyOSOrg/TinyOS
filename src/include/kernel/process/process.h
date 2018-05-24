@@ -125,6 +125,10 @@ void init_process_man();
 /* 创建进程，不解释 */
 void create_process(const char *name, process_exec_func func, bool is_PL_0);
 
+/* 用已有的虚拟地址空间创建进程 */
+void create_process_with_addr_space(const char *name, process_exec_func func,
+                                    vir_addr_space *addr_space, bool is_PL_0);
+
 /* 在当前进程中追加线程，不解释 */
 void add_proc_thread(process_exec_func func);
 

@@ -3,7 +3,7 @@
 #include <kernel/kernel.h>
 #include <kernel/memory.h>
 #include <kernel/process/process.h>
-#include <kernel/readelf.h>
+#include <kernel/exec_elf/readelf.h>
 
 #include <lib/conio.h>
 #include <lib/filesys.h>
