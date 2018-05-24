@@ -1,33 +1,14 @@
-#include <kernel/asm.h>
-#include <kernel/console/console.h>
-#include <kernel/diskdriver.h>
-#include <kernel/explorer/explorer.h>
-#include <kernel/filesys/dpt.h>
-#include <kernel/filesys/filesys.h>
+#include <kernel/console/con_buf.h>
 #include <kernel/interrupt.h>
-#include <kernel/kbdriver.h>
+#include <kernel/kernel.h>
 #include <kernel/memory.h>
 #include <kernel/process/process.h>
-#include <kernel/process/thread.h>
 #include <kernel/readelf.h>
-#include <kernel/rlist_node_alloc.h>
-#include <kernel/syscall.h>
-#include <kernel/sysmsg/sysmsg_syscall.h>
-#include <kernel/sysmsg/sysmsg.h>
 
 #include <lib/conio.h>
 #include <lib/filesys.h>
 #include <lib/keyboard.h>
 #include <lib/proc.h>
-
-#include <shared/keycode.h>
-#include <shared/rbtree.h>
-#include <shared/string.h>
-#include <shared/syscall/common.h>
-#include <shared/syscall/sysmsg.h>
-#include <shared/sysmsg/kbmsg.h>
-
-#include <kernel/filesys/import/import.h>
 
 static void init_explorer()
 {
@@ -44,13 +25,6 @@ static void init_explorer()
     erase_from_ilist(&pcb->processes_node);
 
     set_intr_state(is);
-}
-
-void destroy_kernel()
-{
-    kill_all_processes();
-    destroy_dpt();
-    destroy_filesys();
 }
 
 void explorer_entry()
