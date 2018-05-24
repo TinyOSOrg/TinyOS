@@ -7,6 +7,8 @@ size_t strlen(const char *str);
 
 void strcpy(char *dst, const char *src);
 
+void strcpy_s(char *dst, const char *src, size_t buf_size);
+
 int strcmp(const char *lhs, const char *rhs);
 
 void strcat(char *fst, const char *snd);

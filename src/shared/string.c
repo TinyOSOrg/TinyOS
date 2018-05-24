@@ -14,6 +14,14 @@ void strcpy(char *dst, const char *src)
         ;
 }
 
+void strcpy_s(char *dst, const char *src, size_t buf_size)
+{
+    while(buf_size-- > 1 && (*dst++ = *src++))
+        ;
+    if(!buf_size)
+        *dst = '\0';
+}
+
 int strcmp(const char *lhs, const char *rhs)
 {
     char L, R;

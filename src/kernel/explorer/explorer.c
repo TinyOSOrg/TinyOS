@@ -1,9 +1,11 @@
 #include <kernel/console/con_buf.h>
+#include <kernel/filesys/dpt.h>
+#include <kernel/filesys/import/import.h>
 #include <kernel/interrupt.h>
 #include <kernel/kernel.h>
 #include <kernel/memory.h>
 #include <kernel/process/process.h>
-#include <kernel/exec_elf/readelf.h>
+#include <kernel/exec_elf/exec_elf.h>
 
 #include <lib/conio.h>
 #include <lib/filesys.h>
@@ -33,23 +35,11 @@ void explorer_entry()
 
     printf("Explorer process, pid = %u\n", get_pid());
 
-    /*reformat_dp(0, DISK_PT_AFS);*/
+    reformat_dp(0, DISK_PT_AFS);
 
-    /*ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);*/
+    ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
 
-    usr_file_handle fp;
-    
-    open_file(0, "/minecraft.txt", false, &fp);
-
-    uint8_t *elf_data = (uint8_t*)alloc_static_kernel_mem(get_file_size(fp), 1);
-
-    read_file(fp, 0, get_file_size(fp), elf_data);
-
-    int (*entry_addr)() = (int(*)())load_elf(elf_data);
-
-    entry_addr();
-
-    close_file(fp);
+    exec_elf("test elf", 0, "/minecraft.txt", false, 0, NULL);
 
     while(1)
     {
