@@ -230,6 +230,11 @@ void process_thread_entry(process_exec_func func,
 
     // 填充内核栈最高处的intr_stack，为降低特权级做准备
 
+    // 注意到这里并没有把内核进程的调用栈初始化到0~3GB中
+    // 这是因为内核进程被调度切换时，调用栈不会自动发生变化
+    // 如果栈在0~3GB中，那么进程虚拟地址空间的切换，会导致
+    // 调用栈无效化，当场去世
+
     tcb->ker_stack += sizeof(struct thread_init_stack);
     struct intr_stack_bak *intr_stack =
         (struct intr_stack_bak*)tcb->ker_stack;
@@ -268,13 +273,15 @@ void process_thread_entry(process_exec_func func,
 static void process_thread_entry_PL_0(process_exec_func func)
 {
     process_thread_entry(func,
-        SEG_SEL_KERNEL_DATA, SEG_SEL_KERNEL_CODE, SEG_SEL_KERNEL_STACK, true);
+                         SEG_SEL_KERNEL_DATA, SEG_SEL_KERNEL_CODE,
+                         SEG_SEL_KERNEL_STACK, true);
 }
 
 static void process_thread_entry_PL_3(process_exec_func func)
 {
     process_thread_entry(func,
-        SEG_SEL_USER_DATA, SEG_SEL_USER_CODE, SEG_SEL_USER_STACK, false);
+                         SEG_SEL_USER_DATA, SEG_SEL_USER_CODE,
+                         SEG_SEL_USER_STACK, false);
 }
 
 /* 把bootloader以来一直在跑的东西封装成进程 */

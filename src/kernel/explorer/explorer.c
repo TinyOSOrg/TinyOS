@@ -53,11 +53,6 @@ void destroy_kernel()
     destroy_filesys();
 }
 
-/*
-    bug：PL0级进程被调度器切换时，其调用栈为非共享区域，mov cr3后会当场去世
-    也就是说PL0级进程被换下前需要先把调用栈切换到内核栈
-*/
-
 void explorer_entry()
 {
     init_explorer();
