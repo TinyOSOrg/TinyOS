@@ -217,6 +217,7 @@ struct afs_file_desc *afs_open_file_for_reading(
     // 如果是读模式打开的，计数++；写模式打开的，则因互斥而返回失败
     
     struct rb_node *rbn = rb_find(&head->opening_files, KOF, &entry_idx, rb_less);
+
     if(rbn)
     {
         struct afs_file_desc *desc = GET_STRUCT_FROM_MEMBER(

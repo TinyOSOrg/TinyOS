@@ -91,6 +91,13 @@ static inline uint32_t _get_cr3()
     return rt;
 }
 
+static inline uint32_t _get_esp()
+{
+    uint32_t rt;
+    asm volatile ("movl %%esp, %0" : "=r" (rt));
+    return rt;
+}
+
 static inline uint32_t _get_eflag()
 {
     uint32_t rt;

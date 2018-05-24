@@ -324,3 +324,44 @@ struct rb_node *rb_minimum(struct rb_node *nil, struct rb_node *node)
         p = p->left;
     return p;
 }
+
+#if 0
+
+void rb_init(struct rb_tree *tree)
+{
+    init_ilist(&tree->list);
+}
+
+#define TO_KEY(NODE) \
+    ((void*)((char*)(NODE) + key_offset))
+    
+struct rb_node *rb_find(struct rb_tree *tree, int32_t key_offset,
+                        const void *key, rb_less_func less)
+{
+    for(struct ilist_node *n = tree->list.next;
+        n != &tree->list; n = n->next)
+    {
+        void *k = TO_KEY(n);
+        if(!less(k, key) && !less(key, k))
+            return (struct rb_node*)n;
+    }
+    return NULL;
+}
+
+bool rb_insert(struct rb_tree *tree, struct rb_node *node,
+               int32_t key_offset, rb_less_func less)
+{
+    void *k = TO_KEY(node);
+    if(rb_find(tree, key_offset, k, less))
+        return false;
+    push_back_ilist(&tree->list, &node->node);
+    return true;
+}
+
+void rb_erase(struct rb_tree *tree, struct rb_node *node,
+              int32_t key_offset, rb_less_func less)
+{
+    erase_from_ilist(&node->node);
+}
+
+#endif

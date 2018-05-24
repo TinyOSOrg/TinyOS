@@ -717,7 +717,6 @@ void afs_create_regular_file_by_path(struct afs_dp_head *head,
     {
         // 先求下一截路径，如果没了，说明当前name就是要创建的目标
         next_name_beg = path_next(name_beg, &next_name_len);
-
         struct afs_file_desc *parent_dir =
             afs_open_file_for_reading(head, dir_entry_idx, rt);
         if(!parent_dir)

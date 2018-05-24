@@ -125,6 +125,9 @@ void init_process_man();
 /* 创建进程，不解释 */
 void create_process(const char *name, process_exec_func func, bool is_PL_0);
 
+/* 在当前进程中追加线程，不解释 */
+void add_proc_thread(process_exec_func func);
+
 /* 干掉一个进程 */
 void kill_process(struct PCB *pcb);
 

@@ -210,8 +210,9 @@ static void init_process_addr_space()
 }
 
 /* 进程入口 */
-static void process_thread_entry(process_exec_func func,
-    uint32_t data_seg_sel, uint32_t code_seg_sel, uint32_t stack_seg_sel)
+void process_thread_entry(process_exec_func func,
+                          uint32_t data_seg_sel, uint32_t code_seg_sel,
+                          uint32_t stack_seg_sel, bool is_PL_0)
 {
     // 这里直接关中断
     // 等会儿伪装的中断退出函数那里，eflags中IF是打开的
@@ -232,6 +233,7 @@ static void process_thread_entry(process_exec_func func,
     tcb->ker_stack += sizeof(struct thread_init_stack);
     struct intr_stack_bak *intr_stack =
         (struct intr_stack_bak*)tcb->ker_stack;
+
     intr_stack->edi = 0;
     intr_stack->esi = 0;
     intr_stack->ebp = 0;
@@ -247,8 +249,12 @@ static void process_thread_entry(process_exec_func func,
     intr_stack->eip = (uint32_t)func;
     intr_stack->cs = code_seg_sel;
     intr_stack->eflags = (1 << 1) | (1 << 9);
-    intr_stack->esp = (uint32_t)alloc_thread_user_stack();
-    intr_stack->ss = stack_seg_sel;
+
+    if(!is_PL_0)
+    {
+        intr_stack->esp = (uint32_t)alloc_thread_user_stack();
+        intr_stack->ss = stack_seg_sel;
+    }
 
     extern void intr_proc_end(); // defined in interrupt.s
     
@@ -262,13 +268,13 @@ static void process_thread_entry(process_exec_func func,
 static void process_thread_entry_PL_0(process_exec_func func)
 {
     process_thread_entry(func,
-        SEG_SEL_KERNEL_DATA, SEG_SEL_KERNEL_CODE, SEG_SEL_KERNEL_STACK);
+        SEG_SEL_KERNEL_DATA, SEG_SEL_KERNEL_CODE, SEG_SEL_KERNEL_STACK, true);
 }
 
 static void process_thread_entry_PL_3(process_exec_func func)
 {
     process_thread_entry(func,
-        SEG_SEL_USER_DATA, SEG_SEL_USER_CODE, SEG_SEL_USER_STACK);
+        SEG_SEL_USER_DATA, SEG_SEL_USER_CODE, SEG_SEL_USER_STACK, false);
 }
 
 /* 把bootloader以来一直在跑的东西封装成进程 */
@@ -328,6 +334,22 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0)
     push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
 
     set_intr_state(intr_s);
+}
+
+void add_proc_thread(process_exec_func func)
+{
+    intr_state is = fetch_and_disable_intr();
+
+    struct PCB *pcb = get_cur_PCB();
+
+    thread_exec_func thread_entry =
+        (thread_exec_func)(pcb->is_PL_0 ? process_thread_entry_PL_0 :
+                                          process_thread_entry_PL_3);
+
+    struct TCB *tcb = create_thread(thread_entry, func, pcb);
+    push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
+
+    set_intr_state(is);
 }
 
 uint32_t syscall_get_cur_PID_impl()

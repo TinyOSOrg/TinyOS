@@ -1,6 +1,7 @@
 #include <kernel/asm.h>
 #include <kernel/console/console.h>
 #include <kernel/diskdriver.h>
+#include <kernel/explorer/explorer.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/filesys/filesys.h>
 #include <kernel/interrupt.h>
@@ -33,7 +34,7 @@ void PL0_thread()
     get_cur_PCB()->disp_buf = alloc_con_buf();
     get_cur_PCB()->pis      = pis_foreground;
     
-    printf("keyboard process, pid = %u\n", get_pid());
+    printf("Keyboard process, pid = %u\n", get_pid());
     register_char_msg();
 
     while(true)
@@ -105,52 +106,18 @@ void init_kernel()
     init_dpt();
 }
 
-void destroy_kernel()
-{
-    kill_all_processes();
-    destroy_dpt();
-    destroy_filesys();
-}
-
 int main()
 {
     init_kernel();
 
-    get_cur_PCB()->disp_buf = alloc_con_buf();
-    get_cur_PCB()->pis      = pis_foreground;
+    create_process("explorer", explorer_entry, true);
 
     create_process("another process", PL0_thread, true);
 
     _enable_intr();
 
-    printf("main process, pid = %u\n", get_pid());
-    
-    reformat_dp(0, DISK_PT_AFS);
-
-    ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
-
-    usr_file_handle fp;
-    
-    open_file(0, "/minecraft.txt", false, &fp);
-
-    uint8_t elf_data[get_file_size(fp)];
-
-    read_file(fp, 0, get_file_size(fp), elf_data);
-
-    int (*entry_addr)() = (int(*)())load_elf(elf_data);
-    entry_addr();
-
-    close_file(fp);
-    
     while(1)
     {
-        if(is_key_pressed(VK_ESCAPE))
-        {
-            destroy_kernel();
-            while(1)
-                ;
-        }
-
         do_releasing_thds_procs();
         yield_CPU();
     }
