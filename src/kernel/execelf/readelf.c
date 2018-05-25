@@ -1,9 +1,13 @@
-#include <kernel/exec_elf/readelf.h>
+#include <kernel/execelf/readelf.h>
 
 #include <shared/intdef.h>
 #include <shared/string.h>
 
 #include <lib/conio.h>
+
+/*
+    IMPROVE：load_elf应该进行适当的合法性检查
+*/
 
 #define PT_LOAD 1
 

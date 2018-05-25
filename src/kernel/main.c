@@ -44,7 +44,7 @@ int main()
 {
     init_kernel();
 
-    create_process("explorer", explorer_entry, true);
+    create_process("explorer", explorer, true);
 
     create_process("another process", PL0_thread, true);
 

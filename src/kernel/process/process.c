@@ -1,6 +1,7 @@
 #include <kernel/asm.h>
 #include <kernel/boot.h>
 #include <kernel/console/con_buf.h>
+#include <kernel/explorer/explorer.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/filesys/filesys.h>
 #include <kernel/interrupt.h>
@@ -449,6 +450,9 @@ void _set_tss_esp0(uint32_t esp0)
 void release_process_resources(struct PCB *pcb)
 {
     intr_state is = fetch_and_disable_intr();
+
+    if(pcb->pis == pis_foreground)
+        foreground_exit();
 
     pid_to_pcb[pcb->pid] = NULL;
     erase_from_ilist(&pcb->processes_node);

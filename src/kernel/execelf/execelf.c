@@ -1,6 +1,6 @@
 #include <kernel/assert.h>
-#include <kernel/exec_elf/exec_elf.h>
-#include <kernel/exec_elf/readelf.h>
+#include <kernel/execelf/execelf.h>
+#include <kernel/execelf/readelf.h>
 #include <kernel/interrupt.h>
 #include <kernel/memory.h>
 #include <kernel/process/process.h>
@@ -17,7 +17,7 @@
         
         步骤：
         1. 关中断
-        2. 创建一个虚拟地址空间A，把自己的虚拟地址空间临时切换到A，没错这里需要改PCB
+        2. 创建一个虚拟地址空间A，把自己的虚拟地址空间临时切换到A，没错这里需要改PCB，这个耦合我暂时想不到怎么去掉
             因为等会儿读文件的时候会有进程切换，如果不改PCB，等切换回来的时候虚拟地址空间就不对了
         3. 把elf文件内容装载好，把入口地址和参数都放到特定地址，注意这里读文件会执行调度器
         4. 以A创建一个进程，执行入口是elf的入口地址
