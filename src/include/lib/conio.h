@@ -5,6 +5,8 @@
 
 void set_char_row_col(uint8_t row, uint8_t col, char ch);
 
+void set_char_at(uint16_t pos, char ch);
+
 void set_char_attrib_row_col(uint8_t row, uint8_t col, uint8_t attrib);
 
 void get_cursor_row_col(uint8_t *row, uint8_t *col);

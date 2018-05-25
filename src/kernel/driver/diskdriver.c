@@ -1,6 +1,6 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
-#include <kernel/diskdriver.h>
+#include <kernel/driver/diskdriver.h>
 #include <kernel/interrupt.h>
 #include <kernel/process/thread.h>
 #include <kernel/process/semaphore.h>

@@ -27,6 +27,11 @@ void set_char_row_col(uint8_t row, uint8_t col, char ch)
     CONSOLE_SYSCALL(CONSOLE_SYSCALL_FUNCTION_SET_CHAR, arg);
 }
 
+void set_char_at(uint16_t pos, char ch)
+{
+    set_char_row_col(pos / 80, pos % 80, ch);
+}
+
 void set_char_attrib_row_col(uint8_t row, uint8_t col, uint8_t attrib)
 {
     uint32_t arg = ((row * 80 + col) << 16) | (uint8_t)attrib;

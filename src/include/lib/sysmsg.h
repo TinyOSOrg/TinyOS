@@ -3,8 +3,8 @@
 
 #include <shared/bool.h>
 #include <shared/intdef.h>
+#include <shared/syscall/sysmsg.h>
 #include <shared/sysmsg/common.h>
-#include <shared/sysmsg/kbmsg.h>
 
 /* 查询消息队列是否不为空 */
 bool has_sysmsg();

@@ -1,11 +1,11 @@
 #include <kernel/kernel.h>
 
 #include <kernel/console/console.h>
-#include <kernel/diskdriver.h>
+#include <kernel/driver/diskdriver.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/filesys/filesys.h>
 #include <kernel/interrupt.h>
-#include <kernel/kbdriver.h>
+#include <kernel/driver/kbdriver.h>
 #include <kernel/memory.h>
 #include <kernel/process/process.h>
 #include <kernel/rlist_node_alloc.h>

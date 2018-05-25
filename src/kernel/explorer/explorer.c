@@ -15,11 +15,7 @@
 #include <lib/filesys.h>
 #include <lib/keyboard.h>
 #include <lib/proc.h>
-
-/*
-    Explorer是个FSA，消息驱动（键盘消息和其他进程的特殊调用），转换如下：
-        // TODO
-*/
+#include <lib/sysmsg.h>
 
 /* Explorer状态 */
 enum explorer_state
@@ -41,19 +37,22 @@ static struct PCB *expl_proc;
 /* explorer状态 */
 static enum explorer_state expl_stat;
 
-/* explorer命令输入缓冲大小 */
-#define EXPL_CMD_INPUT_BUF_SIZE 4096
+/* explorer命令输入缓冲大小，三行 */
+#define EXPL_CMD_INPUT_BUF_SIZE (3 * CON_BUF_ROW_SIZE)
 
-/* explorer行输入缓冲大小 */
-#define EXPL_LINE_INPUT_BUF_SIZE 64
+/* 命令输入缓冲区在显示缓存中的偏移 */
+#define CMD_DISP_POS_BEGIN \
+    (CON_BUF_ROW_SIZE * (CON_BUF_COL_SIZE - 3))
+
+#define CMD_DISP_POS_END \
+    (CON_BUF_ROW_SIZE * CON_BUF_COL_SIZE)
+
+#define DISP_CHAR(POS, CH) \
+    do { set_char_at(CMD_DISP_POS_BEGIN + (POS), (CH)); } while(0)
 
 /* explorer命令输入缓冲 */
 static char *expl_cmd_input_buf;
 static uint32_t expl_cmd_input_size;
-
-/* explorer行输入缓冲 */
-static char expl_line_input_buf[EXPL_LINE_INPUT_BUF_SIZE];
-static uint32_t expl_line_input_size;
 
 void copy_scr_to_con_buf(struct PCB *pcb)
 {
@@ -120,13 +119,62 @@ static void init_explorer()
     expl_stat     = es_fg;
 
     // 初始化输入缓冲区
-    expl_cmd_input_buf     = (char*)alloc_ker_page(false);
+    expl_cmd_input_buf =
+        (char*)alloc_static_kernel_mem(EXPL_CMD_INPUT_BUF_SIZE, 1);
     expl_cmd_input_buf[0]  = '\0';
     expl_cmd_input_size    = 0;
-    expl_line_input_size   = 0;
-    expl_line_input_buf[0] = '\0';
+    
+    DISP_CHAR(0, '_');
+
+    // 注册键盘消息
+    register_key_msg();
+    register_char_msg();
 
     set_intr_state(is);
+}
+
+static bool explorer_submit_cmd()
+{
+    bool ret = true;
+
+    if(strcmp(expl_cmd_input_buf, "exit") == 0)
+        ret = false;
+
+    expl_cmd_input_buf[0] = '\0';
+    expl_cmd_input_size   = 0;
+    DISP_CHAR(0, '_');
+    for(uint16_t pos = 1; pos < EXPL_CMD_INPUT_BUF_SIZE; ++pos)
+        DISP_CHAR(pos, ' ');
+
+    return ret;
+}
+
+static void explorer_new_cmd_char(char ch)
+{
+    // 退格
+    if(ch == '\b')
+    {
+        if(expl_cmd_input_size > 0)
+        {
+            DISP_CHAR(expl_cmd_input_size, ' ');
+            expl_cmd_input_buf[--expl_cmd_input_size] = '\0';
+            DISP_CHAR(expl_cmd_input_size, '_');
+        }
+        return;
+    }
+
+    // 命令缓冲区已满
+    if(expl_cmd_input_size >= EXPL_CMD_INPUT_BUF_SIZE - 1)
+        return;
+
+    // 忽略换行符和制表符
+    if(ch == '\n' || ch == '\t')
+        return;
+
+    DISP_CHAR(expl_cmd_input_size, ch);
+    expl_cmd_input_buf[expl_cmd_input_size] = ch;
+    expl_cmd_input_buf[++expl_cmd_input_size] = '\0';
+    DISP_CHAR(expl_cmd_input_size, '_');
 }
 
 /*
@@ -135,12 +183,29 @@ static void init_explorer()
 */
 static bool explorer_transfer()
 {
-    if(is_key_pressed(VK_ESCAPE))
-        return false;
-
     if(expl_stat == es_fg)
     {
+        struct sysmsg msg;
+        if(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg))
+        {
+            // 取得一条键盘按下的消息
+            if(msg.type == SYSMSG_TYPE_KEYBOARD &&
+               is_kbmsg_down(&msg))
+            {
+                uint8_t key = get_kbmsg_key(&msg);
 
+                // 按回车提交一条命令
+                if(key == VK_ENTER)
+                    return explorer_submit_cmd();
+            }
+
+            // 取得一条字符消息
+            if(msg.type == SYSMSG_TYPE_CHAR)
+            {
+                explorer_new_cmd_char(get_chmsg_char(&msg));
+                return true;
+            }
+        }
     }
     else if(expl_stat == es_bg)
     {
@@ -156,13 +221,9 @@ void explorer()
 {
     init_explorer();
 
-    printf("Explorer process, pid = %u\n", get_pid());
-
     reformat_dp(0, DISK_PT_AFS);
 
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
-
-    exec_elf("test elf", 0, "/minecraft.txt", false, 0, NULL);
 
     while(explorer_transfer())
         ;

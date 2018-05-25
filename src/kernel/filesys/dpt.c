@@ -1,5 +1,5 @@
 #include <kernel/assert.h>
-#include <kernel/diskdriver.h>
+#include <kernel/driver/diskdriver.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/memory.h>
 

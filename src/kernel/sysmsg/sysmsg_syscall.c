@@ -1,4 +1,4 @@
-#include <kernel/kbdriver.h>
+#include <kernel/driver/kbdriver.h>
 #include <kernel/process/process.h>
 #include <kernel/process/thread.h>
 #include <kernel/sysmsg/sysmsg_syscall.h>

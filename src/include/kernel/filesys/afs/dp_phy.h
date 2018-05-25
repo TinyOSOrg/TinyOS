@@ -2,7 +2,7 @@
 #define TINY_OS_FILESYS_AFS_DP_PHY_H
 
 #include <kernel/assert.h>
-#include <kernel/diskdriver.h>
+#include <kernel/driver/diskdriver.h>
 #include <kernel/process/semaphore.h>
 #include <kernel/process/spinlock.h>
 

@@ -12,7 +12,7 @@
 #include <lib/proc.h>
 #include <lib/sysmsg.h>
 
-void PL0_thread()
+/*void PL0_thread()
 {
     get_cur_PCB()->disp_buf = alloc_con_buf();
     get_cur_PCB()->pis      = pis_foreground;
@@ -32,7 +32,7 @@ void PL0_thread()
         }
     }
     exit_thread();
-}
+}*/
 
 int main()
 {
@@ -40,7 +40,7 @@ int main()
 
     create_process("explorer", explorer, true);
 
-    create_process("another process", PL0_thread, true);
+    // create_process("another process", PL0_thread, true);
 
     _enable_intr();
 

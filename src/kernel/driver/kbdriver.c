@@ -1,7 +1,7 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
 #include <kernel/interrupt.h>
-#include <kernel/kbdriver.h>
+#include <kernel/driver/kbdriver.h>
 #include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg_src.h>
 

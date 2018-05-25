@@ -23,9 +23,10 @@ static uint32_t console_syscall_function_set_char(uint32_t arg)
         return 0;
 
     uint32_t pos = arg >> 16;
-    if((arg < 0x20) | (arg > 0x7e) | (pos >= 2000))
+    uint32_t ch = arg & 0xff;
+    if((ch < 0x20) | (ch > 0x7e) | (pos >= 2000))
         return 0;
-    kset_char(buf, arg >> 16, arg & 0xff);
+    kset_char(buf, pos, ch);
     return 0;
 }
 

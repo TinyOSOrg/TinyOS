@@ -2,7 +2,7 @@
 
 #include <kernel/console/console.h>
 #include <kernel/filesys/syscall.h>
-#include <kernel/kbdriver.h>
+#include <kernel/driver/kbdriver.h>
 #include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg_syscall.h>
 

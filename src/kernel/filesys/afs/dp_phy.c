@@ -1,6 +1,6 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
-#include <kernel/diskdriver.h>
+#include <kernel/driver/diskdriver.h>
 
 #include <kernel/filesys/afs/blk_mem_buf.h>
 #include <kernel/filesys/afs/dp_phy.h>
