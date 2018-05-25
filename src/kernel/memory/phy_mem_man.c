@@ -4,8 +4,6 @@
 
 #include <kernel/memory/phy_mem_man.h>
 
-#include <common.h>
-
 /*
     物理页管理：
     设共有N个物理页

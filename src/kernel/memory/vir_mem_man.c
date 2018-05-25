@@ -10,8 +10,6 @@
 
 #include <shared/string.h>
 
-#include <common.h>
-
 struct PDE_struct
 {
     uint32_t PTE[1024];
