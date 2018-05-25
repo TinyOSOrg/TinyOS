@@ -41,6 +41,20 @@ static struct PCB *expl_proc;
 /* explorer状态 */
 static enum explorer_state expl_stat;
 
+/* explorer命令输入缓冲大小 */
+#define EXPL_CMD_INPUT_BUF_SIZE 4096
+
+/* explorer行输入缓冲大小 */
+#define EXPL_LINE_INPUT_BUF_SIZE 64
+
+/* explorer命令输入缓冲 */
+static char *expl_cmd_input_buf;
+static uint32_t expl_cmd_input_size;
+
+/* explorer行输入缓冲 */
+static char expl_line_input_buf[EXPL_LINE_INPUT_BUF_SIZE];
+static uint32_t expl_line_input_size;
+
 void copy_scr_to_con_buf(struct PCB *pcb)
 {
     intr_state is = fetch_and_disable_intr();
@@ -104,6 +118,13 @@ static void init_explorer()
     cur_fg_proc   = NULL;
     expl_proc     = pcb;
     expl_stat     = es_fg;
+
+    // 初始化输入缓冲区
+    expl_cmd_input_buf     = (char*)alloc_ker_page(false);
+    expl_cmd_input_buf[0]  = '\0';
+    expl_cmd_input_size    = 0;
+    expl_line_input_size   = 0;
+    expl_line_input_buf[0] = '\0';
 
     set_intr_state(is);
 }

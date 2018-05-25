@@ -10,6 +10,7 @@
 #include <lib/conio.h>
 #include <lib/keyboard.h>
 #include <lib/proc.h>
+#include <lib/sysmsg.h>
 
 void PL0_thread()
 {
@@ -21,20 +22,13 @@ void PL0_thread()
 
     while(true)
     {
-        syscall_param1(SYSCALL_SYSMSG_OPERATION,
-                       SYSMSG_SYSCALL_FUNCTION_BLOCK_ONTO_SYSMSG);
+        wait_for_sysmsg();
         struct sysmsg msg;
-        while(syscall_param3(SYSCALL_SYSMSG_OPERATION,
-                             SYSMSG_SYSCALL_FUNCTION_PEEK_MSG,
-                             SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE,
-                             &msg))
+        while(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE,
+                          &msg))
         {
             if(msg.type == SYSMSG_TYPE_CHAR)
-            {
-                struct kbchar_msg_struct *chmsg =
-                    (struct kbchar_msg_struct*)&msg;
-                put_char(chmsg->ch);
-            }
+                put_char(((struct kbchar_msg_struct*)&msg)->ch);
         }
     }
     exit_thread();
