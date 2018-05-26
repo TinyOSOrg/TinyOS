@@ -12,11 +12,7 @@
 
 #include <shared/string.h>
 
-#include <lib/conio.h>
-#include <lib/filesys.h>
-#include <lib/keyboard.h>
-#include <lib/proc.h>
-#include <lib/sysmsg.h>
+#include <lib/sys.h>
 
 /* Explorer状态 */
 enum explorer_state

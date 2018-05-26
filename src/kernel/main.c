@@ -7,10 +7,7 @@
 #include <shared/syscall/sysmsg.h>
 #include <shared/sysmsg/kbmsg.h>
 
-#include <lib/conio.h>
-#include <lib/keyboard.h>
-#include <lib/proc.h>
-#include <lib/sysmsg.h>
+#include <lib/sys.h>
 
 int main()
 {

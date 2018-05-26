@@ -1,6 +1,6 @@
 #include <shared/syscall/common.h>
 
-#include <lib/proc.h>
+#include <lib/sys.h>
 
 uint32_t get_pid()
 {
@@ -9,5 +9,5 @@ uint32_t get_pid()
 
 void yield_cpu()
 {
-    return syscall_param0(SYSCALL_YIELD_CPU);
+    syscall_param0(SYSCALL_YIELD_CPU);
 }

@@ -1,7 +1,7 @@
 #include <shared/syscall/common.h>
 #include <shared/syscall/sysmsg.h>
 
-#include <lib/sysmsg.h>
+#include <lib/sys.h>
 
 bool has_sysmsg()
 {
@@ -21,16 +21,4 @@ void wait_for_sysmsg()
 {
     syscall_param1(SYSCALL_SYSMSG_OPERATION,
                    SYSMSG_SYSCALL_FUNCTION_BLOCK_ONTO_SYSMSG);
-}
-
-void register_key_msg()
-{
-    syscall_param1(SYSCALL_SYSMSG_OPERATION,
-                   SYSMSG_SYSCALL_FUNCTION_REGISTER_KEYBOARD_MSG);
-}
-
-void register_char_msg()
-{
-    syscall_param1(SYSCALL_SYSMSG_OPERATION,
-                   SYSMSG_SYSCALL_FUNCTION_REGISTER_CHAR_MSG);
 }

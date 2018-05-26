@@ -4,7 +4,7 @@
 
 #include <shared/filesys/import/import.h>
 
-#include <lib/filesys.h>
+#include <lib/sys.h>
 
 #define IPT_SECTOR_BYTE_SIZE 512
 

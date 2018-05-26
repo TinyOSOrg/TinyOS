@@ -1,4 +1,4 @@
-#include <lib/conio.h>
+#include <lib/sys.h>
 
 int main(void)
 {

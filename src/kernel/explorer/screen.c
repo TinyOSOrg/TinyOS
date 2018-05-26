@@ -4,7 +4,7 @@
 #include <shared/screen.h>
 #include <shared/string.h>
 
-#include <lib/conio.h>
+#include <lib/sys.h>
 
 #define CMD_X_BASE 0
 #define CMD_Y_BASE (1 + SCR_DISP_HEIGHT + 1)

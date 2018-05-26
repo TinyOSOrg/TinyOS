@@ -1,7 +1,7 @@
-#include <lib/conio.h>
-
 #include <shared/string.h>
 #include <shared/syscall/console.h>
+
+#include <lib/sys.h>
 
 #define CONSOLE_SYSCALL(N, arg) \
     do { uint32_t dummy_ret; \

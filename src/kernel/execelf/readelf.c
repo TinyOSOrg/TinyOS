@@ -3,7 +3,7 @@
 #include <shared/intdef.h>
 #include <shared/string.h>
 
-#include <lib/conio.h>
+#include <lib/sys.h>
 
 /*
     IMPROVE：load_elf应该进行适当的合法性检查
