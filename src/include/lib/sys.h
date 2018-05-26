@@ -97,4 +97,7 @@ bool peek_sysmsg(uint32_t opr, struct sysmsg *msg);
 /* 阻塞自己，直到一条消息到来 */
 void wait_for_sysmsg();
 
+/* 清空消息队列 */
+void clr_sysmsgs();
+
 #endif /* TINY_OS_LIB_SYS_H */

@@ -15,6 +15,11 @@
 
 #include <lib/sys.h>
 
+/*
+    IMPROVE: 这个explorer是半赶工的结果，写得烂如翔（
+             谁来重写一个……
+*/
+
 /* Explorer状态 */
 enum explorer_state
 {
@@ -41,6 +46,10 @@ static enum explorer_state expl_stat;
 static char *expl_cmd_input_buf;
 static uint32_t expl_cmd_input_size;
 
+#define DISP_TITLE ("Output")
+
+#define CMD_TITLE ("Command")
+
 static void init_explorer()
 {
     intr_state is = fetch_and_disable_intr();
@@ -58,7 +67,6 @@ static void init_explorer()
 
     // explorer的pis标志永远是foreground，因为它必须相应如C+z这样的事件
     pcb->pis      = pis_foreground;
-    pcb->disp_buf = alloc_con_buf();
 
     cur_fg_proc   = NULL;
     expl_proc     = pcb;
@@ -72,8 +80,8 @@ static void init_explorer()
     
     cmd_char2(0, '_');
 
-    scr_disp_caption("Display");
-    scr_cmd_caption("Command");
+    scr_disp_caption(DISP_TITLE);
+    scr_cmd_caption(CMD_TITLE);
 
     // 注册键盘消息
     register_key_msg();
@@ -82,19 +90,50 @@ static void init_explorer()
     set_intr_state(is);
 }
 
-/* 提交并执行一条命令 */
+/* 把一个进程调到前台来，失败时（如进程不存在）返回false */
+static bool make_proc_foreground(uint32_t pid)
+{
+    intr_state is = fetch_and_disable_intr();
+
+    struct PCB *pcb = get_PCB_by_pid(pid);
+    if(!pcb)
+    {
+        set_intr_state(is);
+        return false;
+    }
+
+    ASSERT_S(expl_stat == es_fg && pcb->pis == pis_background);
+
+    expl_stat      = es_bg;
+    expl_proc->pis = pis_expl_foreground;
+    pcb->pis       = pis_foreground;
+    cur_fg_proc    = pcb;
+    copy_scr_to_con_buf(expl_proc);
+    copy_con_buf_to_scr(pcb);
+
+    set_intr_state(is);
+
+    return true;
+}
+
+/*
+    提交并执行一条命令
+    就是一条一条地暴力匹配命令，反正这个不重要，先用着吧……
+*/
 static bool explorer_submit_cmd()
 {
     bool ret = true;
 
     clr_cmd();
 
-    if(strcmp(expl_cmd_input_buf, "shutdown") == 0)
+    if(strcmp(expl_cmd_input_buf, "exit") == 0)
         ret = false;
     else if(strcmp(expl_cmd_input_buf, "procs") == 0)
         expl_show_procs();
     else if(strcmp(expl_cmd_input_buf, "clear") == 0)
         clr_disp();
+    else if(strcmp(expl_cmd_input_buf, "showproc") == 0) // 测试用命令
+        make_proc_foreground(12);
     else
     {
         clr_disp();
@@ -104,8 +143,8 @@ static bool explorer_submit_cmd()
     expl_cmd_input_buf[0] = '\0';
     expl_cmd_input_size   = 0;
 
-    scr_disp_caption("Display");
-    scr_cmd_caption("Command");
+    scr_disp_caption(DISP_TITLE);
+    scr_cmd_caption(CMD_TITLE);
 
     clr_cmd();
     cmd_char2(0, '_');
@@ -161,6 +200,7 @@ static void explorer_usr_interrupt()
     copy_con_buf_to_scr(expl_proc);
 
     expl_stat = es_fg;
+    expl_proc->pis = pis_foreground;
 
     set_intr_state(is);
 }
@@ -172,10 +212,14 @@ static void explorer_usr_exit()
 
     if(cur_fg_proc)
     {
+        // 预先把目标进程的pis设置成后台，这样杀死它就不会通知explorer导致重复copy显示数据什么的
+        cur_fg_proc->pis = pis_background;
+
         kill_process(cur_fg_proc);
-        cur_fg_proc = NULL;
+        cur_fg_proc    = NULL;
+        expl_stat      = es_fg;
+        expl_proc->pis = pis_foreground;
         copy_con_buf_to_scr(expl_proc);
-        expl_stat = es_fg;
     }
 
     set_intr_state(is);
@@ -226,6 +270,7 @@ static bool explorer_transfer()
                 if(key == 'Z' && is_key_pressed(VK_LCTRL))
                 {
                     explorer_usr_interrupt();
+                    clr_sysmsgs();
                     return true;
                 }
 
@@ -233,6 +278,7 @@ static bool explorer_transfer()
                 if(key == 'C' && is_key_pressed(VK_LCTRL))
                 {
                     explorer_usr_exit();
+                    clr_sysmsgs();
                     return true;
                 }
             }
@@ -264,7 +310,20 @@ void explorer()
         ;
 }
 
-void foreground_exit()
+void foreground_exit(struct PCB *pcb)
 {
-    // TODO
+    intr_state is = fetch_and_disable_intr();
+    
+    if(pcb != cur_fg_proc)
+    {
+        set_intr_state(is);
+        return;
+    }
+
+    cur_fg_proc    = NULL;
+    expl_stat      = es_fg;
+    expl_proc->pis = pis_foreground;
+    copy_con_buf_to_scr(expl_proc);
+
+    set_intr_state(is);
 }

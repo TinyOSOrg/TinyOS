@@ -135,9 +135,5 @@ void expl_show_procs()
     }
 
     free_ker_page(buf);
-    
-    // 走之前清空一下消息队列
-    struct sysmsg msg;
-    while(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg))
-        ;
+    clr_sysmsgs();
 }

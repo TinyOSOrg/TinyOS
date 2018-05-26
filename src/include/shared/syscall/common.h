@@ -12,8 +12,10 @@
 */
 #define SYSCALL_GET_PROCESS_ID 0
 
+/* 暂时让出CPU让别的线程执行，无参数无返回值 */
 #define SYSCALL_YIELD_CPU (SYSCALL_GET_PROCESS_ID + 1)
 
+/* 干掉自己所处的线程，无参数无返回值 */
 #define SYSCALL_EXIT_THREAD (SYSCALL_YIELD_CPU + 1)
 
 /*

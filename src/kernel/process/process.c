@@ -148,7 +148,7 @@ static struct PCB *alloc_PCB()
     init_spinlock(&ret->file_table_lock);
 
     ret->pis      = pis_background;
-    ret->disp_buf = NULL;
+    ret->disp_buf = alloc_con_buf();
 
     return ret;
 }
@@ -454,7 +454,7 @@ void release_process_resources(struct PCB *pcb)
     intr_state is = fetch_and_disable_intr();
 
     if(pcb->pis == pis_foreground)
-        foreground_exit();
+        foreground_exit(pcb);
 
     pid_to_pcb[pcb->pid] = NULL;
     erase_from_ilist(&pcb->processes_node);

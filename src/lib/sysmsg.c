@@ -22,3 +22,10 @@ void wait_for_sysmsg()
     syscall_param1(SYSCALL_SYSMSG_OPERATION,
                    SYSMSG_SYSCALL_FUNCTION_BLOCK_ONTO_SYSMSG);
 }
+
+void clr_sysmsgs()
+{
+    struct sysmsg msg;
+    while(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg))
+        ;
+}
