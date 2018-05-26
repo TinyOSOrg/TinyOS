@@ -16,6 +16,8 @@ uint32_t get_pid();
 
 void yield_cpu();
 
+void exit_thread();
+
 /* 屏幕输出相关 */
 
 void set_char_row_col(uint8_t row, uint8_t col, char ch);

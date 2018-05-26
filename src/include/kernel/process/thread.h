@@ -105,9 +105,8 @@ bool kill_thread(struct TCB *tcb);
 
 /*
     每个线程结束的时候自己调用
-    不然触发GP把自己干掉了，系统是不负责任的
 */
-void exit_thread();
+void kexit_thread();
 
 /*
     清理待释放的线程和进程资源

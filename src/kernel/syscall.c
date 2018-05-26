@@ -20,6 +20,8 @@ void init_syscall()
         (syscall_impl)&syscall_get_cur_PID_impl;
     syscall_func_table[SYSCALL_YIELD_CPU] =
         (syscall_impl)&syscall_yield_CPU_impl;
+    syscall_func_table[SYSCALL_EXIT_THREAD] =
+        (syscall_impl)&syscall_thread_exit_impl;
 
     // declared in kernel/console/console.h
 

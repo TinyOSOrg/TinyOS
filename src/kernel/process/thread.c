@@ -359,7 +359,7 @@ bool kill_thread(struct TCB *tcb)
     return true;
 }
 
-void exit_thread()
+void kexit_thread()
 {
     kill_thread(cur_running_TCB);
 }

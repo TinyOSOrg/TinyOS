@@ -1,8 +1,9 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
 #include <kernel/boot.h>
-
 #include <kernel/memory/phy_mem_man.h>
+
+#include <shared/utility.h>
 
 /*
     物理页管理：
@@ -66,11 +67,6 @@ void *alloc_static_kernel_mem(size_t bytes, size_t align_bytes)
     void *rt = static_kernel_mem_top;
     static_kernel_mem_top = (char*)static_kernel_mem_top + bytes;
     return rt;
-}
-
-static inline size_t ceil_int_div(size_t a, size_t b)
-{
-    return (a / b) + (a % b ? 1 : 0);
 }
 
 static inline void set_bitmap32(uint32_t *bms, size_t bm_count)

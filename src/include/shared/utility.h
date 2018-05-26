@@ -26,4 +26,9 @@
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof(A[0]))
 
+static inline uint32_t ceil_int_div(uint32_t a, uint32_t b)
+{
+    return (a / b) + ((a % b) ? 1u : 0u);
+}
+
 #endif /* TINY_OS_SHARED_UTILITY_H */

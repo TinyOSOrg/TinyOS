@@ -11,3 +11,8 @@ void yield_cpu()
 {
     syscall_param0(SYSCALL_YIELD_CPU);
 }
+
+void exit_thread()
+{
+    syscall_param0(SYSCALL_EXIT_THREAD);
+}

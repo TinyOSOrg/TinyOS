@@ -1,5 +1,8 @@
 #include <kernel/assert.h>
+#include <kernel/console/console.h>
 #include <kernel/explorer/screen.h>
+#include <kernel/interrupt.h>
+#include <kernel/process/process.h>
 
 #include <shared/screen.h>
 #include <shared/string.h>
@@ -73,12 +76,12 @@ void clr_scr()
 
 void scr_disp_caption(const char *title)
 {
-    caption(2, 0, title);
+    caption(1, 0, title);
 }
 
 void scr_cmd_caption(const char *title)
 {
-    caption(2, 1 + SCR_DISP_HEIGHT, title);
+    caption(1, 1 + SCR_DISP_HEIGHT, title);
 }
 
 void clr_disp()
@@ -139,4 +142,53 @@ void cmd_attrib2(uint16_t pos, uint8_t attrib)
     set_char_attrib_row_col(pos / SCR_CMD_WIDTH + CMD_Y_BASE,
                             pos % SCR_CMD_WIDTH + CMD_X_BASE,
                             attrib);
+}
+
+void disp_show_str(uint8_t x, uint8_t y, const char *str)
+{
+    uint32_t idx = 0;
+    while(x < SCR_CMD_WIDTH && str[idx])
+        disp_char(x++, y, str[idx++]);
+}
+
+void copy_scr_to_con_buf(struct PCB *pcb)
+{
+    intr_state is = fetch_and_disable_intr();
+
+    struct con_buf *disp = pcb->disp_buf;
+
+    if(disp)
+    {
+        semaphore_wait(&get_sys_con_buf()->lock);
+        semaphore_wait(&disp->lock);
+        
+        memcpy(disp->data, get_sys_con_buf()->data, CON_BUF_BYTE_SIZE);
+        disp->cursor = get_sys_con_buf()->cursor;
+        
+        semaphore_signal(&disp->lock);
+        semaphore_signal(&get_sys_con_buf()->lock);
+    }
+
+    set_intr_state(is);
+}
+
+void copy_con_buf_to_scr(struct PCB *pcb)
+{
+    intr_state is = fetch_and_disable_intr();
+
+    struct con_buf *disp = pcb->disp_buf;
+
+    if(disp)
+    {
+        semaphore_wait(&get_sys_con_buf()->lock);
+        semaphore_wait(&disp->lock);
+        
+        memcpy(get_sys_con_buf()->data, disp->data, CON_BUF_BYTE_SIZE);
+        get_sys_con_buf()->cursor = disp->cursor;
+        
+        semaphore_signal(&disp->lock);
+        semaphore_signal(&get_sys_con_buf()->lock);
+    }
+
+    set_intr_state(is);
 }

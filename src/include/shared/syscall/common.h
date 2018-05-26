@@ -2,7 +2,7 @@
 #define TINY_OS_SHARED_SYSCALL_COMMON_H
 
 /* 系统调用入口数量 */
-#define SYSCALL_COUNT 14
+#define SYSCALL_COUNT 15
 
 /* 一个合法的系统调用应返回void或uint32_t，有0~3个uint32_t大小的参数 */
 
@@ -14,12 +14,14 @@
 
 #define SYSCALL_YIELD_CPU (SYSCALL_GET_PROCESS_ID + 1)
 
+#define SYSCALL_EXIT_THREAD (SYSCALL_YIELD_CPU + 1)
+
 /*
     控制台操作
     func和arg含义见 kernel/console/console.h
     uint32_t impl(uint32_t func, uint32_t arg);
 */
-#define SYSCALL_CONSOLE_OPERATION (SYSCALL_YIELD_CPU + 1)
+#define SYSCALL_CONSOLE_OPERATION (SYSCALL_EXIT_THREAD + 1)
 
 /*
     系统消息队列操作

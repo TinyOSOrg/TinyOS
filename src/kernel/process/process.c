@@ -500,3 +500,9 @@ uint32_t syscall_yield_CPU_impl()
     yield_CPU();
     return 0;
 }
+
+uint32_t syscall_thread_exit_impl()
+{
+    kexit_thread();
+    return 0;
+}

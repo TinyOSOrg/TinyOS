@@ -1,6 +1,7 @@
 #include <kernel/assert.h>
 #include <kernel/console/console.h>
 #include <kernel/explorer/explorer.h>
+#include <kernel/explorer/procs.h>
 #include <kernel/explorer/screen.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/filesys/import/import.h>
@@ -39,50 +40,6 @@ static enum explorer_state expl_stat;
 /* explorer命令输入缓冲 */
 static char *expl_cmd_input_buf;
 static uint32_t expl_cmd_input_size;
-
-/* 将屏幕内容拷贝到一个进程的显示缓冲区 */
-void copy_scr_to_con_buf(struct PCB *pcb)
-{
-    intr_state is = fetch_and_disable_intr();
-
-    struct con_buf *disp = pcb->disp_buf;
-
-    if(disp)
-    {
-        semaphore_wait(&get_sys_con_buf()->lock);
-        semaphore_wait(&disp->lock);
-        
-        memcpy(disp->data, get_sys_con_buf()->data, CON_BUF_BYTE_SIZE);
-        disp->cursor = get_sys_con_buf()->cursor;
-        
-        semaphore_signal(&disp->lock);
-        semaphore_signal(&get_sys_con_buf()->lock);
-    }
-
-    set_intr_state(is);
-}
-
-/* 将一个进程后台缓冲区的内容拷贝到屏幕 */
-void copy_con_buf_to_scr(struct PCB *pcb)
-{
-    intr_state is = fetch_and_disable_intr();
-
-    struct con_buf *disp = pcb->disp_buf;
-
-    if(disp)
-    {
-        semaphore_wait(&get_sys_con_buf()->lock);
-        semaphore_wait(&disp->lock);
-        
-        memcpy(get_sys_con_buf()->data, disp->data, CON_BUF_BYTE_SIZE);
-        get_sys_con_buf()->cursor = disp->cursor;
-        
-        semaphore_signal(&disp->lock);
-        semaphore_signal(&get_sys_con_buf()->lock);
-    }
-
-    set_intr_state(is);
-}
 
 static void init_explorer()
 {
@@ -125,37 +82,33 @@ static void init_explorer()
     set_intr_state(is);
 }
 
-/* 输出进程列表 */
-static void show_procs()
-{
-    scr_disp_caption("Processes");
-    scr_cmd_caption("[Q] Quit [N] Next Page [B] Last Page");
-    
-
-
-    struct sysmsg msg;
-    while(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg))
-        ;
-}
-
 /* 提交并执行一条命令 */
 static bool explorer_submit_cmd()
 {
     bool ret = true;
 
     clr_cmd();
-    cmd_char2(0, '_');
 
     if(strcmp(expl_cmd_input_buf, "shutdown") == 0)
         ret = false;
     else if(strcmp(expl_cmd_input_buf, "procs") == 0)
+        expl_show_procs();
+    else if(strcmp(expl_cmd_input_buf, "clear") == 0)
+        clr_disp();
+    else
     {
-        show_procs();
-        scr_cmd_caption("Command");
+        clr_disp();
+        disp_show_str(0, 0, "Unknown command, enter 'help' for help");
     }
 
     expl_cmd_input_buf[0] = '\0';
     expl_cmd_input_size   = 0;
+
+    scr_disp_caption("Display");
+    scr_cmd_caption("Command");
+
+    clr_cmd();
+    cmd_char2(0, '_');
 
     return ret;
 }
@@ -298,6 +251,9 @@ void explorer()
     reformat_dp(0, DISK_PT_AFS);
 
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
+
+    for(int i = 0; i < 24; ++i)
+        exec_elf("test proc", 0, "/minecraft.txt", false, 0, NULL);
 
     while(explorer_transfer())
         ;

@@ -172,4 +172,6 @@ uint32_t syscall_get_cur_PID_impl();
 
 uint32_t syscall_yield_CPU_impl();
 
+uint32_t syscall_thread_exit_impl();
+
 #endif /* TINY_OS_PROCESS_H */
