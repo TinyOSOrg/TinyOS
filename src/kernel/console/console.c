@@ -12,7 +12,7 @@ static struct con_buf *get_cur_proc_con_buf()
 {
     struct PCB *pcb = get_cur_PCB();
     if(pcb->disp_buf)
-        return pcb->pis == pis_foreground ? get_sys_con_buf() : pcb->disp_buf;
+        return (pcb->pis & PIS_DISP) ? get_sys_con_buf() : pcb->disp_buf;
     return NULL;
 }
 

@@ -4,13 +4,7 @@
 #include <kernel/process/semaphore.h>
 
 #include <shared/intdef.h>
-
-#define CON_BUF_BYTE_SIZE (80 * 25 * 2)
-
-#define CON_BUF_CHAR_COUNT (80 * 25)
-
-#define CON_BUF_ROW_SIZE 80
-#define CON_BUF_COL_SIZE 25
+#include <shared/screen.h>
 
 struct con_buf
 {

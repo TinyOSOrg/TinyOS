@@ -12,35 +12,11 @@
 #include <lib/proc.h>
 #include <lib/sysmsg.h>
 
-/*void PL0_thread()
-{
-    get_cur_PCB()->disp_buf = alloc_con_buf();
-    get_cur_PCB()->pis      = pis_foreground;
-    
-    printf("Keyboard process, pid = %u\n", get_pid());
-    register_char_msg();
-
-    while(true)
-    {
-        wait_for_sysmsg();
-        struct sysmsg msg;
-        while(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE,
-                          &msg))
-        {
-            if(msg.type == SYSMSG_TYPE_CHAR)
-                put_char(((struct kbchar_msg_struct*)&msg)->ch);
-        }
-    }
-    exit_thread();
-}*/
-
 int main()
 {
     init_kernel();
 
     create_process("explorer", explorer, true);
-
-    // create_process("another process", PL0_thread, true);
 
     _enable_intr();
 

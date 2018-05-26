@@ -5,4 +5,6 @@
 
 uint32_t get_pid();
 
+void yield_cpu();
+
 #endif /* TINY_OS_LIB_PROC_H */

@@ -133,7 +133,7 @@ static void set_key_pressed(uint8_t vk, bool pressed)
 */
 static bool kb_masker(const struct PCB *pcb)
 {
-    return pcb->pis == pis_foreground && pcb->disp_buf;
+    return (pcb->pis & PIS_SYSMSG);
 }
 
 /* 键盘中断处理 */

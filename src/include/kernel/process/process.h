@@ -54,11 +54,15 @@
 /* 进程名字最大长度 */
 #define PROCESS_NAME_MAX_LENGTH 31
 
+#define PIS_SYSMSG 0b01
+#define PIS_DISP   0b10
+
 /* 进程前后台状态，影响进程IO方式 */
 enum process_interfacing_state
 {
-    pis_foreground,
-    pis_background
+    pis_foreground      = (PIS_SYSMSG | PIS_DISP),
+    pis_background      = 0,
+    pis_expl_foreground = PIS_SYSMSG
 };
 
 /* process control block */
@@ -144,6 +148,9 @@ struct PCB *get_cur_PCB();
 /* 获得进程链表，注意bootloader进程不在这里面 */
 ilist *get_all_processes();
 
+/* 由pid获取PCB */
+struct PCB *get_PCB_by_pid(uint32_t pid);
+
 /*=====================================================================
     下面的东西是给thread.c用的
 =====================================================================*/
@@ -162,5 +169,7 @@ void release_PCB(struct PCB *pcb);
 =====================================================================*/
 
 uint32_t syscall_get_cur_PID_impl();
+
+uint32_t syscall_yield_CPU_impl();
 
 #endif /* TINY_OS_PROCESS_H */

@@ -387,11 +387,6 @@ void add_proc_thread(process_exec_func func)
     set_intr_state(is);
 }
 
-uint32_t syscall_get_cur_PID_impl()
-{
-    return get_cur_TCB()->pcb->pid;
-}
-
 void kill_process(struct PCB *pcb)
 {
     intr_state intr_s = fetch_and_disable_intr();
@@ -442,6 +437,13 @@ ilist *get_all_processes()
     return &processes;
 }
 
+struct PCB *get_PCB_by_pid(uint32_t pid)
+{
+    if(pid >= MAX_PROCESS_COUNT)
+        return NULL;
+    return pid_to_pcb[pid];
+}
+
 void _set_tss_esp0(uint32_t esp0)
 {
     tss.esp0 = esp0;
@@ -486,4 +488,15 @@ void release_PCB(struct PCB *pcb)
 {
     destroy_vir_addr_space(pcb->addr_space);
     add_freelist(&PCB_freelist, pcb);
+}
+
+uint32_t syscall_get_cur_PID_impl()
+{
+    return get_cur_TCB()->pcb->pid;
+}
+
+uint32_t syscall_yield_CPU_impl()
+{
+    yield_CPU();
+    return 0;
 }
