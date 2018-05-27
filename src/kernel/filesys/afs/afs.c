@@ -293,6 +293,7 @@ struct afs_file_desc *afs_open_dir_file_for_reading_by_path(
     }
 
     uint32_t dir_entry_idx = head->root_dir_entry;
+    bool done = false;
 
     while(true)
     {
@@ -309,8 +310,7 @@ struct afs_file_desc *afs_open_dir_file_for_reading_by_path(
             return NULL;
         }
 
-        // 路径正好没了，完美
-        if(name_beg[name_len] == '\0')
+        if(done)
         {
             SET_RT(afs_file_opr_success);
             return dir;
@@ -324,11 +324,9 @@ struct afs_file_desc *afs_open_dir_file_for_reading_by_path(
         if(!found)
             return NULL;
 
+        // 路径正好没了，说明当前name就是最终要打开的文件
         if(!(name_beg = path_next(name_beg, &name_len)))
-        {
-            SET_RT(afs_file_opr_not_found);
-            return NULL;
-        }
+            done = true;
 
         dir_entry_idx = next_entry;
     }
@@ -870,7 +868,6 @@ uint32_t afs_get_file_byte_size(struct afs_file_desc *file)
     return afs_extract_file_entry(file)->byte_size;
 }
 
-#include <lib/sys.h>
 enum afs_file_operation_status afs_get_dir_unit(struct afs_dp_head *head,
                                                 struct afs_file_desc *dir,
                                                 uint32_t idx,

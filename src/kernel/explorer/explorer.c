@@ -33,7 +33,7 @@
 #define WORKING_DIR_BUF_SIZE 256
 
 /* explorer初始工作目录 */
-#define INIT_WORKING_DIR ("/d0")
+#define INIT_WORKING_DIR ("/")
 
 /* explorer应有的PID */
 #define EXPL_PID 1
@@ -439,11 +439,9 @@ void explorer()
 
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
 
-    //make_directory(0, "/d0");
-
-    /*for(int i = 0; i < 1; ++i)
+    /*for(int i = 0; i < 10; ++i)
     {
-        char name[30] = "t"; char idx_buf[20];
+        char name[30] = "tt "; char idx_buf[20];
         uint32_to_str(i, idx_buf);
         strcat(name, idx_buf);
         exec_elf(name, 0, "/minecraft.txt", false, 0, NULL);

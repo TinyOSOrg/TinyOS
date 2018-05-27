@@ -121,7 +121,7 @@ uint32_t kget_child_file_count(filesys_dp_handle dp, const char *path,
                 SET_RT(trans_afs_file_result(trt));
                 return 0;
             }
-
+            
             uint32_t ret;
             if(!afs_read_binary(dp_head, dir, 0, 4, &ret, &trt))
                 ret = 0;
