@@ -13,7 +13,10 @@
 #include <kernel/sysmsg/sysmsg_syscall.h>
 
 void init_kernel()
-{    
+{
+    /* 时钟中断频率 */
+    set_8253_freq(100);
+
     /* 中断系统 */
     init_IDT();
 
@@ -44,9 +47,6 @@ void init_kernel()
     /* 内核消息系统调用 */
     init_sysmsg_syscall();
 
-    /* 时钟中断频率 */
-    set_8253_freq(20);
-
     /* 键盘驱动 */
     init_kb_driver();
 
@@ -58,6 +58,8 @@ void init_kernel()
 
     /* 磁盘分区 */
     init_dpt();
+
+    _enable_intr();
 }
 
 void destroy_kernel()

@@ -17,8 +17,6 @@ int main()
 
     create_process("explorer", explorer, true);
 
-    _enable_intr();
-
     while(1)
     {
         do_releasing_thds_procs();

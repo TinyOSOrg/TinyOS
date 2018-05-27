@@ -108,10 +108,10 @@ void set_intr_function(uint8_t intr_number, void (*func)())
 
 void set_8253_freq(uint16_t freq)
 {
-    uint16_t value = 1193180 / freq;
+    uint32_t value = ((1193182u + (freq / 2)) / freq) & 0xffff;
 
-    _out_byte_to_port(0x43, (3 << 4) | (2 << 1));
-    _out_byte_to_port(0x40, (uint8_t)value);
+    _out_byte_to_port(0x43, 0x04 | 0x30);
+    _out_byte_to_port(0x40, (uint8_t)(value & 0x00ff));
     _out_byte_to_port(0x40, (uint8_t)(value >> 8));
 }
 
