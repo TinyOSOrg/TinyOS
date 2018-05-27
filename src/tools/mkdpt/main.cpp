@@ -38,7 +38,7 @@ int main(int argc, const char *argv[])
     dpts[0].type         = DISK_PT_NOFS;
     dpts[0].sector_begin = DPT_SECTOR_POSITION + 1;
     dpts[0].sector_end   = (DISK_IMPORT_DP_BEGIN - 1);
-    strcpy(dpts[0].name, "init-pt-0");
+    strcpy(dpts[0].name, "sys");
 
 #define LAST_DPT_IDX (DPT_UNIT_COUNT - 1)
     // 最后一个分区用作import分区

@@ -447,6 +447,10 @@ void explorer()
         exec_elf(name, 0, "/minecraft.txt", false, 0, NULL);
     }*/
 
+    make_directory(0, "/d0");
+    make_directory(0, "/d1");
+    make_directory(0, "/d0/d00");
+
     while(explorer_transfer())
         ;
 
