@@ -77,3 +77,13 @@ enum filesys_opr_result read_file(usr_file_handle file,
     };
     return syscall_param1(SYSCALL_FILESYS_READ, &args);
 }
+
+enum filesys_opr_result get_child_file_count(filesys_dp_handle dp,
+                                             const char *path,
+                                             uint32_t *_rt)
+{
+    enum filesys_opr_result ret; uint32_t rt;
+    ret = syscall_param3(SYSCALL_FILESYS_GET_CHILD_COUNT, dp, path, &rt);
+    if(_rt) *_rt = rt;
+    return ret;
+}

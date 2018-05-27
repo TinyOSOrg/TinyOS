@@ -103,6 +103,44 @@ file_handle kopen_regular_writing(filesys_dp_handle dp, const char *path,
     return filesys_opr_others;
 }
 
+uint32_t kget_child_file_count(filesys_dp_handle dp, const char *path,
+                               enum filesys_opr_result *rt)
+{
+    struct dpt_unit *u = get_dpt_unit(dp);
+    switch(u->type)
+    {
+    case DISK_PT_AFS:
+        {
+            enum afs_file_operation_status trt;
+            struct afs_dp_head *dp_head = (struct afs_dp_head*)get_dp_fs_handler(dp);
+            struct afs_file_desc *dir = afs_open_dir_file_for_reading_by_path(
+                                            dp_head, path, &trt);
+            if(!dir)
+            {
+                SET_RT(trans_afs_file_result(trt));
+                return 0;
+            }
+
+            uint32_t ret;
+            if(!afs_read_binary(dp_head, dir, 0, 4, &ret, &trt))
+                ret = 0;
+
+            afs_close_file(dp_head, dir);
+            SET_RT(filesys_opr_success);
+            return ret;
+        }
+    
+    default:
+        {
+            SET_RT(filesys_opr_invalid_dp);
+            return 0;
+        }
+    }
+
+    SET_RT(filesys_opr_others);
+    return 0;
+}
+
 enum filesys_opr_result kclose_file(filesys_dp_handle dp, file_handle file_handle)
 {
     struct dpt_unit *u = get_dpt_unit(dp);

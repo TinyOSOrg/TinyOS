@@ -16,6 +16,10 @@ file_handle kopen_regular_reading(filesys_dp_handle dp, const char *path,
 file_handle kopen_regular_writing(filesys_dp_handle dp, const char *path,
                                  enum filesys_opr_result *rt);
 
+/* 获知一个目录下有多少文件 */
+uint32_t kget_child_file_count(filesys_dp_handle dp, const char *path,
+                               enum filesys_opr_result *rt);
+
 /* 关闭一个文件 */
 enum filesys_opr_result kclose_file(filesys_dp_handle dp, file_handle file);
 

@@ -68,6 +68,10 @@ enum filesys_opr_result read_file(usr_file_handle file,
                                   uint32_t fpos, uint32_t byte_size,
                                   void *data);
 
+enum filesys_opr_result get_child_file_count(filesys_dp_handle dp,
+                                             const char *path,
+                                             uint32_t *rt);
+
 /* 键盘状态与消息相关 */
 
 /* 某个给定的按键是否处于按压状态 */

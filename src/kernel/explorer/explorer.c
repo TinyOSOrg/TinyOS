@@ -62,6 +62,7 @@ static char *expl_cmd_input_buf;
 static uint32_t expl_cmd_input_size;
 
 /* explorer工作路径buffer */
+static filesys_dp_handle expl_working_dp;
 static char *expl_working_dir;
 static uint32_t expl_working_dir_len;
 
@@ -94,6 +95,7 @@ static void init_explorer()
     expl_cmd_input_size    = 0;
 
     // 初始化工作目录缓冲区
+    expl_working_dp  = 0;
     expl_working_dir =
         (char*)alloc_static_kernel_mem(WORKING_DIR_BUF_SIZE, 1);
     strcpy(expl_working_dir, INIT_WORKING_DIR);
@@ -217,8 +219,16 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
             goto INVALID_ARGUMENT;
 
         disp_new_line();
-        disp_printf("Current working directory: %s",
-                    expl_working_dir);
+        disp_printf("Current working directory: %u:%s",
+                    expl_working_dp, expl_working_dir);
+    }
+    else if(strcmp(cmd, "ls") == 0)
+    {
+        if(arg_cnt)
+            goto INVALID_ARGUMENT;
+        
+        disp_new_line();
+        expl_ls(expl_working_dp, expl_working_dir);
     }
     else if(strcmp(cmd, "fg") == 0)
     {

@@ -2,7 +2,7 @@
 #define TINY_OS_SHARED_SYSCALL_COMMON_H
 
 /* 系统调用入口数量 */
-#define SYSCALL_COUNT 15
+#define SYSCALL_COUNT 16
 
 /* 一个合法的系统调用应返回void或uint32_t，有0~3个uint32_t大小的参数 */
 
@@ -54,6 +54,8 @@
 
 #define SYSCALL_FILESYS_READ  (SYSCALL_FILESYS_GET_SIZE + 1)
 #define SYSCALL_FILESYS_WRITE (SYSCALL_FILESYS_READ + 1)
+
+#define SYSCALL_FILESYS_GET_CHILD_COUNT (SYSCALL_FILESYS_WRITE + 1)
 
 #define syscall_param0(N) \
     ({ uint32_t r; \

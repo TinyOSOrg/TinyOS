@@ -278,6 +278,10 @@ struct afs_file_desc *afs_open_dir_file_for_reading_by_path(
                             const char *path,
                             enum afs_file_operation_status *rt)
 {
+    // 就是单纯的根目录
+    if(path[0] == '/' && !path[1])
+        return afs_open_file_for_reading(head, head->root_dir_entry, rt);
+
     // 取出第一截文件名
     uint32_t name_len;
     const char *name_beg = path_begin(path, &name_len);

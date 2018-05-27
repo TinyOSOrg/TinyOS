@@ -33,4 +33,8 @@ enum filesys_opr_result syscall_filesys_write_impl(
 enum filesys_opr_result syscall_filesys_read_impl(
         struct syscall_filesys_read_params *params);
 
+enum filesys_opr_result syscall_filesys_get_file_count(
+            filesys_dp_handle dp, const char *path,
+            uint32_t *rt);
+
 #endif /* TINY_OS_FILESYS_SYSCALL_H */
