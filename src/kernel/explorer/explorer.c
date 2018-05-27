@@ -33,7 +33,7 @@
 #define WORKING_DIR_BUF_SIZE 256
 
 /* explorer初始工作目录 */
-#define INIT_WORKING_DIR ("/")
+#define INIT_WORKING_DIR ("/d0")
 
 /* explorer应有的PID */
 #define EXPL_PID 1
@@ -190,20 +190,14 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     const char **args  = &strs[1];
     uint32_t arg_cnt   = str_cnt - 1;
 
-    if(strcmp(cmd, "exit") == 0)
+    if(strcmp(cmd, "cd") == 0)
     {
-        if(arg_cnt)
+        if(arg_cnt != 1)
             goto INVALID_ARGUMENT;
-
-        return false;
-    }
-    else if(strcmp(cmd, "ps") == 0)
-    {
-        if(arg_cnt)
-            goto INVALID_ARGUMENT;
-
+        
         disp_new_line();
-        expl_show_procs();
+        expl_cd(&expl_working_dp, expl_working_dir, &expl_working_dir_len,
+                WORKING_DIR_BUF_SIZE - 1, args[0]);
     }
     else if(strcmp(cmd, "clear") == 0)
     {
@@ -213,22 +207,12 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
         clr_disp();
         disp_set_cursor(0, 0);
     }
-    else if(strcmp(cmd, "pwd") == 0)
+    else if(strcmp(cmd, "exit") == 0)
     {
         if(arg_cnt)
             goto INVALID_ARGUMENT;
 
-        disp_new_line();
-        disp_printf("Current working directory: %u:%s",
-                    expl_working_dp, expl_working_dir);
-    }
-    else if(strcmp(cmd, "ls") == 0)
-    {
-        if(arg_cnt)
-            goto INVALID_ARGUMENT;
-        
-        disp_new_line();
-        expl_ls(expl_working_dp, expl_working_dir);
+        return false;
     }
     else if(strcmp(cmd, "fg") == 0)
     {
@@ -242,10 +226,35 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
             disp_printf("Invalid pid");
         }
     }
+    else if(strcmp(cmd, "ls") == 0)
+    {
+        if(arg_cnt)
+            goto INVALID_ARGUMENT;
+        
+        disp_new_line();
+        expl_ls(expl_working_dp, expl_working_dir);
+    }
+    else if(strcmp(cmd, "ps") == 0)
+    {
+        if(arg_cnt)
+            goto INVALID_ARGUMENT;
+
+        disp_new_line();
+        expl_show_procs();
+    }
+    else if(strcmp(cmd, "pwd") == 0)
+    {
+        if(arg_cnt)
+            goto INVALID_ARGUMENT;
+
+        disp_new_line();
+        disp_printf("Current working directory: %u:%s",
+                    expl_working_dp, expl_working_dir);
+    }
     else
     {
         disp_new_line();
-        disp_printf("Unknown command");
+        disp_printf("Invalid command");
     }
 
     return true;
@@ -430,8 +439,15 @@ void explorer()
 
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
 
-    for(int i = 0; i < 10; ++i)
-        exec_elf("test proc", 0, "/minecraft.txt", false, 0, NULL);
+    //make_directory(0, "/d0");
+
+    /*for(int i = 0; i < 1; ++i)
+    {
+        char name[30] = "t"; char idx_buf[20];
+        uint32_to_str(i, idx_buf);
+        strcat(name, idx_buf);
+        exec_elf(name, 0, "/minecraft.txt", false, 0, NULL);
+    }*/
 
     while(explorer_transfer())
         ;

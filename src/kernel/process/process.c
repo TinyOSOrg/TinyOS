@@ -176,11 +176,8 @@ static struct PCB *create_empty_process_with_addr_space(
     init_sysmsg_queue(&pcb->sys_msgs);
     init_sysmsg_sources_list(&pcb->sys_msg_srcs);
 
-    // 名字复制，超出长度限制的部分都丢掉
-    size_t i_name = 0;
-    for(;i_name != PROCESS_NAME_MAX_LENGTH && name[i_name]; ++i_name)
-        pcb->name[i_name] = name[i_name];
-    pcb->name[i_name] = '\0';
+    // 名字复制
+    strcpy_s(pcb->name, name, PROCESS_NAME_MAX_LENGTH + 1);
 
     push_back_ilist(&processes, &pcb->processes_node);
     

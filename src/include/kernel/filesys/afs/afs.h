@@ -6,6 +6,7 @@
 
 #include <shared/bool.h>
 #include <shared/intdef.h>
+#include <shared/syscall/filesys.h>
 
 struct afs_dp_head;
 struct afs_file_desc;
@@ -25,7 +26,7 @@ void init_afs();
 void destroy_afs();
 
 /* 单个文件名最大长度 */
-#define AFS_FILE_NAME_MAX_LENGTH 63
+#define AFS_FILE_NAME_MAX_LENGTH FILE_NAME_MAX_LEN
 
 /*
     以下函数均为线程安全，遇到互斥时会操作失败
@@ -86,5 +87,10 @@ void afs_expand_regular_file(struct afs_dp_head *head,
                              struct afs_file_desc *file,
                              uint32_t new_size,
                              enum afs_file_operation_status *rt);
+
+enum afs_file_operation_status afs_get_dir_unit(struct afs_dp_head *head,
+                                                struct afs_file_desc *dir,
+                                                uint32_t idx,
+                                                struct syscall_filesys_file_info *info);
 
 #endif /* TINY_OS_FILESYS_AFS_AFS_H */

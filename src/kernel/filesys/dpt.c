@@ -77,6 +77,16 @@ uint32_t get_dp_fs_handler(size_t idx)
     return dp_fs_handles[idx];
 }
 
+filesys_dp_handle get_dp_handle_by_name(const char *name)
+{
+    for(filesys_dp_handle ret = 0; ret < DPT_UNIT_COUNT; ++ret)
+    {
+        if(strcmp(get_dpt_unit(ret)->name, name) == 0)
+            return ret;
+    }
+    return DPT_UNIT_COUNT;
+}
+
 void restore_dpt()
 {
     disk_write(DPT_SECTOR_POSITION, 1, dpts);

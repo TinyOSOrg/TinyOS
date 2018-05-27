@@ -66,6 +66,8 @@ void *alloc_static_kernel_mem(size_t bytes, size_t align_bytes)
     static_kernel_mem_top += (size_t)static_kernel_mem_top % align_bytes;
     void *rt = static_kernel_mem_top;
     static_kernel_mem_top = (char*)static_kernel_mem_top + bytes;
+    ASSERT_S((uint32_t)static_kernel_mem_top < STATIC_KERNEL_MEM_START
+                                             + STATIC_KERNEL_MEM_SIZE);
     return rt;
 }
 

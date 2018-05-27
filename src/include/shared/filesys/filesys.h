@@ -24,6 +24,8 @@ enum filesys_opr_result
     filesys_opr_others,            // 其他错误
 };
 
+#define FILE_NAME_MAX_LEN 63
+
 typedef uint32_t file_handle;
 
 typedef uint32_t filesys_dp_handle;

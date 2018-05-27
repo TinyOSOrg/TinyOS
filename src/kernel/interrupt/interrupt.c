@@ -1,6 +1,7 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
 #include <kernel/interrupt.h>
+#include <kernel/process/process.h>
 #include <kernel/seg_desc.h>
 
 #include <shared/string.h>
@@ -44,7 +45,13 @@ void default_intr_function(uint32_t intr_number)
 {
     if(intr_number == 0x27 || intr_number == 0x2f)
         return;
-    FATAL_ERROR("unprocessed intr");
+    char buf[40] = "unprocessed intr: ";
+    char int_buf[30];
+    uint32_to_str(intr_number, int_buf);
+    strcat(buf, int_buf);
+    strcat(buf, " from process ");
+    strcat(buf, get_cur_PCB()->name);
+    FATAL_ERROR(buf);
 }
 
 /* 初始化8259A */

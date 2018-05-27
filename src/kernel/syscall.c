@@ -60,4 +60,6 @@ void init_syscall()
         (syscall_impl)&syscall_filesys_read_impl;
     syscall_func_table[SYSCALL_FILESYS_GET_CHILD_COUNT] =
         (syscall_impl)&syscall_filesys_get_file_count;
+    syscall_func_table[SYSCALL_FILESYS_GET_CHILD_INFO] =
+        (syscall_impl)&syscall_filesys_get_child_info;
 }

@@ -75,14 +75,18 @@ void expl_show_procs()
     scr_disp_caption("Processe List");
     scr_cmd_caption("[Q] Quit [N] Next Page [B] Last Page");
 
-    clr_disp(); clr_cmd();
-
     // 取得所有进程信息
     struct proc_info *buf = (struct proc_info*)alloc_ker_page(false);
     if(!buf)
         return;
     uint32_t cnt;
     get_procs_info(buf, &cnt);
+
+    if(!cnt)
+    {
+        disp_printf("No active process");
+        return;
+    }
 
     uint32_t max_page_idx = ceil_int_div(cnt, PROCS_PER_PAGE) - 1;
     uint32_t page_idx     = 0;

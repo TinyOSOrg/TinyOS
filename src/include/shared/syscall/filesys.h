@@ -30,4 +30,18 @@ struct syscall_filesys_write_params
     const void *data_src;
 };
 
+struct syscall_filesys_get_child_info_params
+{
+    filesys_dp_handle dp;
+    const char *path;
+    uint32_t idx;
+    struct syscall_filesys_file_info *info;
+};
+
+struct syscall_filesys_file_info
+{
+    bool is_dir;
+    char name[FILE_NAME_MAX_LEN + 1];
+};
+
 #endif /* TINY_OS_SHARED_SYSCALL_FILESYS_H */

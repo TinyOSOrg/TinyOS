@@ -87,3 +87,18 @@ enum filesys_opr_result get_child_file_count(filesys_dp_handle dp,
     if(_rt) *_rt = rt;
     return ret;
 }
+
+enum filesys_opr_result get_child_file_info(filesys_dp_handle dp,
+                                            const char *path,
+                                            uint32_t idx,
+                                            struct syscall_filesys_file_info *rt)
+{
+    struct syscall_filesys_get_child_info_params args =
+    {
+        .dp   = dp,
+        .path = path,
+        .idx  = idx,
+        .info = rt
+    };
+    return syscall_param1(SYSCALL_FILESYS_GET_CHILD_INFO, &args);
+}

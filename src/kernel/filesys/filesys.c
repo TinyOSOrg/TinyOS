@@ -6,6 +6,7 @@
 #include <kernel/filesys/afs/file.h>
 #include <kernel/filesys/afs/file_type.h>
 
+#include <shared/syscall/filesys.h>
 #include <shared/utility.h>
 
 void init_filesys()
@@ -139,6 +140,36 @@ uint32_t kget_child_file_count(filesys_dp_handle dp, const char *path,
 
     SET_RT(filesys_opr_others);
     return 0;
+}
+
+enum filesys_opr_result kget_child_file_info(filesys_dp_handle dp, const char *path, uint32_t idx,
+                                             struct syscall_filesys_file_info *info)
+{
+    struct dpt_unit *u = get_dpt_unit(dp);
+    switch(u->type)
+    {
+    case DISK_PT_AFS:
+        {
+            enum afs_file_operation_status trt;
+            struct afs_dp_head *dp_head = (struct afs_dp_head*)get_dp_fs_handler(dp);
+            struct afs_file_desc *dir = afs_open_dir_file_for_reading_by_path(
+                                            dp_head, path, &trt);
+            if(!dir)
+                return trans_afs_file_result(trt);
+
+            trt = afs_get_dir_unit(dp_head, dir, idx, info);
+
+            afs_close_file(dp_head, dir);
+            return trans_afs_file_result(trt);
+        }
+    
+    default:
+        {
+            return filesys_opr_invalid_dp;
+        }
+    }
+
+    return filesys_opr_others;
 }
 
 enum filesys_opr_result kclose_file(filesys_dp_handle dp, file_handle file_handle)

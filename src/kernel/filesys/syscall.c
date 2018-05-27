@@ -261,13 +261,28 @@ enum filesys_opr_result syscall_filesys_get_file_count(
             uint32_t *rt)
 {
     thread_syscall_protector_entry();
-
     enum filesys_opr_result ret;
+
     intr_state is = fetch_and_enable_intr();
     uint32_t _rt = kget_child_file_count(dp, path, &ret);
     set_intr_state(is);
 
     thread_syscall_protector_exit();
     if(rt) *rt = _rt;
+    return ret;
+}
+
+enum filesys_opr_result syscall_filesys_get_child_info(
+            struct syscall_filesys_get_child_info_params *params)
+{
+    thread_syscall_protector_entry();
+    enum filesys_opr_result ret;
+
+    intr_state is = fetch_and_enable_intr();
+    ret = kget_child_file_info(
+        params->dp, params->path, params->idx, params->info);
+    set_intr_state(is);
+
+    thread_syscall_protector_exit();
     return ret;
 }

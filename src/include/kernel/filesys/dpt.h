@@ -3,6 +3,7 @@
 
 #include <shared/bool.h>
 #include <shared/filesys/dpt.h>
+#include <shared/filesys/filesys.h>
 
 /* 初始化分区表 */
 void init_dpt();
@@ -15,6 +16,9 @@ bool reformat_dp(size_t idx, disk_partition_type type);
 
 /* 取得某个分区文件系统的句柄 */
 uint32_t get_dp_fs_handler(size_t idx);
+
+/* 由名字取得分区句柄，失败时返回DPT_UNIT_COUNT */
+filesys_dp_handle get_dp_handle_by_name(const char *name);
 
 /* 将分区表写回到磁盘 */
 void restore_dpt();

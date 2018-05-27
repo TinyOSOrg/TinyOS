@@ -9,6 +9,7 @@
 
 #include <shared/freelist.h>
 #include <shared/string.h>
+#include <shared/syscall/filesys.h>
 
 struct dir_head
 {
@@ -867,4 +868,34 @@ void afs_remove_file_by_path(struct afs_dp_head *head,
 uint32_t afs_get_file_byte_size(struct afs_file_desc *file)
 {
     return afs_extract_file_entry(file)->byte_size;
+}
+
+#include <lib/sys.h>
+enum afs_file_operation_status afs_get_dir_unit(struct afs_dp_head *head,
+                                                struct afs_file_desc *dir,
+                                                uint32_t idx,
+                                                struct syscall_filesys_file_info *info)
+{
+    uint32_t cnt; enum afs_file_operation_status ret;
+    if(!afs_read_binary(head, dir, 0, 4, &cnt, &ret))
+        return ret;
+    
+    if(idx >= cnt)
+        return afs_file_opr_limit_exceeded;
+    
+    if(info)
+    {
+        struct dir_unit unit;
+        if(!afs_read_binary(head, dir,
+                sizeof(struct dir_head) + idx * sizeof(struct dir_unit),
+                sizeof(struct dir_unit), &unit, &ret))
+            return ret;
+        strcpy_s(info->name, unit.name, FILE_NAME_MAX_LEN + 1);
+        
+        struct afs_file_entry entry;
+        afs_read_file_entry(head, unit.entry_index, &entry);
+        info->is_dir = (entry.type == AFS_FILE_TYPE_DIRECTORY);
+    }
+
+    return afs_file_opr_success;
 }

@@ -2,7 +2,7 @@
 #define TINY_OS_FILESYS_FILESYS_H
 
 #include <shared/intdef.h>
-#include <shared/filesys/filesys.h>
+#include <shared/syscall/filesys.h>
 
 void init_filesys();
 
@@ -19,6 +19,10 @@ file_handle kopen_regular_writing(filesys_dp_handle dp, const char *path,
 /* 获知一个目录下有多少文件 */
 uint32_t kget_child_file_count(filesys_dp_handle dp, const char *path,
                                enum filesys_opr_result *rt);
+
+/* 取得某目录下第idx个文件的信息 */
+enum filesys_opr_result kget_child_file_info(filesys_dp_handle dp, const char *path, uint32_t idx,
+                                             struct syscall_filesys_file_info *info);
 
 /* 关闭一个文件 */
 enum filesys_opr_result kclose_file(filesys_dp_handle dp, file_handle file);
