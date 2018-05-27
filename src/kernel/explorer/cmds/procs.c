@@ -1,5 +1,6 @@
 #include <kernel/assert.h>
-#include <kernel/explorer/procs.h>
+#include <kernel/explorer/cmds.h>
+#include <kernel/explorer/disp.h>
 #include <kernel/explorer/screen.h>
 #include <kernel/interrupt.h>
 #include <kernel/process/process.h>
@@ -45,44 +46,27 @@ static void get_procs_info(struct proc_info *buf, uint32_t *cnt)
 }
 
 /* 每个显示页能放多少条进程信息 */
-#define PROCS_PER_PAGE SCR_DISP_HEIGHT
+#define PROCS_PER_PAGE (SCR_DISP_HEIGHT - 1)
 
 /* 在显示区输出一页进程信息 */
 static void show_procs_page(struct proc_info *buf,
                             uint32_t cnt, uint32_t page_idx)
 {
     clr_disp();
+    disp_set_cursor(0, 0);
 
-    uint32_t y = 0, idx = page_idx * PROCS_PER_PAGE;
+    disp_printf(" pid   name\n");
+
+    uint32_t y = 1, idx = page_idx * PROCS_PER_PAGE;
     while(y < SCR_DISP_HEIGHT && idx < cnt)
     {
+        disp_new_line();
         struct proc_info *info = &buf[idx];
 
-        disp_char(0, y, ' ');
-        uint32_t x = 1;
+        disp_printf(" %l", info->pid, 6);
+        disp_put_line_str(info->name);
 
-        char pid_str[20]; uint32_t si = 0;
-        uint32_to_str(info->pid, pid_str);
-        while(x < SCR_DISP_WIDTH && pid_str[si])
-        {
-            disp_char(x, y, pid_str[si]);
-            ++x, ++si;
-        }
-
-        while(si < 6)
-        {
-            disp_char(x, y, ' ');
-            ++x, ++si;
-        }
-
-        si = 0;
-        while(x < SCR_DISP_WIDTH && info->name[si])
-        {
-            disp_char(x, y, info->name[si]);
-            ++x, ++si;
-        }
-
-        ++y; ++idx;
+        ++y, ++idx;
     }
 }
 
@@ -104,6 +88,14 @@ void expl_show_procs()
     uint32_t page_idx     = 0;
 
     show_procs_page(buf, cnt, page_idx);
+
+    // 如果只有一页，直接退了
+    if(max_page_idx == 0)
+    {
+        free_ker_page(buf);
+        clr_sysmsgs();
+        return;
+    }
 
     while(true)
     {

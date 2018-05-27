@@ -30,6 +30,8 @@ void get_cursor_row_col(uint8_t *row, uint8_t *col);
 
 void set_cursor_row_col(uint8_t row, uint8_t col);
 
+char get_char_row_col(uint8_t row, uint8_t col);
+
 void put_char(char ch);
 
 void put_str(const char *str);

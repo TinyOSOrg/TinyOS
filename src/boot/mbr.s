@@ -23,8 +23,6 @@ section MBR vstart=0x7c00
 
 	jmp BOOTLOADER_START_ADDR
 
-	jmp $
-
 ; eax：LBA
 ; bx ：目的地址
 ; cx ：扇区数目

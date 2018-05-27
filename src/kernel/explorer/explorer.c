@@ -1,7 +1,8 @@
 #include <kernel/assert.h>
 #include <kernel/console/console.h>
+#include <kernel/explorer/cmds.h>
+#include <kernel/explorer/disp.h>
 #include <kernel/explorer/explorer.h>
-#include <kernel/explorer/procs.h>
 #include <kernel/explorer/screen.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/filesys/import/import.h>
@@ -11,14 +12,31 @@
 #include <kernel/process/process.h>
 #include <kernel/execelf/execelf.h>
 
+#include <shared/ctype.h>
 #include <shared/string.h>
 
 #include <lib/sys.h>
 
 /*
-    IMPROVE: 这个explorer是半赶工的结果，写得烂如翔（
+    IMPROVE: 这个explorer是赶工的结果，写得烂如翔（
              谁来重写一个……
 */
+
+/* explorer命令输入buffer大小，三行 */
+#define CMD_INPUT_BUF_SIZE (SCR_CMD_WIDTH * SCR_CMD_HEIGHT)
+
+/* explorer显示区和命令区的默认标题 */
+#define DISP_TITLE ("Output")
+#define CMD_TITLE ("Command")
+
+/* explorer工作目录buffer大小 */
+#define WORKING_DIR_BUF_SIZE 256
+
+/* explorer初始工作目录 */
+#define INIT_WORKING_DIR ("/")
+
+/* explorer应有的PID */
+#define EXPL_PID 1
 
 /* Explorer状态 */
 enum explorer_state
@@ -39,16 +57,13 @@ static struct PCB *expl_proc;
 /* explorer状态 */
 static enum explorer_state expl_stat;
 
-/* explorer命令输入缓冲大小，三行 */
-#define EXPL_CMD_INPUT_BUF_SIZE (SCR_CMD_WIDTH * SCR_CMD_HEIGHT)
-
-/* explorer命令输入缓冲 */
+/* explorer命令输入buffer */
 static char *expl_cmd_input_buf;
 static uint32_t expl_cmd_input_size;
 
-#define DISP_TITLE ("Output")
-
-#define CMD_TITLE ("Command")
+/* explorer工作路径buffer */
+static char *expl_working_dir;
+static uint32_t expl_working_dir_len;
 
 static void init_explorer()
 {
@@ -60,7 +75,7 @@ static void init_explorer()
     struct PCB *pcb = get_cur_PCB();
 
     // explorer应该是1号进程
-    ASSERT_S(pcb->pid == 1);
+    ASSERT_S(pcb->pid == EXPL_PID);
 
     // 把自己从PCB列表中摘除
     erase_from_ilist(&pcb->processes_node);
@@ -74,10 +89,16 @@ static void init_explorer()
 
     // 初始化输入缓冲区
     expl_cmd_input_buf =
-        (char*)alloc_static_kernel_mem(EXPL_CMD_INPUT_BUF_SIZE, 1);
+        (char*)alloc_static_kernel_mem(CMD_INPUT_BUF_SIZE, 1);
     expl_cmd_input_buf[0]  = '\0';
     expl_cmd_input_size    = 0;
-    
+
+    // 初始化工作目录缓冲区
+    expl_working_dir =
+        (char*)alloc_static_kernel_mem(WORKING_DIR_BUF_SIZE, 1);
+    strcpy(expl_working_dir, INIT_WORKING_DIR);
+    expl_working_dir_len = strlen(INIT_WORKING_DIR);
+
     cmd_char2(0, '_');
 
     scr_disp_caption(DISP_TITLE);
@@ -86,6 +107,8 @@ static void init_explorer()
     // 注册键盘消息
     register_key_msg();
     register_char_msg();
+
+    init_disp();
 
     set_intr_state(is);
 }
@@ -96,7 +119,7 @@ static bool make_proc_foreground(uint32_t pid)
     intr_state is = fetch_and_disable_intr();
 
     struct PCB *pcb = get_PCB_by_pid(pid);
-    if(!pcb)
+    if(!pcb || pid < 2)
     {
         set_intr_state(is);
         return false;
@@ -117,28 +140,127 @@ static bool make_proc_foreground(uint32_t pid)
 }
 
 /*
-    提交并执行一条命令
-    就是一条一条地暴力匹配命令，反正这个不重要，先用着吧……
+    匹配形如 str1 str2 ... strN 的命令，会改写buf为
+        str1 \0 str2 \0 ... strN \0
+    且每个str的首元素地址被分别放到strs中
+    所有空白字符均会被跳过
+    返回识别到的str数量，超出max_strs_cnt的str被忽略
 */
+static uint32_t expl_parse_cmd(char *buf, const char **strs,
+                               uint32_t max_strs_cnt)
+{
+    uint32_t ri = 0, wi = 0; //ri用于读buf，wi用于改写buf
+    uint32_t cnt = 0;
+
+    while(true)
+    {
+        // 跳过空白字符
+        while(buf[ri] && isspace(buf[ri]))
+            ++ri;
+
+        // 到头了，该结束了
+        if(!buf[ri])
+            break;
+
+        // 取得一条str
+        uint32_t str_beg = wi;
+        while(buf[ri] && !isspace(buf[ri]))
+            buf[wi++] = buf[ri++];
+        strs[cnt] = &buf[str_beg];
+        ++cnt;
+
+        // 把str末端置为\0
+        if(buf[ri])
+            ++ri;
+        buf[wi++] = '\0';
+        
+        if(cnt >= max_strs_cnt)
+            break;
+    }
+
+    return cnt;
+}
+
+/* 就是一条一条地暴力匹配命令，反正这个不是很重要，先用着吧…… */
+static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
+{
+    const char *cmd    = strs[0];
+    const char **args  = &strs[1];
+    uint32_t arg_cnt   = str_cnt - 1;
+
+    if(strcmp(cmd, "exit") == 0)
+    {
+        if(arg_cnt)
+            goto INVALID_ARGUMENT;
+
+        return false;
+    }
+    else if(strcmp(cmd, "ps") == 0)
+    {
+        if(arg_cnt)
+            goto INVALID_ARGUMENT;
+
+        disp_new_line();
+        expl_show_procs();
+    }
+    else if(strcmp(cmd, "clear") == 0)
+    {
+        if(arg_cnt)
+            goto INVALID_ARGUMENT;
+
+        clr_disp();
+        disp_set_cursor(0, 0);
+    }
+    else if(strcmp(cmd, "pwd") == 0)
+    {
+        if(arg_cnt)
+            goto INVALID_ARGUMENT;
+
+        disp_new_line();
+        disp_printf("Current working directory: %s",
+                    expl_working_dir);
+    }
+    else if(strcmp(cmd, "fg") == 0)
+    {
+        uint32_t pid;
+        if(arg_cnt != 1 || !str_to_uint32(args[0], &pid))
+            goto INVALID_ARGUMENT;
+
+        if(!make_proc_foreground(pid))
+        {
+            disp_new_line();
+            disp_printf("Invalid pid");
+        }
+    }
+    else
+    {
+        disp_new_line();
+        disp_printf("Unknown command");
+    }
+
+    return true;
+
+INVALID_ARGUMENT:
+
+    disp_new_line();
+    disp_printf("Invalid argument(s)");
+    return true;
+}
+
+/* 提交并执行一条命令 */
 static bool explorer_submit_cmd()
 {
     bool ret = true;
 
     clr_cmd();
 
-    if(strcmp(expl_cmd_input_buf, "exit") == 0)
-        ret = false;
-    else if(strcmp(expl_cmd_input_buf, "procs") == 0)
-        expl_show_procs();
-    else if(strcmp(expl_cmd_input_buf, "clear") == 0)
-        clr_disp();
-    else if(strcmp(expl_cmd_input_buf, "showproc") == 0) // 测试用命令
-        make_proc_foreground(12);
-    else
-    {
-        clr_disp();
-        disp_show_str(0, 0, "Unknown command, enter 'help' for help");
-    }
+    // 命令参数解析
+    const char *strs[EXEC_ELF_ARG_MAX_COUNT];
+    uint32_t str_cnt = expl_parse_cmd(
+        expl_cmd_input_buf, strs, EXEC_ELF_ARG_MAX_COUNT);
+    
+    if(str_cnt)
+        ret = explorer_exec_cmd(strs, str_cnt);
 
     expl_cmd_input_buf[0] = '\0';
     expl_cmd_input_size   = 0;
@@ -146,7 +268,6 @@ static bool explorer_submit_cmd()
     scr_disp_caption(DISP_TITLE);
     scr_cmd_caption(CMD_TITLE);
 
-    clr_cmd();
     cmd_char2(0, '_');
 
     return ret;
@@ -167,7 +288,7 @@ static void explorer_new_cmd_char(char ch)
     }
 
     // 命令缓冲区已满
-    if(expl_cmd_input_size >= EXPL_CMD_INPUT_BUF_SIZE - 1)
+    if(expl_cmd_input_size >= CMD_INPUT_BUF_SIZE - 1)
         return;
 
     // 忽略换行符和制表符
@@ -212,7 +333,8 @@ static void explorer_usr_exit()
 
     if(cur_fg_proc)
     {
-        // 预先把目标进程的pis设置成后台，这样杀死它就不会通知explorer导致重复copy显示数据什么的
+        // 预先把目标进程的pis设置成后台
+        // 这样杀死它就不会通知explorer导致重复copy显示数据什么的
         cur_fg_proc->pis = pis_background;
 
         kill_process(cur_fg_proc);
@@ -298,7 +420,7 @@ void explorer()
 
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
 
-    for(int i = 0; i < 24; ++i)
+    for(int i = 0; i < 10; ++i)
         exec_elf("test proc", 0, "/minecraft.txt", false, 0, NULL);
 
     while(explorer_transfer())

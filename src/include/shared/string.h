@@ -1,7 +1,8 @@
 #ifndef TINYOS_LIB_STRING_H
 #define TINYOS_LIB_STRING_H
 
-#include "intdef.h"
+#include <shared/bool.h>
+#include <shared/intdef.h>
 
 size_t strlen(const char *str);
 
@@ -14,6 +15,8 @@ int strcmp(const char *lhs, const char *rhs);
 void strcat(char *fst, const char *snd);
 
 void uint32_to_str(uint32_t intval, char *buf);
+
+bool str_to_uint32(const char *str, uint32_t *val);
 
 void memset(char *dst, uint8_t val, size_t byte_size);
 

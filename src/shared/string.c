@@ -1,3 +1,4 @@
+#include <shared/ctype.h>
 #include <shared/string.h>
 
 size_t strlen(const char *str)
@@ -70,6 +71,24 @@ void uint32_to_str(uint32_t intval, char *buf)
     }
 
     buf[idx] = '\0';
+}
+
+bool str_to_uint32(const char *str, uint32_t *_val)
+{
+    if(str[0] == '0' && str[1])
+        return false;
+
+    uint32_t val = 0;
+    while(*str)
+    {
+        if(!isdigit(*str))
+            return false;
+        val = 10 * val + (*str++ - '0');
+    }
+
+    if(_val)
+        *_val = val;
+    return true;
 }
 
 void memset(char *dst, uint8_t val, size_t byte_size)

@@ -2,6 +2,7 @@
 #define TINY_OS_EXPLORER_SCREEN_H
 
 #include <shared/intdef.h>
+#include <shared/screen.h>
 
 struct PCB;
 
@@ -37,6 +38,9 @@ void disp_attrib(uint8_t x, uint8_t y, uint8_t attrib);
 
 /* 设置显示区字符属性 */
 void disp_attrib2(uint16_t pos, uint8_t attrib);
+
+/* disp区滚屏一行 */
+void disp_roll_screen();
 
 /* 设置控制区区字符 */
 void cmd_char(uint8_t x, uint8_t y, char ch);

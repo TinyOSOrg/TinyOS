@@ -122,6 +122,15 @@ static uint32_t console_syscall_function_roll_screen(uint32_t arg)
     return 0;
 }
 
+static uint32_t console_syscall_function_get_char(uint32_t arg)
+{
+    struct con_buf *buf = get_cur_proc_con_buf();
+    if(!buf)
+        return 0;
+
+    return kget_char(buf, arg & 0xffff);
+}
+
 void init_console()
 {
     struct con_buf *sys_con_buf = get_sys_con_buf();
@@ -146,6 +155,8 @@ void init_console()
         console_syscall_function_put_str;
     functions[CONSOLE_SYSCALL_FUNCTION_ROLL_SCREEN] =
         console_syscall_function_roll_screen;
+    functions[CONSOLE_SYSCALL_FUNCTION_GET_CHAR] =
+        console_syscall_function_get_char;
     
     _out_byte_to_port(0x03d4, 0x0e);
     _out_byte_to_port(0x03d5, 2000 >> 8);

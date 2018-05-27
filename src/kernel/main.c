@@ -9,6 +9,8 @@
 
 #include <lib/sys.h>
 
+#include <kernel/console/print.h>
+
 int main()
 {
     init_kernel();

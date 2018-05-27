@@ -54,6 +54,14 @@ void set_cursor_row_col(uint8_t row, uint8_t col)
     CONSOLE_SYSCALL(CONSOLE_SYSCALL_FUNCTION_SET_CURSOR, arg);
 }
 
+char get_char_row_col(uint8_t row, uint8_t col)
+{
+    uint32_t arg = 80 * row + col;
+    uint32_t ret;
+    CONSOLE_SYSCALL_RET(CONSOLE_SYSCALL_FUNCTION_GET_CHAR, arg, ret);
+    return (char)ret;
+}
+
 void put_char(char ch)
 {
     uint32_t arg = ch;

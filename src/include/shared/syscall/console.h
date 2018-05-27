@@ -29,7 +29,10 @@
 /* void */
 #define CONSOLE_SYSCALL_FUNCTION_ROLL_SCREEN     8
 
+/* low16: pos */
+#define CONSOLE_SYSCALL_FUNCTION_GET_CHAR        9
+
 /* 控制台系统系统调用功能号数量 */
-#define CONSOLE_SYSCALL_FUNCTION_COUNT 9
+#define CONSOLE_SYSCALL_FUNCTION_COUNT 10
 
 #endif /* TINY_OS_SHARED_SYSCALL_CONSOLE_H */

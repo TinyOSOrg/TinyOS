@@ -39,6 +39,8 @@ void kroll_screen(struct con_buf *buf);
 */
 void kput_char(struct con_buf *buf, char ch);
 
+char kget_char(struct con_buf *buf, uint16_t pos);
+
 void kput_str(struct con_buf *buf, const char *str);
 
 /* ch就得是普通字符，控制字符一律UB */

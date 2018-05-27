@@ -79,6 +79,13 @@ void kput_char(struct con_buf *buf, char ch)
     kset_cursor_pos(buf, cursor_pos);
 }
 
+char kget_char(struct con_buf *buf, uint16_t pos)
+{
+    if(2 * pos < CON_BUF_BYTE_SIZE)
+        return buf->data[pos * 2];
+    return'\0';
+}
+
 void kput_str(struct con_buf *buf, const char *str)
 {
     while(*str)
