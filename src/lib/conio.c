@@ -109,3 +109,9 @@ void printf(const char *fmt, ...)
             put_char(*fmt++);
     }
 }
+
+void roll_scr(uint32_t beg_row, uint32_t end_row)
+{
+    uint32_t arg = (((beg_row & 0xff) << 8) | (end_row & 0xff)) & 0xffff;
+    CONSOLE_SYSCALL(CONSOLE_SYSCALL_FUNCTION_ROLL_SCREEN_BETWEEN, arg);
+}

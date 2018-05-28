@@ -57,6 +57,9 @@ bool reformat_dp(size_t idx, disk_partition_type type)
         break;
     }
 
+    u->type = DISK_PT_NOFS;
+    dp_fs_handles[idx] = 0;
+
     switch(type)
     {
     case DISK_PT_AFS:

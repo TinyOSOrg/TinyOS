@@ -7,7 +7,7 @@
 */
 
 /* 磁盘最大扇区号 */
-#define DISK_MAX_SECTOR_NUMBER 262143
+#define DISK_MAX_SECTOR_NUMBER 262079
 
 /* import分区起始扇区 */
 #define DISK_IMPORT_DP_BEGIN 182144

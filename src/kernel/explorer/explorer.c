@@ -439,23 +439,23 @@ void explorer()
 
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
 
-    /*for(int i = 0; i < 10; ++i)
-    {
-        char name[30] = "tt "; char idx_buf[20];
-        uint32_to_str(i, idx_buf);
-        strcat(name, idx_buf);
-        exec_elf(name, 0, "/minecraft.txt", false, 0, NULL);
-    }*/
-
     make_directory(0, "/d0");
     make_directory(0, "/d1");
     make_directory(0, "/d0/d00");
 
+    for(int i = 0; i < 5; ++i)
+    {
+        char name[30] = "t"; char idx_buf[20];
+        uint32_to_str(i, idx_buf);
+        strcat(name, idx_buf);
+        exec_elf(name, 0, "/hello_world.elf", false, 0, NULL);
+    }
+
     while(explorer_transfer())
         ;
 
-    clr_scr();
     destroy_kernel();
+    clr_scr();
     while(true)
         ;
 }

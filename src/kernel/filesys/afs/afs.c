@@ -70,6 +70,9 @@ void destroy_afs()
 
 bool afs_reformat_dp(uint32_t beg, uint32_t cnt)
 {
+    afs_release_all_block_cache();
+    afs_release_all_sector_cache();
+
     if(!afs_phy_reformat_dp(beg, cnt))
         return false;
     

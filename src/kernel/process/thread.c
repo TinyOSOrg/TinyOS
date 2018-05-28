@@ -58,6 +58,15 @@ static rlist waiting_release_threads;
 /* 待释放的pcb */
 static rlist waiting_release_processes;
 
+/* 将调度器禁用的大神 */
+static struct TCB *scheduler_disabler;
+
+/* 记录有多少个连续的线程让出了CPU */
+static uint32_t yield_count;
+
+/* 此次调度是否由yield_cpu触发 */
+static bool yield_scheduler;
+
 /* 分配一个空TCB块 */
 static struct TCB *alloc_TCB()
 {
@@ -196,9 +205,30 @@ static void thread_scheduler()
 
     struct TCB *last = cur_running_TCB;
 
-    // 若没有就绪线程可用，就调出idle线程
-    if(is_ilist_empty(&ready_threads))
+    if(yield_scheduler)
+        ++yield_count;
+    else
+        yield_count = 0;
+    yield_scheduler = false;
+
+    if(scheduler_disabler)
+    {
+        // 如果调度被禁用，则优先运行禁用者，其次是idle线程
+        if(scheduler_disabler->state == thread_state_ready)
+        {
+            cur_running_TCB = scheduler_disabler;
+            erase_from_ilist(&scheduler_disabler->ready_block_threads_node);
+        }
+        else
+            cur_running_TCB = idle_TCB;
+    }
+    else if(is_ilist_empty(&ready_threads)) // 若没有就绪线程可用，就调出idle线程
         cur_running_TCB = idle_TCB;
+    else if(yield_count > 5)
+    {
+        cur_running_TCB = idle_TCB;
+        yield_count = 0;
+    }
     else
     {
         cur_running_TCB = GET_STRUCT_FROM_MEMBER(struct TCB, ready_block_threads_node,
@@ -227,6 +257,11 @@ static void thread_scheduler()
 
 void init_thread_man()
 {
+    scheduler_disabler = NULL;
+
+    yield_count = 0;
+    yield_scheduler = false;
+
     init_freelist(&TCB_freelist);
 
     init_ilist(&ready_threads);
@@ -399,6 +434,7 @@ void do_releasing_thds_procs()
 void yield_CPU()
 {
     intr_state is = fetch_and_disable_intr();
+    yield_scheduler = true;
     thread_scheduler();
     set_intr_state(is);
 }
@@ -409,10 +445,7 @@ void thread_syscall_protector_entry()
     spinlock_lock(&tcb->syscall_protector_lock);
 
     if(tcb->thread_kill_flag)
-    {
-        while(1)
-            ;
-    }
+        do_kill_thread(tcb);
 
     tcb->syscall_protector_count++;
 
@@ -428,4 +461,19 @@ void thread_syscall_protector_exit()
         do_kill_thread(tcb);
     else
         spinlock_unlock(&tcb->syscall_protector_lock);
+}
+
+void disable_thread_scheduler()
+{
+    intr_state is = fetch_and_disable_intr();
+    scheduler_disabler = get_cur_TCB();
+    set_intr_state(is);
+}
+
+void enable_thread_scheduler()
+{
+    intr_state is = fetch_and_disable_intr();
+    ASSERT_S(scheduler_disabler == get_cur_TCB());
+    scheduler_disabler = NULL;
+    set_intr_state(is);
 }

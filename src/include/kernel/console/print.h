@@ -32,6 +32,10 @@ uint16_t kget_cursor_row_col(struct con_buf *buf);
 /* 屏幕滚动一行 */
 void kroll_screen(struct con_buf *buf);
 
+/* 指定的行范围 */
+void kroll_screen_row_between(struct con_buf *buf,
+                              uint32_t beg, uint32_t end);
+
 /*
     在光标位置处输出字符并自动调整光标
     对特殊字符，仅支持换行(\n)，退格(backspace)，水平制表(\t)

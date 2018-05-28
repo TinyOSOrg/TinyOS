@@ -122,14 +122,7 @@ void disp_attrib2(uint16_t pos, uint8_t attrib)
 
 void disp_roll_screen()
 {
-    for(uint32_t y = DISP_Y_BASE; y < DISP_Y_BASE + SCR_DISP_HEIGHT - 1; ++y)
-    {
-        for(uint32_t x = DISP_X_BASE; x < DISP_X_BASE + SCR_DISP_WIDTH; ++x)
-            set_char_row_col(y, x, get_char_row_col(y + 1, x));
-    }
-
-    for(uint32_t x = DISP_X_BASE; x < DISP_X_BASE + SCR_DISP_WIDTH; ++x)
-        set_char_row_col(DISP_Y_BASE + SCR_DISP_HEIGHT - 1, x, ' ');
+    roll_scr(DISP_Y_BASE, DISP_Y_BASE + SCR_DISP_HEIGHT);
 }
 
 void cmd_char(uint8_t x, uint8_t y, char ch)

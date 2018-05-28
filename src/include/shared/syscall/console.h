@@ -32,7 +32,14 @@
 /* low16: pos */
 #define CONSOLE_SYSCALL_FUNCTION_GET_CHAR        9
 
+/*
+    在一定y范围内滚屏
+    high8(low16): beg
+    low8(low16) : end
+*/
+#define CONSOLE_SYSCALL_FUNCTION_ROLL_SCREEN_BETWEEN 10
+
 /* 控制台系统系统调用功能号数量 */
-#define CONSOLE_SYSCALL_FUNCTION_COUNT 10
+#define CONSOLE_SYSCALL_FUNCTION_COUNT 11
 
 #endif /* TINY_OS_SHARED_SYSCALL_CONSOLE_H */

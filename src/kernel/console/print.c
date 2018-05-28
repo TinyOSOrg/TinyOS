@@ -30,12 +30,20 @@ uint16_t kget_cursor_row_col(struct con_buf *buf)
     return (row << 8) | col;
 }
 
+void kroll_screen_row_between(struct con_buf *buf,
+                              uint32_t beg, uint32_t end)
+{
+    memcpy(buf->data + (beg * 2 * CON_BUF_ROW_SIZE),
+           buf->data + ((beg + 1) * 2 * CON_BUF_ROW_SIZE),
+           (end - beg - 1) * 2 * CON_BUF_ROW_SIZE);
+    char *d = buf->data + (end - 1) * 2 * CON_BUF_ROW_SIZE;
+    for(uint32_t i = 0; i < CON_BUF_ROW_SIZE; ++i)
+        d[i << 1] = ' ';
+}
+
 void kroll_screen(struct con_buf *buf)
 {
-    memcpy(buf->data, buf->data + 2 * CON_BUF_ROW_SIZE,
-           (CON_BUF_COL_SIZE - 1) * CON_BUF_ROW_SIZE * 2);
-    memset(buf->data + (CON_BUF_COL_SIZE - 1) * CON_BUF_ROW_SIZE * 2,
-           0x0, 2 * CON_BUF_ROW_SIZE);
+    kroll_screen_row_between(buf, 0, CON_BUF_COL_SIZE);
 }
 
 static inline void kset_word(struct con_buf *buf, uint16_t cursor, uint8_t fst, uint8_t snd)

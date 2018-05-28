@@ -1,6 +1,6 @@
 rm -rf build
 rm -f hd.img
-bximage -mode=create -hd=128M -imgmode=flat -q hd.img
+bximage -hd -size=128M -mode=flat -q hd.img
 mkdir build
 make mkdpt
 make elf_tester

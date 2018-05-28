@@ -299,6 +299,8 @@ static void init_bootloader_process()
     struct PCB *pcb = alloc_PCB();
     struct TCB *tcb = get_cur_TCB();
 
+    pcb->pis = pis_foreground;
+
     strcpy(pcb->name, "kernel process");
 
     pcb->addr_space = get_ker_vir_addr_space();
@@ -494,7 +496,9 @@ uint32_t syscall_get_cur_PID_impl()
 
 uint32_t syscall_yield_CPU_impl()
 {
+    thread_syscall_protector_entry();
     yield_CPU();
+    thread_syscall_protector_exit();
     return 0;
 }
 

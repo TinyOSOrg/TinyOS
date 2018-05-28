@@ -14,6 +14,10 @@ int strcmp(const char *lhs, const char *rhs);
 
 void strcat(char *fst, const char *snd);
 
+#define STRING_NPOS ((uint32_t)0xffffffff)
+
+uint32_t strfind(const char *str, char c, uint32_t beg);
+
 void uint32_to_str(uint32_t intval, char *buf);
 
 bool str_to_uint32(const char *str, uint32_t *val);

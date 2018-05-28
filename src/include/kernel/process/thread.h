@@ -125,4 +125,12 @@ void thread_syscall_protector_entry();
 /* 离开系统调用保护模式，由可能被打断的系统调用实现负责调用 */
 void thread_syscall_protector_exit();
 
+/*
+    临时禁用线程调度器，只有禁用者能将其再次开启
+    若禁用者本身被阻塞，那么会运行idle线程
+*/
+void disable_thread_scheduler();
+
+void enable_thread_scheduler();
+
 #endif /* TINY_OS_THREAD_H */

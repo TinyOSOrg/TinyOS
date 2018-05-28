@@ -38,6 +38,8 @@ void put_str(const char *str);
 
 void printf(const char *fmt, ...);
 
+void roll_scr(uint32_t beg_row, uint32_t end_row);
+
 /* 文件系统相关 */
 
 enum filesys_opr_result open_file(filesys_dp_handle dp,

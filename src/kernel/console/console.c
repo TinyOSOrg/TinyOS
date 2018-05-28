@@ -131,6 +131,21 @@ static uint32_t console_syscall_function_get_char(uint32_t arg)
     return kget_char(buf, arg & 0xffff);
 }
 
+static uint32_t console_syscall_function_roll_screen_between(uint32_t arg)
+{
+    struct con_buf *buf = get_cur_proc_con_buf();
+    if(!buf)
+        return 0;
+    
+    uint32_t beg = (arg >> 8) & 0xff;
+    uint32_t end = arg & 0xff;
+    if(beg >= end || end >= CON_BUF_COL_SIZE)
+        return 0;
+        
+    kroll_screen_row_between(buf, beg, end);
+    return 0;
+}
+
 void init_console()
 {
     struct con_buf *sys_con_buf = get_sys_con_buf();
@@ -157,6 +172,8 @@ void init_console()
         console_syscall_function_roll_screen;
     functions[CONSOLE_SYSCALL_FUNCTION_GET_CHAR] =
         console_syscall_function_get_char;
+    functions[CONSOLE_SYSCALL_FUNCTION_ROLL_SCREEN_BETWEEN] =
+        console_syscall_function_roll_screen_between;
     
     _out_byte_to_port(0x03d4, 0x0e);
     _out_byte_to_port(0x03d5, 2000 >> 8);

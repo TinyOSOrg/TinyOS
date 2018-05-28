@@ -45,6 +45,17 @@ void strcat(char *fst, const char *snd)
     strcpy(fst, snd);
 }
 
+uint32_t strfind(const char *str, char c, uint32_t beg)
+{
+    while(str[beg])
+    {
+        if(str[beg] == c)
+            return beg;
+        ++beg;
+    }
+    return STRING_NPOS;
+}
+
 void uint32_to_str(uint32_t intval, char *buf)
 {
     size_t idx = 0;

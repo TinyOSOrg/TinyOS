@@ -50,12 +50,16 @@ static void get_procs_info(struct proc_info *buf, uint32_t *cnt)
 
 /* 在显示区输出一页进程信息 */
 static void show_procs_page(struct proc_info *buf,
-                            uint32_t cnt, uint32_t page_idx)
+                            uint32_t cnt, uint32_t page_idx,
+                            bool clear)
 {
-    clr_disp();
-    disp_set_cursor(0, 0);
+    if(clear)
+    {
+        clr_disp();
+        disp_set_cursor(0, 0);
+    }
 
-    disp_printf(" pid   name\n");
+    disp_printf("pid   name\n");
 
     uint32_t y = 1, idx = page_idx * PROCS_PER_PAGE;
     while(y < SCR_DISP_HEIGHT && idx < cnt)
@@ -63,7 +67,7 @@ static void show_procs_page(struct proc_info *buf,
         disp_new_line();
         struct proc_info *info = &buf[idx];
 
-        disp_printf(" %l", info->pid, 6);
+        disp_printf("%l", info->pid, 6);
         disp_put_line_str(info->name);
 
         ++y, ++idx;
@@ -91,10 +95,11 @@ void expl_show_procs()
     uint32_t max_page_idx = ceil_int_div(cnt, PROCS_PER_PAGE) - 1;
     uint32_t page_idx     = 0;
 
-    show_procs_page(buf, cnt, page_idx);
+    bool only_one_page = (max_page_idx == 0);
+    show_procs_page(buf, cnt, page_idx, !only_one_page);
 
     // 如果只有一页，直接退了
-    if(max_page_idx == 0)
+    if(only_one_page)
     {
         free_ker_page(buf);
         clr_sysmsgs();
@@ -107,7 +112,7 @@ void expl_show_procs()
         struct sysmsg msg;
         if(!peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg))
             continue;
-        if(msg.type != SYSMSG_TYPE_KEYBOARD)
+        if(msg.type != SYSMSG_TYPE_KEYBOARD || !is_kbmsg_down(&msg))
             continue;
         uint8_t key = get_kbmsg_key(&msg);
 
@@ -119,14 +124,14 @@ void expl_show_procs()
         if(key == 'N' && page_idx < max_page_idx)
         {
             ++page_idx;
-            show_procs_page(buf, cnt, page_idx);
+            show_procs_page(buf, cnt, page_idx, true);
         }
 
         // 上一页
         if(key == 'B' && page_idx > 0)
         {
             --page_idx;
-            show_procs_page(buf, cnt, page_idx);
+            show_procs_page(buf, cnt, page_idx, true);
         }
     }
 
