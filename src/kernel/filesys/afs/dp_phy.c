@@ -6,8 +6,9 @@
 #include <kernel/filesys/afs/dp_phy.h>
 #include <kernel/filesys/afs/disk_cache.h>
 
-#include <shared/string.h>
 #include <shared/utility.h>
+
+#include <lib/string.h>
 
 /* 将blkgrp下标转换为其头部描述符所在的扇区号 */
 static inline uint32_t blkgrp_idx_to_head_sec(struct afs_dp_head *dph, uint32_t idx)

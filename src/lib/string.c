@@ -1,5 +1,6 @@
 #include <shared/ctype.h>
-#include <shared/string.h>
+
+#include <lib/string.h>
 
 size_t strlen(const char *str)
 {
@@ -126,4 +127,3 @@ uint32_t strhash(const char *str)
     }
     return ret & 0x7fffffff;
 }
-

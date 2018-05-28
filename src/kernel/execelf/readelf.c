@@ -1,8 +1,8 @@
 #include <kernel/execelf/readelf.h>
 
 #include <shared/intdef.h>
-#include <shared/string.h>
 
+#include <lib/string.h>
 #include <lib/sys.h>
 
 /*

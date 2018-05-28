@@ -5,8 +5,7 @@
 #include <kernel/memory.h>
 #include <kernel/process/process.h>
 
-#include <shared/string.h>
-
+#include <lib/string.h>
 #include <lib/sys.h>
 
 /*

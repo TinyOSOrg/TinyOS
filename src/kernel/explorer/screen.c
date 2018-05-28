@@ -5,8 +5,8 @@
 #include <kernel/process/process.h>
 
 #include <shared/screen.h>
-#include <shared/string.h>
 
+#include <lib/string.h>
 #include <lib/sys.h>
 
 #define CMD_X_BASE 0

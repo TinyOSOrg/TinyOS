@@ -2,8 +2,7 @@
 #include <kernel/explorer/cmds.h>
 #include <kernel/explorer/disp.h>
 
-#include <shared/string.h>
-
+#include <lib/string.h>
 #include <lib/sys.h>
 
 /* 将path变换为其父目录，失败时返回false（怎么会） */

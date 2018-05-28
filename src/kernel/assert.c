@@ -5,7 +5,8 @@
 #include <kernel/console/print.h>
 
 #include <shared/bool.h>
-#include <shared/string.h>
+
+#include <lib/string.h>
 
 void _fatal_error_impl(const char *prefix, const char *filename, const char *function, int line, const char *msg)
 {

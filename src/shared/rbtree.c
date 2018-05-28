@@ -1,5 +1,6 @@
 #include <shared/rbtree.h>
-#include <shared/string.h>
+
+#include <lib/string.h>
 
 #define RB_COLOR_RED   1
 #define RB_COLOR_BLACK 0

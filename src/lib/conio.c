@@ -1,6 +1,6 @@
-#include <shared/string.h>
 #include <shared/syscall/console.h>
 
+#include <lib/string.h>
 #include <lib/sys.h>
 
 #define CONSOLE_SYSCALL(N, arg) \

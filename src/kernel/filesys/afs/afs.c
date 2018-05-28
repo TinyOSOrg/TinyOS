@@ -8,8 +8,9 @@
 #include <kernel/filesys/afs/file_type.h>
 
 #include <shared/freelist.h>
-#include <shared/string.h>
 #include <shared/syscall/filesys.h>
+
+#include <lib/string.h>
 
 struct dir_head
 {

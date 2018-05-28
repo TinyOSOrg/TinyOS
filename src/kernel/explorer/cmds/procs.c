@@ -6,9 +6,9 @@
 #include <kernel/process/process.h>
 
 #include <shared/bool.h>
-#include <shared/string.h>
 #include <shared/utility.h>
 
+#include <lib/string.h>
 #include <lib/sys.h>
 
 struct proc_info

@@ -5,10 +5,10 @@
 #include <kernel/sysmsg/sysmsg.h>
 
 #include <shared/bool.h>
-#include <shared/string.h>
-
 #include <shared/syscall/sysmsg.h>
 #include <shared/sysmsg/common.h>
+
+#include <lib/string.h>
 
 static uint32_t (*functions[SYSMSG_SYSCALL_FUNCTION_COUNT])(uint32_t, uint32_t);
 

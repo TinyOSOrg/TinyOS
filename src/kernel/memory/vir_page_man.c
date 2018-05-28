@@ -4,7 +4,8 @@
 #include <kernel/memory/vir_page_man.h>
 
 #include <shared/bool.h>
-#include <shared/string.h>
+
+#include <lib/string.h>
 
 struct vir_page_man
 {

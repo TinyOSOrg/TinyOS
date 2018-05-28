@@ -2,7 +2,8 @@
 #include <kernel/explorer/screen.h>
 
 #include <shared/bool.h>
-#include <shared/string.h>
+
+#include <lib/string.h>
 
 static uint8_t cx, cy;
 

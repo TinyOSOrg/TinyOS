@@ -4,7 +4,7 @@
 #include <kernel/process/process.h>
 #include <kernel/seg_desc.h>
 
-#include <shared/string.h>
+#include <lib/string.h>
 
 /* 中断描述符构成 */
 

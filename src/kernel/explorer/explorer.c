@@ -13,8 +13,8 @@
 #include <kernel/execelf/execelf.h>
 
 #include <shared/ctype.h>
-#include <shared/string.h>
 
+#include <lib/string.h>
 #include <lib/sys.h>
 
 /*
