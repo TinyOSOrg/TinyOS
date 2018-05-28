@@ -76,9 +76,6 @@ static void show_procs_page(struct proc_info *buf,
 
 void expl_show_procs()
 {
-    scr_disp_caption("Processe List");
-    scr_cmd_caption("[Q] Quit [N] Next Page [B] Last Page");
-
     // 取得所有进程信息
     struct proc_info *buf = (struct proc_info*)alloc_ker_page(false);
     if(!buf)
@@ -105,6 +102,9 @@ void expl_show_procs()
         clr_sysmsgs();
         return;
     }
+
+    scr_disp_caption("Processe List");
+    scr_cmd_caption("[Q] Quit [N] Next Page [B] Last Page");
 
     while(true)
     {
