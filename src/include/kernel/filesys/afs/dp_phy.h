@@ -6,9 +6,10 @@
 #include <kernel/process/semaphore.h>
 #include <kernel/process/spinlock.h>
 
-#include <shared/bool.h>
-#include <shared/intdef.h>
 #include <shared/rbtree.h>
+
+#include <lib/stdbool.h>
+#include <lib/stdint.h>
 
 /*======================================================
 分区格式描述：

@@ -1,8 +1,9 @@
 #ifndef TINY_OS_SHARED_KBMSG_H
 #define TINY_OS_SHARED_KBMSG_H
 
-#include <shared/intdef.h>
 #include <shared/sysmsg/common.h>
+
+#include <lib/stdint.h>
 
 /*
     msg参数含义:

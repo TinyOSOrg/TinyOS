@@ -1,7 +1,7 @@
 #ifndef TINY_OS_PAGE_DESC_H
 #define TINY_OS_PAGE_DESC_H
 
-#include <shared/intdef.h>
+#include <lib/stdint.h>
 
 typedef uint32_t page_desc_attrib;
 

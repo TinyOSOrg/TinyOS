@@ -5,9 +5,9 @@
 #include <kernel/interrupt.h>
 #include <kernel/process/process.h>
 
-#include <shared/bool.h>
 #include <shared/utility.h>
 
+#include <lib/stdbool.h>
 #include <lib/string.h>
 #include <lib/sys.h>
 

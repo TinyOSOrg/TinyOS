@@ -2,7 +2,8 @@
 #define TINY_OS_SHARED_FILESYS_FILESYS_H
 
 #include <shared/atrc.h>
-#include <shared/intdef.h>
+
+#include <lib/stdint.h>
 
 /*
     统一的文件系统接口

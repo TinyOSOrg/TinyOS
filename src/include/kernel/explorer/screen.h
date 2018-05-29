@@ -1,8 +1,9 @@
 #ifndef TINY_OS_EXPLORER_SCREEN_H
 #define TINY_OS_EXPLORER_SCREEN_H
 
-#include <shared/intdef.h>
 #include <shared/screen.h>
+
+#include <lib/stdint.h>
 
 struct PCB;
 

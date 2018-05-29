@@ -1,7 +1,7 @@
 #ifndef TINY_OS_SHARED_FILESYS_DPT_H
 #define TINY_OS_SHARED_FILESYS_DPT_H
 
-#include <shared/intdef.h>
+#include <lib/stdint.h>
 
 /*
     磁盘分区类型

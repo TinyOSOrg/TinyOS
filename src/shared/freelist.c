@@ -1,5 +1,6 @@
 #include <shared/freelist.h>
-#include <shared/intdef.h>
+
+#include <lib/stdint.h>
 
 #define FL ((struct freelist_node*)handle)
 

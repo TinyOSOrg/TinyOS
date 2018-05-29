@@ -12,10 +12,10 @@
 #include <kernel/seg_desc.h>
 
 #include <shared/freelist.h>
-#include <shared/intdef.h>
 #include <shared/ptrlist.h>
 #include <shared/utility.h>
 
+#include <lib/stdint.h>
 #include <lib/string.h>
 
 /*=====================================================================

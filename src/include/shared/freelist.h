@@ -1,8 +1,8 @@
 #ifndef TINY_OS_LIB_FREELIST_H
 #define TINY_OS_LIB_FREELIST_H
 
-#include "bool.h"
-#include "intdef.h"
+#include <lib/stdbool.h>
+#include <lib/stdint.h>
 
 /* 自由链表句柄 */
 typedef uint32_t freelist_handle;

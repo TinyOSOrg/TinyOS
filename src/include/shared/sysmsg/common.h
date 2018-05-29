@@ -1,7 +1,7 @@
 #ifndef TINY_OS_SHARED_SYSMSG_COMMON_H
 #define TINY_OS_SHARED_SYSMSG_COMMON_H
 
-#include <shared/intdef.h>
+#include <lib/stdint.h>
 
 /*
     内核进程消息类型

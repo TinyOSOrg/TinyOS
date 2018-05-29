@@ -1,7 +1,7 @@
 #ifndef TINY_OS_IO_PORT
 #define TINY_OS_IO_PORT
 
-#include <shared/intdef.h>
+#include <lib/stdint.h>
 
 static inline uint8_t _in_byte_from_port(uint16_t port)
 {

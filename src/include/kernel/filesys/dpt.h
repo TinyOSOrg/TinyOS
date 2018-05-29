@@ -1,9 +1,10 @@
 #ifndef TINY_OS_DISK_PARTITION_TABLE_H
 #define TINY_OS_DISK_PARTITION_TABLE_H
 
-#include <shared/bool.h>
 #include <shared/filesys/dpt.h>
 #include <shared/filesys/filesys.h>
+
+#include <lib/stdbool.h>
 
 /* 初始化分区表 */
 void init_dpt();

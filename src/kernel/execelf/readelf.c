@@ -1,7 +1,6 @@
 #include <kernel/execelf/readelf.h>
 
-#include <shared/intdef.h>
-
+#include <lib/stdint.h>
 #include <lib/string.h>
 #include <lib/sys.h>
 

@@ -1,8 +1,8 @@
 #ifndef TINY_OS_SHARED_RBTREE_H
 #define TINY_OS_SHARED_RBTREE_H
 
-#include <shared/bool.h>
-#include <shared/intdef.h>
+#include <lib/stdbool.h>
+#include <lib/stdint.h>
 
 /*
     侵入式红黑树节点

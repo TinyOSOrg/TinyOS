@@ -1,14 +1,15 @@
 #ifndef TINY_OS_LIB_SYS_H
 #define TINY_OS_LIB_SYS_H
 
-#include <shared/bool.h>
-#include <shared/intdef.h>
 #include <shared/filesys/filesys.h>
 #include <shared/keycode.h>
 #include <shared/syscall/filesys.h>
 #include <shared/syscall/sysmsg.h>
 #include <shared/sysmsg/common.h>
 #include <shared/sysmsg/kbmsg.h>
+
+#include <lib/stdbool.h>
+#include <lib/stdint.h>
 
 /* 进程/线程相关 */
 

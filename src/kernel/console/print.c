@@ -2,8 +2,7 @@
 #include <kernel/assert.h>
 #include <kernel/console/print.h>
 
-#include <shared/bool.h>
-
+#include <lib/stdbool.h>
 #include <lib/string.h>
 
 void kset_cursor_pos(struct con_buf *buf, uint16_t pos)

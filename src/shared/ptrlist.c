@@ -1,5 +1,6 @@
-#include <shared/intdef.h>
 #include <shared/ptrlist.h>
+
+#include <lib/stdint.h>
 
 void init_rlist(rlist *L)
 {

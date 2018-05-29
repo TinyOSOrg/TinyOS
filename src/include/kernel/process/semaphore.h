@@ -1,8 +1,9 @@
 #ifndef TINY_OS_SEMAPHORE_H
 #define TINY_OS_SEMAPHORE_H
 
-#include <shared/intdef.h>
 #include <shared/ptrlist.h>
+
+#include <lib/stdint.h>
 
 /*
     内核信号量，提供PV原语

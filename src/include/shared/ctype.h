@@ -1,7 +1,7 @@
 #ifndef TINY_OS_SHARED_CTYPE_H
 #define TINY_OS_SHARED_CTYPE_H
 
-#include <shared/bool.h>
+#include <lib/stdbool.h>
 
 static inline bool isdigit(char ch)
 {

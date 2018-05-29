@@ -1,7 +1,7 @@
 #ifndef TINY_OS_LIB_PTRLIST_H
 #define TINY_OS_LIB_PTRLIST_H
 
-#include "bool.h"
+#include <lib/stdbool.h>
 
 /*=====================================================================
     非侵入双向循环链表

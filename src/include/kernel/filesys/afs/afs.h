@@ -4,9 +4,10 @@
 #include <kernel/filesys/afs/file_opr.h>
 #include <kernel/filesys/afs/file_type.h>
 
-#include <shared/bool.h>
-#include <shared/intdef.h>
 #include <shared/syscall/filesys.h>
+
+#include <lib/stdbool.h>
+#include <lib/stdint.h>
 
 struct afs_dp_head;
 struct afs_file_desc;

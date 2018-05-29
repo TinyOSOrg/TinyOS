@@ -1,7 +1,7 @@
 #ifndef TINY_OS_VIR_PAGE_MAN_H
 #define TINY_OS_VIR_PAGE_MAN_H
 
-#include <shared/intdef.h>
+#include <lib/stdint.h>
 
 /* 页级虚拟地址空间管理 */
 struct vir_page_man;

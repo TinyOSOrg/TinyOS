@@ -1,8 +1,9 @@
 #ifndef TINY_OS_FILESYS_FILESYS_H
 #define TINY_OS_FILESYS_FILESYS_H
 
-#include <shared/intdef.h>
 #include <shared/syscall/filesys.h>
+
+#include <lib/stdint.h>
 
 void init_filesys();
 

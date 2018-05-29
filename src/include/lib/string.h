@@ -1,8 +1,8 @@
 #ifndef TINYOS_LIB_STRING_H
 #define TINYOS_LIB_STRING_H
 
-#include <shared/bool.h>
-#include <shared/intdef.h>
+#include <lib/stdbool.h>
+#include <lib/stdint.h>
 
 size_t strlen(const char *str);
 

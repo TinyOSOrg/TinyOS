@@ -3,7 +3,7 @@
 
 #include <kernel/console/con_buf.h>
 
-#include <shared/intdef.h>
+#include <lib/stdint.h>
 
 /* 初始化控制台 */
 void init_console();

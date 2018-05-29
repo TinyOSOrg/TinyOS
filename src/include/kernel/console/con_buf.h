@@ -3,8 +3,9 @@
 
 #include <kernel/process/semaphore.h>
 
-#include <shared/intdef.h>
 #include <shared/screen.h>
+
+#include <lib/stdint.h>
 
 struct con_buf
 {
