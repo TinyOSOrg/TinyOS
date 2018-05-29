@@ -30,7 +30,7 @@
 #define CMD_TITLE ("Command")
 
 /* explorer工作目录buffer大小 */
-#define WORKING_DIR_BUF_SIZE 256
+#define EXPL_WORKING_DIR_BUF_SIZE 256
 
 /* explorer初始工作目录 */
 #define INIT_WORKING_DIR ("/")
@@ -97,7 +97,7 @@ static void init_explorer()
     // 初始化工作目录缓冲区
     expl_working_dp  = 0;
     expl_working_dir =
-        (char*)alloc_static_kernel_mem(WORKING_DIR_BUF_SIZE, 1);
+        (char*)alloc_static_kernel_mem(EXPL_WORKING_DIR_BUF_SIZE, 1);
     strcpy(expl_working_dir, INIT_WORKING_DIR);
     expl_working_dir_len = strlen(INIT_WORKING_DIR);
 
@@ -197,7 +197,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
         
         disp_new_line();
         expl_cd(&expl_working_dp, expl_working_dir, &expl_working_dir_len,
-                WORKING_DIR_BUF_SIZE - 1, args[0]);
+                EXPL_WORKING_DIR_BUF_SIZE - 1, args[0]);
     }
     else if(strcmp(cmd, "clear") == 0)
     {
@@ -206,6 +206,14 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
 
         clr_disp();
         disp_set_cursor(0, 0);
+    }
+    else if(strcmp(cmd, "dp") == 0)
+    {
+        if(arg_cnt)
+            goto INVALID_ARGUMENT;
+        
+        disp_new_line();
+        expl_dp(expl_working_dp);
     }
     else if(strcmp(cmd, "exec") == 0)
     {
@@ -242,6 +250,14 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
         disp_new_line();
         expl_ls(expl_working_dp, expl_working_dir);
     }
+    else if(strcmp(cmd, "mkdir") == 0)
+    {
+        if(arg_cnt != 1)
+            goto INVALID_ARGUMENT;
+        
+        disp_new_line();
+        expl_mkdir(expl_working_dp, expl_working_dir, args[0]);
+    }
     else if(strcmp(cmd, "ps") == 0)
     {
         if(arg_cnt)
@@ -258,6 +274,14 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
         disp_new_line();
         disp_printf("Current working directory: %u:%s",
                     expl_working_dp, expl_working_dir);
+    }
+    else if(strcmp(cmd, "rmdir") == 0)
+    {
+        if(arg_cnt != 1)
+            goto INVALID_ARGUMENT;
+        
+        disp_new_line();
+        expl_rmdir(expl_working_dp, expl_working_dir, args[0]);
     }
     else
     {
@@ -446,10 +470,6 @@ void explorer()
     reformat_dp(0, DISK_PT_AFS);
 
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
-
-    make_directory(0, "/d0");
-    make_directory(0, "/d1");
-    make_directory(0, "/d0/d00");
 
     for(int i = 0; i < 5; ++i)
     {

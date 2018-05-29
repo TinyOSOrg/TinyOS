@@ -225,7 +225,7 @@ static void thread_scheduler()
     }
     else if(is_ilist_empty(&ready_threads)) // 若没有就绪线程可用，就调出idle线程
         cur_running_TCB = idle_TCB;
-    else if(yield_count > 5)
+    else if(yield_count > 3)
     {
         cur_running_TCB = idle_TCB;
         yield_count = 0;

@@ -1,103 +1,85 @@
 #include <kernel/assert.h>
 #include <kernel/explorer/cmds.h>
 #include <kernel/explorer/disp.h>
+#include <kernel/explorer/explorer.h>
+#include <kernel/memory.h>
+
+#include <kernel/filesys/dpt.h>
+#include <shared/path.h>
 
 #include <lib/string.h>
 #include <lib/sys.h>
-
-/* 将path变换为其父目录，失败时返回false（怎么会） */
-static bool to_parent(char *path)
-{
-    uint32_t len = strlen(path);
-
-    if(!len)
-        return false;
-
-    // 根目录的..指向自身，啥都不用做
-    if(path[len - 1] == '/')
-        return true;
-    
-    // 查找最右边的'/'所处位置
-    uint32_t idx = len - 1;
-    while(idx > 0 && path[idx] != '/')
-        --idx;
-    
-    // 父目录就是根目录
-    if(idx == 0)
-    {
-        path[1] = '\0';
-        return true;
-    }
-
-    path[idx] = '\0';
-    return true;
-}
 
 bool expl_cd(filesys_dp_handle *dp, char *cur,
              uint32_t *len, uint32_t max_len,
              const char *dst)
 {
-    uint32_t dst_len = strlen(dst);
-    if(!dst_len)
-        goto FAILED;
+    // 申请一块缓冲区作为dst缓冲
+    char *cur_tmp = (char*)alloc_ker_page(false);
+    char *dp_name_buf = cur_tmp + max_len;
 
-    // 首个路径是'/'说明给出了本分区下的一个绝对路径
-    if(dst[0] == '/')
+    // 目标是带分区号的绝对路径
+    if(is_path_containning_dp(dst))
     {
-        if(dst_len > max_len)
+        // 获取分区编号
+        uint32_t dp_name_len = get_dp_from_path_s(
+            dst, dp_name_buf, DP_NAME_BUF_SIZE);
+
+        if(!dp_name_len)
             goto FAILED;
-        
-        // 看看是不是个合法目录
-        if(get_child_file_count(*dp, dst, NULL) != filesys_opr_success)
-            goto FAILED;
-        
-        strcpy(cur, dst);
-        *len = dst_len;
 
-        goto SUCCEED;
-    }
+        uint32_t new_dp;
 
-    if(strcmp(dst, ".") == 0)
-        goto SUCCEED;
-    
-    if(strcmp(dst, "..") == 0)
-    {
-        if(!to_parent(cur))
-            goto FAILED;
-        
-        *len = strlen(cur);
-
-        goto SUCCEED;
-    }
-    
-    // 查找'/'，如果没有出现，那么应该是个相对路径
-    if(strfind(dst, '/', 0) == STRING_NPOS)
-    {
-        bool root = (*len == 1);
-
-        if(*len + (root ? 0 : 1) + dst_len > max_len)
-            goto FAILED;
-        strcat(cur, root ? "" : "/");
-        strcat(cur, dst);
-
-        // 看看是不是个合法目录
-        if(get_child_file_count(*dp, cur, NULL) != filesys_opr_success)
+        // 是数字形式的分区号
+        if(dp_name_buf[dp_name_len - 1] == ':')
         {
-            cur[*len] = '\0';
-            goto FAILED;
+            dp_name_buf[dp_name_len - 1] = '\0';
+            if(!str_to_uint32(dp_name_buf, &new_dp))
+                goto FAILED;
         }
+        else // 是分区名
+        {
+            ASSERT_S(dp_name_buf[dp_name_len - 1] == '>');
 
-        *len = strlen(cur);
+            dp_name_buf[dp_name_len - 1] = '\0';
+            new_dp = get_dp_handle_by_name(dp_name_buf);
+            if(new_dp >= DPT_UNIT_COUNT)
+                goto FAILED;
+        }
+        
+        if(!cat_path_s(cur, skip_dp_in_abs_path(dst),
+                       cur_tmp, max_len))
+            goto FAILED;
+
+        if(get_child_file_count(new_dp, cur_tmp, NULL)
+            != filesys_opr_success)
+            goto FAILED;
+
+        strcpy(cur, cur_tmp);
+        *dp = new_dp;
+
         goto SUCCEED;
     }
+
+    // 目标不带分区，尝试拼接路径
+    if(!cat_path_s(cur, dst, cur_tmp, max_len))
+        goto FAILED;
+    if(get_child_file_count(*dp, cur_tmp, NULL) != filesys_opr_success)
+        goto FAILED;
+    
+    strcpy(cur, cur_tmp);
+
+    goto SUCCEED;
 
 FAILED:
 
+    free_ker_page(cur_tmp);
     disp_printf("Invalid cd destination: %s", dst);
     return false;
 
 SUCCEED:
 
+    free_ker_page(cur_tmp);
     disp_printf("Current working directory: %u:%s",
                 *dp, cur);
     return true;

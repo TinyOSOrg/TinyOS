@@ -497,9 +497,7 @@ uint32_t syscall_get_cur_PID_impl()
 
 uint32_t syscall_yield_CPU_impl()
 {
-    thread_syscall_protector_entry();
     yield_CPU();
-    thread_syscall_protector_exit();
     return 0;
 }
 
