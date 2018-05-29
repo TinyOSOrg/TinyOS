@@ -56,33 +56,16 @@ void *load_elf(const void *_filestart)
         eh.e_ident[pos] = *(filestart + pos);
     
     //initialize ELF header
-
-    eh.e_type      = *(ELF32_Half *)(filestart + pos); pos += sizeof(ELF32_Half);
-    eh.e_machine   = *(ELF32_Half *)(filestart + pos); pos += sizeof(ELF32_Half);
-    eh.e_version   = *(ELF32_Word *)(filestart + pos); pos += sizeof(ELF32_Word);
-    eh.e_entry     = *(ELF32_Addr *)(filestart + pos); pos += sizeof(ELF32_Addr);
-    eh.e_phoff     = *(ELF32_Off  *)(filestart + pos); pos += sizeof(ELF32_Off);
-    eh.e_shoff     = *(ELF32_Off  *)(filestart + pos); pos += sizeof(ELF32_Off);
-    eh.e_flags     = *(ELF32_Word *)(filestart + pos); pos += sizeof(ELF32_Word);
-    eh.e_ehsize    = *(ELF32_Half *)(filestart + pos); pos += sizeof(ELF32_Half);
-    eh.e_phentsize = *(ELF32_Half *)(filestart + pos); pos += sizeof(ELF32_Half);
-    eh.e_phnum     = *(ELF32_Half *)(filestart + pos); pos += sizeof(ELF32_Half);
-    eh.e_shentsize = *(ELF32_Half *)(filestart + pos); pos += sizeof(ELF32_Half);
-    eh.e_shnum     = *(ELF32_Half *)(filestart + pos); pos += sizeof(ELF32_Half);
-    eh.e_shstrndx  = *(ELF32_Half *)(filestart + pos); pos += sizeof(ELF32_Half);
+    
+    memcpy((char*)&eh, filestart, sizeof(eh));
+    pos += sizeof(eh);
 
     elf32_phdr header;
     pos = eh.e_phoff;
     for(uint16_t i = 0; i < eh.e_phnum; i++)
     {
-        header.p_type   = *(ELF32_Word *)(filestart + pos); pos += sizeof(ELF32_Word);
-	    header.p_offset = *(ELF32_Off  *)(filestart + pos); pos += sizeof(ELF32_Off);
-	    header.p_vaddr  = *(ELF32_Addr *)(filestart + pos); pos += sizeof(ELF32_Addr);
-	    header.p_paddr  = *(ELF32_Addr *)(filestart + pos); pos += sizeof(ELF32_Addr);
-	    header.p_filesz = *(ELF32_Word *)(filestart + pos); pos += sizeof(ELF32_Word);
-	    header.p_memsz  = *(ELF32_Word *)(filestart + pos); pos += sizeof(ELF32_Word);
-	    header.p_flags  = *(ELF32_Word *)(filestart + pos); pos += sizeof(ELF32_Word);
-	    header.p_align  = *(ELF32_Word *)(filestart + pos); pos += sizeof(ELF32_Word);
+        memcpy((char*)&header, filestart + pos, sizeof(header));
+        pos += sizeof(header);
 
         if(header.p_type != PT_LOAD)
             continue;
