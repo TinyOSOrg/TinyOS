@@ -323,6 +323,14 @@ static void init_bootloader_process()
     tcb->pcb = pcb;
 }
 
+/* 对GP异常等应用程序的锅造成的中断，把该进程干掉就好了 */
+static void intr_kill_proc(uint32_t intr_number)
+{
+    kill_process(get_cur_PCB());
+    while(true)
+        ;
+}
+
 void init_process_man()
 {
     for(size_t i = 0;i != MAX_PROCESS_COUNT; ++i)
@@ -338,6 +346,22 @@ void init_process_man()
     init_freelist(&PCB_freelist);
 
     init_bootloader_process();
+
+    set_intr_function(INTR_NUMBER_DIVIDE_ERROR        , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_DEBUG               , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_BREAKPOINT          , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_INT_OVERFLOW        , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_BOUND_OUT           , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_UNDEFINED_INSTR     , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_DOUBLE_FAULT        , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_NO_FLOAT_PROC       , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_SEG_NOT_P           , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_STK_SEG_FAULT       , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_GENERAL_PROTECTION  , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_FLOAT_ERROR         , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_ALIGNMENT_CHECK     , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_MACHINE_CHECK       , intr_kill_proc);
+    set_intr_function(INTR_NUMBER_SIMD_FLOAT_EXCEPTION, intr_kill_proc);
 }
 
 uint32_t create_process(const char *name, process_exec_func func, bool is_PL_0)
