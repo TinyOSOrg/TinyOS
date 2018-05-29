@@ -1,4 +1,5 @@
-#include <shared/syscall/console.h>
+#include <shared/screen.h>
+#include <shared/syscall.h>
 
 #include <lib/string.h>
 #include <lib/sys.h>

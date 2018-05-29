@@ -1,8 +1,7 @@
 #ifndef TINY_OS_DISK_PARTITION_TABLE_H
 #define TINY_OS_DISK_PARTITION_TABLE_H
 
-#include <shared/filesys/dpt.h>
-#include <shared/filesys/filesys.h>
+#include <shared/filesys.h>
 
 #include <lib/stdbool.h>
 

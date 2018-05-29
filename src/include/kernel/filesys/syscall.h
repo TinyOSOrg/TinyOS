@@ -1,8 +1,7 @@
 #ifndef TINY_OS_FILESYS_SYSCALL_H
 #define TINY_OS_FILESYS_SYSCALL_H
 
-#include <shared/filesys/filesys.h>
-#include <shared/syscall/filesys.h>
+#include <shared/filesys.h>
 
 #include <lib/stdbool.h>
 #include <lib/stdint.h>

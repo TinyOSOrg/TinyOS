@@ -4,7 +4,7 @@
 #include <kernel/filesys/afs/file_opr.h>
 #include <kernel/filesys/afs/file_type.h>
 
-#include <shared/syscall/filesys.h>
+#include <shared/filesys.h>
 
 #include <lib/stdbool.h>
 #include <lib/stdint.h>

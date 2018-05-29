@@ -1,12 +1,9 @@
 #ifndef TINY_OS_LIB_SYS_H
 #define TINY_OS_LIB_SYS_H
 
-#include <shared/filesys/filesys.h>
-#include <shared/keycode.h>
-#include <shared/syscall/filesys.h>
-#include <shared/syscall/sysmsg.h>
-#include <shared/sysmsg/common.h>
-#include <shared/sysmsg/kbmsg.h>
+#include <shared/filesys.h>
+#include <shared/keyboard.h>
+#include <shared/sysmsg.h>
 
 #include <lib/stdbool.h>
 #include <lib/stdint.h>

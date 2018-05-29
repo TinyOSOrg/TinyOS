@@ -1,4 +1,4 @@
-#include <shared/syscall/common.h>
+#include <shared/syscall.h>
 
 #include <lib/sys.h>
 

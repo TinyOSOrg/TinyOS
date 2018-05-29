@@ -1,8 +1,6 @@
 #ifndef TINY_OS_SHARED_PATH_H
 #define TINY_OS_SHARED_PATH_H
 
-#include <shared/filesys/filesys.h>
-
 #include <lib/stdbool.h>
 #include <lib/stdint.h>
 

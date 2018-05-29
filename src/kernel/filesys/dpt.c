@@ -5,7 +5,7 @@
 
 #include <kernel/filesys/afs/afs.h>
 
-#include <shared/filesys/dpt.h>
+#include <shared/filesys.h>
 
 #include <lib/string.h>
 

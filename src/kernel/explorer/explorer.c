@@ -12,8 +12,7 @@
 #include <kernel/process/process.h>
 #include <kernel/execelf/execelf.h>
 
-#include <shared/ctype.h>
-
+#include <lib/ctype.h>
 #include <lib/string.h>
 #include <lib/sys.h>
 

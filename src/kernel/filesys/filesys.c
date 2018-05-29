@@ -6,7 +6,7 @@
 #include <kernel/filesys/afs/file.h>
 #include <kernel/filesys/afs/file_type.h>
 
-#include <shared/syscall/filesys.h>
+#include <shared/filesys.h>
 #include <shared/utility.h>
 
 void init_filesys()

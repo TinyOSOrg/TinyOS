@@ -10,7 +10,7 @@
 extern "C"
 {
 #define TINY_OS_NO_INTDEF
-#include <shared/filesys/dpt.h>
+#include <shared/filesys.h>
 }
 
 dpt_unit dpts[DPT_UNIT_COUNT];

@@ -3,7 +3,7 @@
 #include <kernel/process/process.h>
 #include <kernel/process/semaphore.h>
 
-#include <shared/syscall/console.h>
+#include <shared/screen.h>
 
 #include <lib/string.h>
 

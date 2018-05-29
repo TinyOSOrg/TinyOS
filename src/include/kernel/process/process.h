@@ -9,8 +9,7 @@
 #include <kernel/sysmsg/sysmsg_src.h>
 
 #include <shared/atrc.h>
-#include <shared/filesys/dpt.h>
-#include <shared/filesys/filesys.h>
+#include <shared/filesys.h>
 #include <shared/ptrlist.h>
 
 /*

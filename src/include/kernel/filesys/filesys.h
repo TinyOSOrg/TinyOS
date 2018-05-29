@@ -1,7 +1,7 @@
 #ifndef TINY_OS_FILESYS_FILESYS_H
 #define TINY_OS_FILESYS_FILESYS_H
 
-#include <shared/syscall/filesys.h>
+#include <shared/filesys.h>
 
 #include <lib/stdint.h>
 

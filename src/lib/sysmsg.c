@@ -1,5 +1,5 @@
-#include <shared/syscall/common.h>
-#include <shared/syscall/sysmsg.h>
+#include <shared/syscall.h>
+#include <shared/sysmsg.h>
 
 #include <lib/sys.h>
 

@@ -6,7 +6,7 @@
 #include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg_syscall.h>
 
-#include <shared/syscall/common.h>
+#include <shared/syscall.h>
 
 typedef void (*syscall_impl)();
 

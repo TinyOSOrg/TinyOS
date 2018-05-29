@@ -5,9 +5,7 @@
 #include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg_src.h>
 
-#include <shared/keycode.h>
-#include <shared/sysmsg/kbmsg.h>
-#include <shared/syscall/keyboard.h>
+#include <shared/keyboard.h>
 #include <shared/utility.h>
 
 /* 按键位图数量 */
@@ -136,6 +134,12 @@ static bool kb_masker(const struct PCB *pcb)
     return (pcb->pis & PIS_SYSMSG);
 }
 
+/* 保证一条消息只发给explorer */
+static bool expl_masker(const struct PCB *pcb)
+{
+    return pcb->pid == 1;
+}
+
 /* 键盘中断处理 */
 static void kb_intr_handler()
 {
@@ -191,6 +195,9 @@ static void kb_intr_handler()
     if(vk == VK_CAPS && !up)
         caps_lock = !caps_lock;
     
+    bool explorer_only = (!up && vk == 'Z' && kis_key_pressed(VK_LCTRL));
+    bool (*masker)(const struct PCB*) = explorer_only ? expl_masker : kb_masker;
+    
     // 按键消息发布
     if(vk != VK_NULL)
     {
@@ -200,7 +207,7 @@ static void kb_intr_handler()
         kbmsg.type = SYSMSG_TYPE_KEYBOARD;
         kbmsg.key  = vk;
         kbmsg.flags = up ? 1 : 0;
-        send_msg_to_procs(&kb_receivers, (struct sysmsg*)&kbmsg, kb_masker);
+        send_msg_to_procs(&kb_receivers, (struct sysmsg*)&kbmsg, masker);
     }
 
     // 字符消息发布
@@ -209,7 +216,7 @@ static void kb_intr_handler()
         struct kbchar_msg_struct msg;
         msg.type = SYSMSG_TYPE_CHAR;
         msg.ch = ch;
-        send_msg_to_procs(&char_receivers, (struct sysmsg*)&msg, kb_masker);
+        send_msg_to_procs(&char_receivers, (struct sysmsg*)&msg, masker);
     }
 }
 

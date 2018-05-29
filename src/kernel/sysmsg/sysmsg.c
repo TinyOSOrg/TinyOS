@@ -3,7 +3,7 @@
 #include <kernel/process/process.h>
 #include <kernel/sysmsg/sysmsg.h>
 
-#include <shared/sysmsg/common.h>
+#include <shared/sysmsg.h>
 #include <shared/utility.h>
 
 #include <lib/string.h>

@@ -22,7 +22,9 @@ int main()
         while(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg))
         {
             if(msg.type == SYSMSG_TYPE_CHAR)
+            {
                 put_char(get_chmsg_char(&msg));
+            }
             else if(msg.type == SYSMSG_TYPE_KEYBOARD)
             {
                 if(get_kbmsg_key(&msg) == VK_ESCAPE)

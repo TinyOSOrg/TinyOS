@@ -2,7 +2,7 @@
 #include <kernel/filesys/import/import.h>
 #include <kernel/memory.h>
 
-#include <shared/filesys/import/import.h>
+#include <shared/filesys.h>
 
 #include <lib/sys.h>
 

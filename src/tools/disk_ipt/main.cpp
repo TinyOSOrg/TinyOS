@@ -12,7 +12,7 @@
 extern "C"
 {
 #define TINY_OS_NO_INTDEF
-#include <shared/filesys/import/import.h>
+#include <shared/filesys.h>
 }
 
 using namespace std;

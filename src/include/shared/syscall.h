@@ -1,5 +1,5 @@
-#ifndef TINY_OS_SHARED_SYSCALL_COMMON_H
-#define TINY_OS_SHARED_SYSCALL_COMMON_H
+#ifndef TINY_OS_SHARED_SYSCALL_H
+#define TINY_OS_SHARED_SYSCALL_H
 
 /* 系统调用入口数量 */
 #define SYSCALL_COUNT 17
@@ -91,4 +91,4 @@
                      : "memory"); \
        r; })
 
-#endif /* TINY_OS_SHARED_SYSCALL_COMMON_H */
+#endif /* TINY_OS_SHARED_SYSCALL_H */

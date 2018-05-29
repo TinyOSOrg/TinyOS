@@ -1,6 +1,6 @@
-#include <shared/syscall/common.h>
-#include <shared/syscall/keyboard.h>
-#include <shared/syscall/sysmsg.h>
+#include <shared/syscall.h>
+#include <shared/keyboard.h>
+#include <shared/sysmsg.h>
 
 #include <lib/sys.h>
 

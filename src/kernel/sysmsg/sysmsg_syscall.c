@@ -4,8 +4,7 @@
 #include <kernel/sysmsg/sysmsg_syscall.h>
 #include <kernel/sysmsg/sysmsg.h>
 
-#include <shared/syscall/sysmsg.h>
-#include <shared/sysmsg/common.h>
+#include <shared/sysmsg.h>
 
 #include <lib/stdbool.h>
 #include <lib/string.h>
