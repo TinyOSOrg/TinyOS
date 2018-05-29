@@ -114,3 +114,7 @@ clean :
 bochs :
 	make all
 	bochs
+
+.PHONY: setup
+setup :
+	bash setup_old.sh

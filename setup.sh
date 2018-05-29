@@ -6,5 +6,5 @@ make mkdpt
 make elf_tester
 make disk_ipt
 ./build/mkdpt hd.img
-./build/disk_ipt hd.img ./build/elf_tester /hello_world.elf
+./build/disk_ipt hd.img ./build/elf_tester /test.elf
 make clean
