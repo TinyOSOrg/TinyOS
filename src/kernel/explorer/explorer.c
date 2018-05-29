@@ -283,6 +283,14 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
         disp_new_line();
         expl_rmdir(expl_working_dp, expl_working_dir, args[0]);
     }
+    else if(strcmp(cmd, "rmfile") == 0)
+    {
+        if(arg_cnt != 1)
+            goto INVALID_ARGUMENT;
+        
+        disp_new_line();
+        expl_rmfile(expl_working_dp, expl_working_dir, args[0]);
+    }
     else
     {
         disp_new_line();

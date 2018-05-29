@@ -37,4 +37,8 @@ void expl_mkdir(filesys_dp_handle dp, const char *working_dir,
 void expl_rmdir(filesys_dp_handle dp, const char *working_dir,
                 const char *dirname);
 
+/* rmfile，不解释 */
+void expl_rmfile(filesys_dp_handle dp, const char *working_dir,
+                 const char *filename);
+
 #endif /* TINY_OS_EXPLORER_PROCS_H */
