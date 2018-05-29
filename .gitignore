@@ -2,11 +2,6 @@ bochs.out
 
 .vscode/
 
-doc/docsrc/
-doc/
-DESIGN.md
-DESIGN.html
-
 *.o
 *.d
 *.bin
