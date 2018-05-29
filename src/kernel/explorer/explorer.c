@@ -207,6 +207,14 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
         clr_disp();
         disp_set_cursor(0, 0);
     }
+    else if(strcmp(cmd, "exec") == 0)
+    {
+        if(!arg_cnt)
+            goto INVALID_ARGUMENT;
+        
+        disp_new_line();
+        expl_exec(expl_working_dp, expl_working_dir, args, arg_cnt);
+    }
     else if(strcmp(cmd, "exit") == 0)
     {
         if(arg_cnt)

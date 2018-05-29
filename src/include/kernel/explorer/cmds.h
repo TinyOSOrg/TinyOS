@@ -3,6 +3,8 @@
 
 #include <kernel/filesys/filesys.h>
 
+#include <shared/intdef.h>
+
 /* Explorer中的部分内建命令 */
 
 /* 输出进程列表 */
@@ -15,5 +17,13 @@ bool expl_ls(filesys_dp_handle dp, const char *dir);
 bool expl_cd(filesys_dp_handle *dp, char *cur,
              uint32_t *len, uint32_t max_len,
              const char *arg);
+
+/*
+    exec，执行一个用户程序
+    args为
+        程序路径（绝对/相对） 参数1 参数2 ……
+*/
+void expl_exec(filesys_dp_handle dp, const char *working_dir,
+               const char **args, uint32_t args_cnt);
 
 #endif /* TINY_OS_EXPLORER_PROCS_H */
