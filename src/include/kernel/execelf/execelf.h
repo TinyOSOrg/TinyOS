@@ -19,6 +19,7 @@ enum exec_elf_result
 /* 以磁盘上的一个elf文件为程序创建一个进程 */
 enum exec_elf_result exec_elf(const char *proc_name,
                               filesys_dp_handle dp, const char *elf_path,
-                              bool is_PL_0, uint32_t argc, const char **argv);
+                              bool is_PL_0, uint32_t argc, const char **argv,
+                              uint32_t *pid);
 
 #endif /* TINY_OS_EXEC_ELF_EXEC_H */

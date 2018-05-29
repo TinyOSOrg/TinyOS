@@ -66,7 +66,8 @@
 
 enum exec_elf_result exec_elf(const char *proc_name,
                               filesys_dp_handle dp, const char *elf_path,
-                              bool is_PL_0, uint32_t argc, const char **argv)
+                              bool is_PL_0, uint32_t argc, const char **argv,
+                              uint32_t *_pid)
 {
     intr_state is = fetch_and_disable_intr();
     struct PCB *pcb = get_cur_PCB();
@@ -118,8 +119,10 @@ enum exec_elf_result exec_elf(const char *proc_name,
     }
 
     // 进程创建
-    create_process_with_addr_space(proc_name, (process_exec_func)entry_addr,
-                                   new_addr_space, is_PL_0);
+    uint32_t pid = create_process_with_addr_space(proc_name, (process_exec_func)entry_addr,
+                                                  new_addr_space, is_PL_0);
+    if(_pid)
+        *_pid = pid;
 
     EXEC_ELF_EXIT(exec_elf_success);
 }

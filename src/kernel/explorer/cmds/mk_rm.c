@@ -17,7 +17,8 @@ static bool expl_file_opr(filesys_dp_handle dp, const char *working_dir,
     if(!cat_path_s(working_dir, dstname, namebuf, 4096))
         return false;
 
-    if(opr(dp, namebuf) != filesys_opr_success)
+    enum filesys_opr_result rt = opr(dp, namebuf);
+    if(rt != filesys_opr_success)
         return false;
 
     return true;

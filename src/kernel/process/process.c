@@ -340,7 +340,7 @@ void init_process_man()
     init_bootloader_process();
 }
 
-void create_process(const char *name, process_exec_func func, bool is_PL_0)
+uint32_t create_process(const char *name, process_exec_func func, bool is_PL_0)
 {
     intr_state intr_s = fetch_and_disable_intr();
 
@@ -352,10 +352,12 @@ void create_process(const char *name, process_exec_func func, bool is_PL_0)
     struct TCB *tcb = create_thread(thread_entry, func, pcb);
     push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
 
+    uint32_t ret = pcb->pid;
     set_intr_state(intr_s);
+    return ret;
 }
 
-void create_process_with_addr_space(const char *name, process_exec_func func,
+uint32_t create_process_with_addr_space(const char *name, process_exec_func func,
                                     vir_addr_space *addr_space, bool is_PL_0)
 {
     intr_state intr_s = fetch_and_disable_intr();
@@ -368,7 +370,9 @@ void create_process_with_addr_space(const char *name, process_exec_func func,
     struct TCB *tcb = create_thread(thread_entry, func, pcb);
     push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
 
+    uint32_t ret = pcb->pid;
     set_intr_state(intr_s);
+    return ret;
 }
 
 void add_proc_thread(process_exec_func func)

@@ -217,7 +217,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "exec") == 0)
     {
-        if(!arg_cnt)
+        if(arg_cnt < 2)
             goto INVALID_ARGUMENT;
         
         disp_new_line();
@@ -478,14 +478,6 @@ void explorer()
     reformat_dp(0, DISK_PT_AFS);
 
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
-
-    for(int i = 0; i < 5; ++i)
-    {
-        char name[30] = "t"; char idx_buf[20];
-        uint32_to_str(i, idx_buf);
-        strcat(name, idx_buf);
-        exec_elf(name, 0, "/hello_world.elf", false, 0, NULL);
-    }
 
     while(explorer_transfer())
         ;

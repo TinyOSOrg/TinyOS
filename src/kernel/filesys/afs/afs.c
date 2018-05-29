@@ -864,6 +864,9 @@ void afs_remove_file_by_path(struct afs_dp_head *head,
 
         name_beg = next_name_beg;
         name_len = next_name_len;
+
+        if(parent_dir)
+            afs_close_file_for_reading(head, parent_dir);
     }
 }
 
