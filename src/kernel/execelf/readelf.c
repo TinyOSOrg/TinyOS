@@ -1,8 +1,8 @@
 #include <kernel/execelf/readelf.h>
 
-#include <lib/stdint.h>
-#include <lib/string.h>
-#include <lib/sys.h>
+#include <shared/stdint.h>
+#include <shared/string.h>
+#include <shared/sys.h>
 
 /*
     IMPROVE：load_elf应该进行适当的合法性检查

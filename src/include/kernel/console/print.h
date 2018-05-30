@@ -3,7 +3,7 @@
 
 #include <kernel/console/con_buf.h>
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /*
     设置光标位置

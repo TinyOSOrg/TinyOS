@@ -3,7 +3,7 @@
 
 #include <kernel/explorer/screen.h>
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 void init_disp();
 

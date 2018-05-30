@@ -2,9 +2,8 @@
 #define TINY_OS_FILESYS_SYSCALL_H
 
 #include <shared/filesys.h>
-
-#include <lib/stdbool.h>
-#include <lib/stdint.h>
+#include <shared/stdbool.h>
+#include <shared/stdint.h>
 
 enum filesys_opr_result syscall_filesys_open_impl(
         struct syscall_filesys_open_params *params);

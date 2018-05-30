@@ -1,7 +1,7 @@
-#ifndef TINY_OS_SHARED_CTYPE_H
-#define TINY_OS_SHARED_CTYPE_H
+#ifndef TINY_OS_SHARD_CTYPE_H
+#define TINY_OS_SHARD_CTYPE_H
 
-#include <lib/stdbool.h>
+#include <shared/stdbool.h>
 
 static inline bool isdigit(char ch)
 {
@@ -14,4 +14,4 @@ static inline bool isspace(char ch)
     return ch == ' ' || ch == '\n' || ch == '\t';
 }
 
-#endif /* TINY_OS_SHARED_CTYPE_H */
+#endif /* TINY_OS_SHARD_CTYPE_H */

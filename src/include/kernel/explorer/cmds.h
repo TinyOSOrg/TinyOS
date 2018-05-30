@@ -3,7 +3,7 @@
 
 #include <kernel/filesys/filesys.h>
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /* Explorer中的部分内建命令 */
 

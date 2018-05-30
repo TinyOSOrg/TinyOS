@@ -6,8 +6,7 @@
 #include <kernel/filesys/afs/afs.h>
 
 #include <shared/filesys.h>
-
-#include <lib/string.h>
+#include <shared/string.h>
 
 #define DPT_BYTE_SIZE (sizeof(struct dpt_unit) * DPT_UNIT_COUNT)
 

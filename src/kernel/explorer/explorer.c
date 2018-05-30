@@ -12,9 +12,9 @@
 #include <kernel/process/process.h>
 #include <kernel/execelf/execelf.h>
 
-#include <lib/ctype.h>
-#include <lib/string.h>
-#include <lib/sys.h>
+#include <shared/ctype.h>
+#include <shared/string.h>
+#include <shared/sys.h>
 
 /*
     IMPROVE: 这个explorer是赶工的结果，写得烂如翔（

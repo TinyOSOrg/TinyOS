@@ -1,8 +1,8 @@
 #ifndef TINY_OS_SYSMSG_H
 #define TINY_OS_SYSMSG_H
 
-#include <lib/stdbool.h>
-#include <lib/stdint.h>
+#include <shared/stdbool.h>
+#include <shared/stdint.h>
 
 /*
     每个进程都有一个消息队列，位于内核地址空间中，大小非常有限

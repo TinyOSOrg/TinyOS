@@ -7,9 +7,8 @@
 #include <kernel/process/spinlock.h>
 
 #include <shared/rbtree.h>
-
-#include <lib/stdbool.h>
-#include <lib/stdint.h>
+#include <shared/stdbool.h>
+#include <shared/stdint.h>
 
 /*======================================================
 分区格式描述：

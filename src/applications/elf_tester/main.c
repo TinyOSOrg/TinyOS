@@ -1,12 +1,4 @@
-#include <lib/sys.h>
-
-int main();
-
-void _start()
-{
-    main();
-    exit_thread();
-}
+#include <shared/sys.h>
 
 int main()
 {

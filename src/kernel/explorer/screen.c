@@ -5,9 +5,8 @@
 #include <kernel/process/process.h>
 
 #include <shared/screen.h>
-
-#include <lib/string.h>
-#include <lib/sys.h>
+#include <shared/string.h>
+#include <shared/sys.h>
 
 #define CMD_X_BASE 0
 #define CMD_Y_BASE (1 + SCR_DISP_HEIGHT + 1)

@@ -1,7 +1,7 @@
 #ifndef TINY_OS_FILESYS_AFS_SECTOR_CACHE_H
 #define TINY_OS_FILESYS_AFS_SECTOR_CACHE_H
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /*
     进程对磁盘的访问通常也是有时空局部性的，因此这里做个LRU的磁盘访问cache，不考虑抖动什么的

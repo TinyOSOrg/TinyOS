@@ -3,8 +3,7 @@
 #include <kernel/memory.h>
 
 #include <shared/filesys.h>
-
-#include <lib/sys.h>
+#include <shared/sys.h>
 
 #define IPT_SECTOR_BYTE_SIZE 512
 

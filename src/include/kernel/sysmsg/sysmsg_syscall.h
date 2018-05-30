@@ -1,7 +1,7 @@
 #ifndef TINY_OS_PROC_SYSMSG_SYSCALL_H
 #define TINY_OS_PROC_SYSMSG_SYSCALL_H
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /* 初始化内核消息系统调用 */
 void init_sysmsg_syscall();

@@ -2,8 +2,7 @@
 #define TINY_OS_THREAD_H
 
 #include <shared/ptrlist.h>
-
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /* 操作实现在spinlock.h中，TCB要用这个所以提前声明在这了…… */
 typedef volatile uint32_t spinlock;

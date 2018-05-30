@@ -3,8 +3,8 @@
 
 #include <kernel/memory/vir_page_man.h>
 
-#include <lib/stdbool.h>
-#include <lib/string.h>
+#include <shared/stdbool.h>
+#include <shared/string.h>
 
 struct vir_page_man
 {

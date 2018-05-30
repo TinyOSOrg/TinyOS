@@ -1,7 +1,7 @@
 #ifndef TINY_OS_DISK_DRIVER_H
 #define TINY_OS_DISK_DRIVER_H
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /*
     硬盘任务调度：

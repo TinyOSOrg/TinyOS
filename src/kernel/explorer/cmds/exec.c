@@ -6,8 +6,7 @@
 #include <kernel/memory.h>
 
 #include <shared/path.h>
-
-#include <lib/string.h>
+#include <shared/string.h>
 
 void expl_exec(filesys_dp_handle dp, const char *working_dir,
                const char **_args, uint32_t args_cnt)

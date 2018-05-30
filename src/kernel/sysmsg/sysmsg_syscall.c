@@ -6,8 +6,8 @@
 
 #include <shared/sysmsg.h>
 
-#include <lib/stdbool.h>
-#include <lib/string.h>
+#include <shared/stdbool.h>
+#include <shared/string.h>
 
 static uint32_t (*functions[SYSMSG_SYSCALL_FUNCTION_COUNT])(uint32_t, uint32_t);
 

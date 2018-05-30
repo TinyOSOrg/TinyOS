@@ -4,8 +4,7 @@
 #include <kernel/process/semaphore.h>
 
 #include <shared/screen.h>
-
-#include <lib/string.h>
+#include <shared/string.h>
 
 static uint32_t (*functions[CONSOLE_SYSCALL_FUNCTION_COUNT])(struct con_buf *, uint32_t);
 

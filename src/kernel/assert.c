@@ -1,11 +1,10 @@
 #include <kernel/asm.h>
 #include <kernel/assert.h>
-
 #include <kernel/console/console.h>
 #include <kernel/console/print.h>
 
-#include <lib/stdbool.h>
-#include <lib/string.h>
+#include <shared/stdbool.h>
+#include <shared/string.h>
 
 void _fatal_error_impl(const char *prefix, const char *filename, const char *function, int line, const char *msg)
 {

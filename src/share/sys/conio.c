@@ -1,8 +1,7 @@
 #include <shared/screen.h>
 #include <shared/syscall.h>
-
-#include <lib/string.h>
-#include <lib/sys.h>
+#include <shared/string.h>
+#include <shared/sys.h>
 
 #define CONSOLE_SYSCALL(N, arg) \
     do { uint32_t dummy_ret; \

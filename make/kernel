@@ -27,7 +27,7 @@ src/boot/mbr.bootbin : src/boot/mbr.s src/boot/boot.s
 src/boot/bootloader.bootbin : src/boot/bootloader.s src/boot/boot.s
 	$(ASM) $(ASM_FLAGS) $< -o $@
 
-src/boot/kernel.bootbin : $(KER_O_FILES) $(KER_BIN_FILES) $(LIB_O_FILES) $(SHARED_O_FILES)
+src/boot/kernel.bootbin : $(KER_O_FILES) $(KER_BIN_FILES) $(SHARED_O_FILES)
 	$(LD) $(LD_FLAGS) $^ -Ttext $(KER_ENTRY_ADDR) -e main -o $@
 
 $(KER_O_FILES) : %.o : %.c

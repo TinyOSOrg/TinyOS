@@ -1,8 +1,8 @@
 #include <kernel/explorer/disp.h>
 #include <kernel/explorer/screen.h>
 
-#include <lib/stdbool.h>
-#include <lib/string.h>
+#include <shared/stdbool.h>
+#include <shared/string.h>
 
 static uint8_t cx, cy;
 

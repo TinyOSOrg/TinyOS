@@ -4,8 +4,7 @@
 #include <kernel/process/semaphore.h>
 
 #include <shared/screen.h>
-
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 struct con_buf
 {

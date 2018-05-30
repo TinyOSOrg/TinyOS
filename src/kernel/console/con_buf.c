@@ -4,8 +4,7 @@
 #include <kernel/process/spinlock.h>
 
 #include <shared/freelist.h>
-
-#include <lib/string.h>
+#include <shared/string.h>
 
 STATIC_ASSERT(sizeof(struct con_buf) < 4096, invalid_size_of_con_buf);
 

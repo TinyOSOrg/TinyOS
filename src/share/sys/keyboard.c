@@ -1,8 +1,7 @@
 #include <shared/syscall.h>
 #include <shared/keyboard.h>
 #include <shared/sysmsg.h>
-
-#include <lib/sys.h>
+#include <shared/sys.h>
 
 bool is_key_pressed(uint8_t kc)
 {

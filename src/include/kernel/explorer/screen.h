@@ -2,8 +2,7 @@
 #define TINY_OS_EXPLORER_SCREEN_H
 
 #include <shared/screen.h>
-
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 struct PCB;
 

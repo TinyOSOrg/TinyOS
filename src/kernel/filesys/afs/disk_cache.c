@@ -11,9 +11,8 @@
 #include <shared/freelist.h>
 #include <shared/ptrlist.h>
 #include <shared/rbtree.h>
+#include <shared/string.h>
 #include <shared/utility.h>
-
-#include <lib/string.h>
 
 //=========================== 扇区缓存管理 ===========================
 

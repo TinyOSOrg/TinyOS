@@ -1,6 +1,5 @@
 #include <shared/syscall.h>
-
-#include <lib/sys.h>
+#include <shared/sys.h>
 
 enum filesys_opr_result open_file(filesys_dp_handle dp,
                                   const char *path, bool writing,

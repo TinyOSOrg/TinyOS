@@ -5,8 +5,7 @@
 #include <kernel/filesys/afs/dp_phy.h>
 
 #include <shared/rbtree.h>
-
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /* 一个打开的文件槽句柄 */
 struct afs_file_desc;

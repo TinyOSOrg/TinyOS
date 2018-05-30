@@ -1,12 +1,11 @@
-#ifndef TINY_OS_LIB_SYS_H
-#define TINY_OS_LIB_SYS_H
+#ifndef TINY_OS_SHARD_SYS_H
+#define TINY_OS_SHARD_SYS_H
 
 #include <shared/filesys.h>
 #include <shared/keyboard.h>
+#include <shared/stdbool.h>
+#include <shared/stdint.h>
 #include <shared/sysmsg.h>
-
-#include <lib/stdbool.h>
-#include <lib/stdint.h>
 
 /* 进程/线程相关 */
 
@@ -111,4 +110,4 @@ void wait_for_sysmsg();
 /* 清空消息队列 */
 void clr_sysmsgs();
 
-#endif /* TINY_OS_LIB_SYS_H */
+#endif /* TINY_OS_SHARD_SYS_H */

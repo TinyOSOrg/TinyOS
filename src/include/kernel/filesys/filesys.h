@@ -2,8 +2,7 @@
 #define TINY_OS_FILESYS_FILESYS_H
 
 #include <shared/filesys.h>
-
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 void init_filesys();
 

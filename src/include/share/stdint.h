@@ -1,5 +1,5 @@
-#ifndef TINY_OS_LIB_STDINT_H
-#define TINY_OS_LIB_STDINT_H
+#ifndef TINY_OS_SHARD_STDINT_H
+#define TINY_OS_SHARD_STDINT_H
 
 #ifndef TINY_OS_NO_INTDEF
 
@@ -21,4 +21,4 @@ typedef uint32_t size_t;
     #define NULL ((void*)0)
 #endif
 
-#endif /* TINY_OS_LIB_STDINT_H */
+#endif /* TINY_OS_SHARD_STDINT_H */

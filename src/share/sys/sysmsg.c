@@ -1,7 +1,6 @@
 #include <shared/syscall.h>
 #include <shared/sysmsg.h>
-
-#include <lib/sys.h>
+#include <shared/sys.h>
 
 bool has_sysmsg()
 {

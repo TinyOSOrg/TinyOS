@@ -2,7 +2,7 @@
 #include <kernel/explorer/disp.h>
 #include <kernel/filesys/filesys.h>
 
-#include <lib/sys.h>
+#include <shared/sys.h>
 
 bool expl_ls(filesys_dp_handle dp, const char *dir)
 {

@@ -13,10 +13,9 @@
 
 #include <shared/freelist.h>
 #include <shared/ptrlist.h>
+#include <shared/stdint.h>
+#include <shared/string.h>
 #include <shared/utility.h>
-
-#include <lib/stdint.h>
-#include <lib/string.h>
 
 /*=====================================================================
     用户段相关

@@ -4,7 +4,7 @@
 #include <kernel/asm.h>
 #include <kernel/process/thread.h>
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /* 自旋锁实现的互斥量，不解释 */
 

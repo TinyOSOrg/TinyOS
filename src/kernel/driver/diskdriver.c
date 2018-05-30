@@ -5,9 +5,8 @@
 #include <kernel/process/thread.h>
 #include <kernel/process/semaphore.h>
 
+#include <shared/string.h>
 #include <shared/utility.h>
-
-#include <lib/string.h>
 
 /* IDE0相关的控制端口号 */
 #define DISK_PORT_DATA         0x1f0

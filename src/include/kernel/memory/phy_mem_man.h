@@ -3,8 +3,8 @@
 
 /* 页级存储管理 */
 
-#include <lib/stdbool.h>
-#include <lib/stdint.h>
+#include <shared/stdbool.h>
+#include <shared/stdint.h>
 
 /* 内核虚拟地址分配（base = 0xc0000000）：
     1M~2M：内核栈

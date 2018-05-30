@@ -1,8 +1,8 @@
-#ifndef TINYOS_LIB_STRING_H
-#define TINYOS_LIB_STRING_H
+#ifndef TINYOS_SHARD_STRING_H
+#define TINYOS_SHARD_STRING_H
 
-#include <lib/stdbool.h>
-#include <lib/stdint.h>
+#include <shared/stdbool.h>
+#include <shared/stdint.h>
 
 size_t strlen(const char *str);
 
@@ -28,4 +28,4 @@ void memcpy(char *dst, const char *src, size_t byte_size);
 
 uint32_t strhash(const char *str);
 
-#endif /* TINYOS_LIB_STRING_H */
+#endif /* TINYOS_SHARD_STRING_H */

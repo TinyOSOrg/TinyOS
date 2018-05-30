@@ -12,9 +12,9 @@
 
 #include <shared/freelist.h>
 #include <shared/ptrlist.h>
+#include <shared/string.h>
 #include <shared/utility.h>
 
-#include <lib/string.h>
 
 /*
     中断发生时压入栈中的东西得占多少字节

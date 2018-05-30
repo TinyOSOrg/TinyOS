@@ -3,8 +3,7 @@
 #include <kernel/memory.h>
 
 #include <shared/path.h>
-
-#include <lib/sys.h>
+#include <shared/sys.h>
 
 static bool expl_file_opr(filesys_dp_handle dp, const char *working_dir,
                           const char *dstname, char *namebuf,

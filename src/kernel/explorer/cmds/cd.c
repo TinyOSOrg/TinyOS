@@ -2,13 +2,12 @@
 #include <kernel/explorer/cmds.h>
 #include <kernel/explorer/disp.h>
 #include <kernel/explorer/explorer.h>
+#include <kernel/filesys/dpt.h>
 #include <kernel/memory.h>
 
-#include <kernel/filesys/dpt.h>
 #include <shared/path.h>
-
-#include <lib/string.h>
-#include <lib/sys.h>
+#include <shared/string.h>
+#include <shared/sys.h>
 
 bool expl_cd(filesys_dp_handle *dp, char *cur,
              uint32_t *len, uint32_t max_len,

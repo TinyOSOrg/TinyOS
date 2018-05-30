@@ -1,7 +1,7 @@
 #ifndef TINY_OS_FILESYS_IMPORT_IMPORT_H
 #define TINY_OS_FILESYS_IMPORT_IMPORT_H
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /*
     Import分区是用于开发和测试的一种特殊磁盘分区

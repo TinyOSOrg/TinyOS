@@ -1,7 +1,7 @@
 #ifndef TINY_OS_SYSCALL_H
 #define TINY_OS_SYSCALL_H
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /*
     系统调用设计：

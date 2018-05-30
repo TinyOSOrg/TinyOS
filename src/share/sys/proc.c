@@ -1,6 +1,5 @@
 #include <shared/syscall.h>
-
-#include <lib/sys.h>
+#include <shared/sys.h>
 
 uint32_t get_pid()
 {

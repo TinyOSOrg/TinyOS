@@ -3,7 +3,7 @@
 
 #include <shared/ptrlist.h>
 
-#include <lib/stdint.h>
+#include <shared/stdint.h>
 
 /*
     内核信号量，提供PV原语

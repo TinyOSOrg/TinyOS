@@ -5,8 +5,8 @@
 #include <kernel/memory.h>
 #include <kernel/process/process.h>
 
-#include <lib/string.h>
-#include <lib/sys.h>
+#include <shared/string.h>
+#include <shared/sys.h>
 
 /*
     exec要完成以下事情（顺序无先后）：

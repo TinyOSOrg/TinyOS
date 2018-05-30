@@ -5,9 +5,8 @@
 #include <kernel/filesys/afs/file_type.h>
 
 #include <shared/filesys.h>
-
-#include <lib/stdbool.h>
-#include <lib/stdint.h>
+#include <shared/stdbool.h>
+#include <shared/stdint.h>
 
 struct afs_dp_head;
 struct afs_file_desc;

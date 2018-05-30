@@ -2,13 +2,12 @@
 #include <kernel/assert.h>
 #include <kernel/boot.h>
 #include <kernel/interrupt.h>
-
 #include <kernel/memory/page_desc.h>
 #include <kernel/memory/phy_mem_man.h>
 #include <kernel/memory/vir_mem_man.h>
 #include <kernel/memory/vir_page_man.h>
 
-#include <lib/string.h>
+#include <shared/string.h>
 
 struct PDE_struct
 {

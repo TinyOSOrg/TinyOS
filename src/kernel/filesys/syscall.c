@@ -5,10 +5,9 @@
 #include <kernel/interrupt.h>
 #include <kernel/process/process.h>
 
+#include <shared/ctype.h>
 #include <shared/filesys.h>
-
-#include <lib/ctype.h>
-#include <lib/string.h>
+#include <shared/string.h>
 
 static bool get_file_from_usr_handle(usr_file_handle handle,
                                     filesys_dp_handle *dp,
