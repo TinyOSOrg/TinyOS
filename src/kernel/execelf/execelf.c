@@ -26,24 +26,6 @@
         elf入口函数自己去把命令行参数从特定地址取出来
 */
 
-/*
-    进程初始虚拟地址空间规划：
-    addr space
-        || 低地址区域：
-        ||     0~USER_DISPLAYING_BUFFER_ADDR：空闲
-        ||     USER_DISPLAYING_BUFFER_ADDR~(USER_STACK_BITMAP_ADDR - 1)：进程屏幕缓存
-        ||     屏幕缓存之后紧跟调用栈分配位图，之后的空间均为空闲
-        || 高地址区域：
-        ||     elf文件缓存
-        ||     进程参数区
-        \/     调用栈
-*/
-
-/* 进程参数区起始地址 */
-#define PROC_ARG_ZONE_ADDR \
-    (USER_STACK_TOP_ADDR - MAX_PROCESS_THREADS * USER_STACK_SIZE - \
-     EXEC_ELF_ARG_MAX_COUNT * EXEC_ELF_ARG_BUF_SIZE - sizeof(uint32_t))
-    
 /* elf文件缓存区大小 */
 #define PROC_FILE_BUF_SIZE (100 * 1024 * 1024)
 
@@ -104,7 +86,9 @@ enum exec_elf_result exec_elf(const char *proc_name,
     close_file(fp);
 
     // 装载elf
-    void *entry_addr = load_elf((const void*)PROC_FILE_BUF_ADDR);
+    size_t prog_beg, prog_end;
+    void *entry_addr = load_elf((const void*)PROC_FILE_BUF_ADDR,
+                                &prog_beg, &prog_end);
     if(!entry_addr)
         EXEC_ELF_ERROR(exec_elf_invalid_elf);
     
@@ -118,9 +102,22 @@ enum exec_elf_result exec_elf(const char *proc_name,
         p_buf += EXEC_ELF_ARG_BUF_SIZE;
     }
 
+    // 放置usr_addr_interval
+    struct usr_addr_interval *free_space =
+        (struct usr_addr_interval *)USR_ADDR_INTERVAL_ADDR;
+    
+    free_space->beg1 = USR_ADDR_INTERVAL_ADDR +
+                       sizeof(struct usr_addr_interval);
+    free_space->size1 = (prog_beg > free_space->beg1) ?
+                            (prog_beg - free_space->beg1) : 0;
+    free_space->beg2 = prog_end;
+    free_space->size2 = (PROC_ARG_ZONE_ADDR > free_space->beg2) ?
+                            (PROC_ARG_ZONE_ADDR - free_space->beg2) : 0;
+
     // 进程创建
-    uint32_t pid = create_process_with_addr_space(proc_name, (process_exec_func)entry_addr,
-                                                  new_addr_space, is_PL_0);
+    uint32_t pid = create_process_with_addr_space(
+                        proc_name, (process_exec_func)entry_addr,
+                        new_addr_space, is_PL_0);
     if(_pid)
         *_pid = pid;
 

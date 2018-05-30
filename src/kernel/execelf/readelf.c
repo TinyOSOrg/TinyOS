@@ -1,8 +1,10 @@
+#include <kernel/assert.h>
 #include <kernel/execelf/readelf.h>
 
 #include <shared/stdint.h>
 #include <shared/string.h>
 #include <shared/sys.h>
+#include <shared/utility.h>
 
 /*
     IMPROVE：load_elf应该进行适当的合法性检查
@@ -46,8 +48,11 @@ typedef struct {
     ELF32_Word p_align;
 } elf32_phdr;
 
-void *load_elf(const void *_filestart)
+void *load_elf(const void *_filestart, size_t *beg, size_t *end)
 {
+    ASSERT_S(beg && end);
+    size_t _beg = 0xffffffff, _end = 0;
+
     elf32_ehdr eh;
     const char *filestart = (const char *)_filestart;
 
@@ -77,7 +82,11 @@ void *load_elf(const void *_filestart)
             memset((char *)((char*)header.p_vaddr + header.p_filesz), 0x0,
                    header.p_memsz - header.p_filesz);
         }
+
+        _beg = MIN(_beg, header.p_vaddr);
+        _end = MAX(_end, header.p_vaddr + header.p_memsz);
     }
 
+    *beg = _beg, *end = _end;
     return (void*)eh.e_entry;
 }

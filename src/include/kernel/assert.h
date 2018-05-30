@@ -1,6 +1,8 @@
 #ifndef TINY_OS_FATAL_ERROR_H
 #define TINY_OS_FATAL_ERROR_H
 
+#include <shared/utility.h>
+
 #include <config.h>
 
 #define FATAL_ERROR(MSG) _fatal_error_impl("Fatal error in ", \
@@ -30,9 +32,5 @@
 
 void _fatal_error_impl(const char *prefix, const char *filename,
                        const char *function, int line, const char *msg);
-
-/* static_assert一直到C11才有，这里通过数组大小非负来模拟之 */
-#define STATIC_ASSERT(EXPR, MSG) \
-    typedef char static_assert_failed__##MSG[2 * !!(EXPR) - 1]
 
 #endif /* TINY_OS_FATAL_ERROR_H */

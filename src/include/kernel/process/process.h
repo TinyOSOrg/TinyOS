@@ -10,6 +10,7 @@
 
 #include <shared/atrc.h>
 #include <shared/filesys.h>
+#include <shared/proc_mem.h>
 #include <shared/ptrlist.h>
 
 /*
@@ -28,27 +29,8 @@
 /* 最大进程数量（包括内核初始进程） */
 #define MAX_PROCESS_COUNT (MAX_VIR_ADDR_SPACE_COUNT + 1)
 
-/* 默认用户栈大小：1M */
-#define USER_STACK_SIZE 0x100000
-
-/* 用户栈位图起始地址 */
-#define USER_STACK_BITMAP_ADDR 0x100000
-
-/* 显示缓存大小 */
-#define USER_DISPLAYING_BUFFER_SIZE (80 * 25 * 2)
-
-/* 显示缓存起始地址 */
-#define USER_DISPLAYING_BUFFER_ADDR \
-    (USER_STACK_BITMAP_ADDR - USER_DISPLAYING_BUFFER_SIZE)
-
 /* 用户栈最高地址 */
 #define USER_STACK_TOP_ADDR ((uint32_t)0xbffff * (uint32_t)0x1000)
-
-/*
-    一个进程最多包含多少线程
-    应是32的整数倍
-*/
-#define MAX_PROCESS_THREADS 32
 
 /* 进程名字最大长度 */
 #define PROCESS_NAME_MAX_LENGTH 31

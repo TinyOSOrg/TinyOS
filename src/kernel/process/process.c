@@ -71,9 +71,6 @@ static void init_user_segments()
     进程本体相关
 =====================================================================*/
 
-/* 有多少个用户栈位图 */
-#define USER_THREAD_STACK_BITMAP_COUNT (MAX_PROCESS_THREADS >> 5)
-
 struct intr_stack_bak
 {
     // 最后压入的是中断向量号
@@ -202,7 +199,7 @@ static void *alloc_thread_user_stack()
     {
         if(!usr_bmps[i])
             continue;
-        uint32_t local_idx = _find_lowest_nonzero_bit(usr_bmps[i]);
+        uint32_t local_idx = find_lowest_nonzero_bit(usr_bmps[i]);
         usr_bmps[i] &= ~(1 << local_idx);
         return (void*)((uint32_t)USER_STACK_TOP_ADDR -
             (uint32_t)(((i << 5) + local_idx) * ((uint32_t)USER_STACK_SIZE) + 4));

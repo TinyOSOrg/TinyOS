@@ -48,7 +48,7 @@ uint32_t alloc_page_in_vir_addr_space(struct vir_page_man *page_man)
     {
         if(page_man->bitmap[bmp_idx] != 0)
         {
-            uint32_t loc_idx = _find_lowest_nonzero_bit(page_man->bitmap[bmp_idx]);
+            uint32_t loc_idx = find_lowest_nonzero_bit(page_man->bitmap[bmp_idx]);
             page_man->bitmap[bmp_idx] &= ~(1 << loc_idx);
             --page_man->unused;
             return (((bmp_idx << 5) + loc_idx) + page_man->begin) << 12;

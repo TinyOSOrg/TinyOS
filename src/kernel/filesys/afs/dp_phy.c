@@ -186,7 +186,7 @@ uint32_t afs_alloc_disk_block(struct afs_dp_head *head)
     {
         if(blkgrp_head->blk_btmp[g_idx])
         {
-            l_idx = _find_lowest_nonzero_bit(blkgrp_head->blk_btmp[g_idx]);
+            l_idx = find_lowest_nonzero_bit(blkgrp_head->blk_btmp[g_idx]);
             blkgrp_head->blk_btmp[g_idx] &= ~(1 << l_idx);
             break;
         }

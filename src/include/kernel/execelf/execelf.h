@@ -3,11 +3,7 @@
 
 #include <kernel/filesys/filesys.h>
 
-/* exec_elf参数最大长度 */
-#define EXEC_ELF_ARG_BUF_SIZE 256
-
-/* 至多有多少参数 */
-#define EXEC_ELF_ARG_MAX_COUNT 12
+#include <shared/proc_mem.h>
 
 enum exec_elf_result
 {

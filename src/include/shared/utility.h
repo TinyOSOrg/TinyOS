@@ -1,6 +1,12 @@
 #ifndef TINY_OS_SHARD_UTILITY_H
 #define TINY_OS_SHARD_UTILITY_H
 
+#include <shared/stdint.h>
+
+/* static_assert一直到C11才有，这里通过数组大小非负来模拟之 */
+#define STATIC_ASSERT(EXPR, MSG) \
+    typedef char static_assert_failed__##MSG[2 * !!(EXPR) - 1]
+
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

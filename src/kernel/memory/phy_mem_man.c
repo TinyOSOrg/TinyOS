@@ -177,12 +177,12 @@ uint32_t alloc_phy_page(bool resident)
         FATAL_ERROR("system out of memory");
 
     // 找到一个空闲物理页
-    uint32_t idxL1          = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L0);
-    uint32_t localL2        = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L1[idxL1]);
+    uint32_t idxL1          = find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L0);
+    uint32_t localL2        = find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L1[idxL1]);
     uint32_t idxL2          = (idxL1 << 5) + localL2;
-    uint32_t localL3        = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L2[idxL2]);
+    uint32_t localL3        = find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L2[idxL2]);
     uint32_t idxL3          = (idxL2 << 5) + localL3;
-    uint32_t local_page_idx = _find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L3[idxL3]);
+    uint32_t local_page_idx = find_lowest_nonzero_bit(phy_mem_page_pool->bitmap_L3[idxL3]);
 
     // 设置L3位图中对应的标记位
     clr_local_bit(&phy_mem_page_pool->bitmap_L3[idxL3], local_page_idx);
