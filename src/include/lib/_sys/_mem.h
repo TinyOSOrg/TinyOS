@@ -1,5 +1,5 @@
-#ifndef TINY_OS_LIB_SYS_dMEM_H
-#define TINY_OS_LIB_SYS_dMEM_H
+#ifndef TINY_OS_LIB_dSYS_dMEM_H
+#define TINY_OS_LIB_dSYS_dMEM_H
 
 #include <shared/proc_mem.h>
 #include <shared/stdint.h>
@@ -12,4 +12,4 @@ void *_malloc(size_t size);
 /* ptr为调用_malloc得到的结果 */
 void _free(void *ptr);
 
-#endif /* TINY_OS_LIB_SYS_dMEM_H */
+#endif /* TINY_OS_LIB_dSYS_dMEM_H */
