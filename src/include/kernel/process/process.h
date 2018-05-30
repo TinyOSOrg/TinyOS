@@ -29,9 +29,6 @@
 /* 最大进程数量（包括内核初始进程） */
 #define MAX_PROCESS_COUNT (MAX_VIR_ADDR_SPACE_COUNT + 1)
 
-/* 用户栈最高地址 */
-#define USER_STACK_TOP_ADDR ((uint32_t)0xbffff * (uint32_t)0x1000)
-
 /* 进程名字最大长度 */
 #define PROCESS_NAME_MAX_LENGTH 31
 

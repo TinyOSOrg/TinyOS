@@ -19,6 +19,9 @@
         \/     调用栈
 */
 
+/* 用户栈最高地址 */
+#define USER_STACK_TOP_ADDR ((uint32_t)0xbffff * (uint32_t)0x1000)
+
 /* 默认用户栈大小：1M */
 #define USER_STACK_SIZE 0x100000
 
@@ -34,16 +37,16 @@
 /* 有多少个用户栈位图 */
 #define USER_THREAD_STACK_BITMAP_COUNT (MAX_PROCESS_THREADS >> 5)
 
-/* 进程参数区起始地址 */
-#define PROC_ARG_ZONE_ADDR \
-    (USER_STACK_TOP_ADDR - MAX_PROCESS_THREADS * USER_STACK_SIZE - \
-     EXEC_ELF_ARG_MAX_COUNT * EXEC_ELF_ARG_BUF_SIZE - sizeof(uint32_t))
-
 /* 每个参数的buffer size */
 #define EXEC_ELF_ARG_BUF_SIZE 256
 
 /* 至多有多少参数 */
 #define EXEC_ELF_ARG_MAX_COUNT 12
+
+/* 进程参数区起始地址 */
+#define PROC_ARG_ZONE_ADDR \
+    (USER_STACK_TOP_ADDR - MAX_PROCESS_THREADS * USER_STACK_SIZE - \
+     EXEC_ELF_ARG_MAX_COUNT * EXEC_ELF_ARG_BUF_SIZE - sizeof(uint32_t))
 
 struct usr_addr_interval
 {

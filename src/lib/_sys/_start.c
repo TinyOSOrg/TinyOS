@@ -1,3 +1,4 @@
+#include <shared/proc_mem.h>
 #include <shared/sys.h>
 
 #include <lib/_sys/_mem.h>
@@ -8,7 +9,16 @@ void _start(void)
 
     _init_mem_man();
 
-    main(0, NULL);
+    uint32_t parg = PROC_ARG_ZONE_ADDR;
+    char *argv[EXEC_ELF_ARG_MAX_COUNT];
+
+    uint32_t argc = *(uint32_t*)parg;
+    parg += sizeof(uint32_t);
+
+    for(uint32_t i = 0; i < argc; ++i)
+        argv[i] = (char*)(parg + i * EXEC_ELF_ARG_BUF_SIZE);
+
+    main(argc, argv);
 
     exit_thread();
 }

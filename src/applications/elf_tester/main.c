@@ -1,8 +1,9 @@
 #include <shared/sys.h>
 
-int main()
+int main(int argc, char *argv[])
 {
-    printf("Hello, elf!\n");
+    if(argc >= 1)
+        printf("%s\n", argv[0]);
 
     register_char_msg();
     register_key_msg();

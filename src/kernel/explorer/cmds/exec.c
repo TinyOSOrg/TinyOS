@@ -79,6 +79,8 @@ void expl_exec(filesys_dp_handle dp, const char *working_dir,
     }
 
     uint32_t pid;
+    if(strcmp(proc_name, "`") == 0)
+        proc_name = dst;
     enum exec_elf_result rt = exec_elf(
         proc_name, dst_dp, path_buf, false, args_cnt - 2, args, &pid);
     

@@ -180,6 +180,12 @@ enum filesys_opr_result syscall_filesys_rmdir_impl(filesys_dp_handle dp,
 {
     thread_syscall_protector_entry();
 
+    if(strcmp(path, ".") == 0 || strcmp(path, "..") == 0)
+    {
+        thread_syscall_protector_exit();
+        return filesys_opr_others;
+    }
+
     intr_state is = fetch_and_enable_intr();
     enum filesys_opr_result ret = kremove_directory(dp, path);
     set_intr_state(is);
