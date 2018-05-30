@@ -1,6 +1,7 @@
 #ifndef TINY_OS_SHARD_PATH_H
 #define TINY_OS_SHARD_PATH_H
 
+#include <shared/filesys.h>
 #include <shared/stdbool.h>
 #include <shared/stdint.h>
 
@@ -26,5 +27,11 @@ const char *skip_dp_in_abs_path(const char *path);
 */
 bool cat_path_s(const char *src, const char *delta,
                 char *dst, uint32_t buf_size);
+
+/* 同上，但会考虑分区的切换 */
+bool cat_path_ex_s(filesys_dp_handle src_dp, const char *src_path,
+                   const char *delta,
+                   filesys_dp_handle *out_dp, char *out_path,
+                   uint32_t out_path_buf_size);
 
 #endif /* TINY_OS_SHARD_PATH_H */

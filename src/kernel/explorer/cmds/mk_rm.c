@@ -9,14 +9,11 @@ static bool expl_file_opr(filesys_dp_handle dp, const char *working_dir,
                           const char *dstname, char *namebuf,
                           enum filesys_opr_result (*opr)(filesys_dp_handle, const char*))
 {
-    // 只能在本分区下操作
-    if(is_path_containning_dp(dstname))
+    filesys_dp_handle dst_dp;
+    if(!cat_path_ex_s(dp, working_dir, dstname, &dst_dp, namebuf, 4096))
         return false;
 
-    if(!cat_path_s(working_dir, dstname, namebuf, 4096))
-        return false;
-
-    enum filesys_opr_result rt = opr(dp, namebuf);
+    enum filesys_opr_result rt = opr(dst_dp, namebuf);
     if(rt != filesys_opr_success)
         return false;
 

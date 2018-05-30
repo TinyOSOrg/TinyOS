@@ -1,6 +1,7 @@
 #include <shared/path.h>
 #include <shared/utility.h>
 #include <shared/string.h>
+#include <shared/sys.h>
 
 bool is_absolute_path(const char *path)
 {
@@ -131,6 +132,52 @@ bool cat_path_s(const char *src, const char *delta,
         strcpy(dst, src);
         dst[srclen] = '/';
         strcpy(dst + srclen + 1, delta);
+    }
+
+    return true;
+}
+
+bool cat_path_ex_s(filesys_dp_handle src_dp, const char *src_path,
+                   const char *delta,
+                   filesys_dp_handle *out_dp, char *out_path,
+                   uint32_t out_path_buf_size)
+{
+    if(!out_dp || !out_path || !out_path_buf_size)
+        return false;
+    
+    if(is_path_containning_dp(delta))
+    {
+        uint32_t dp_name_len = get_dp_from_path_s(
+            delta, out_path, out_path_buf_size);
+        if(!dp_name_len)
+            return false;
+        
+        if(out_path[dp_name_len - 1] == ':')
+        {
+            out_path[dp_name_len - 1] = '\0';
+            if(!str_to_uint32(out_path, out_dp))
+                return false;
+        }
+        else
+        {
+            if(out_path[dp_name_len - 1] != '>')
+                return false;
+            
+            out_path[dp_name_len - 1] = '\0';
+            *out_dp = get_dp(out_path);
+            if(*out_dp >= DPT_UNIT_COUNT)
+                return false;
+        }
+
+        if(!cat_path_s(src_path, skip_dp_in_abs_path(delta),
+                    out_path, out_path_buf_size))
+            return false;
+    }
+    else
+    {
+        if(!cat_path_s(src_path, delta, out_path, out_path_buf_size))
+            return false;
+        *out_dp = src_dp;
     }
 
     return true;

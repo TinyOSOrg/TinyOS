@@ -101,3 +101,8 @@ enum filesys_opr_result get_child_file_info(filesys_dp_handle dp,
     };
     return syscall_param1(SYSCALL_FILESYS_GET_CHILD_INFO, &args);
 }
+
+filesys_dp_handle get_dp(const char *name)
+{
+    return syscall_param1(SYSCALL_DP_GET_HANDLE, name);
+}

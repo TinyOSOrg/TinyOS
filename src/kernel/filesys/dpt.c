@@ -42,7 +42,8 @@ void init_dpt()
 
 struct dpt_unit *get_dpt_unit(size_t idx)
 {
-    ASSERT_S(0 <= idx && idx < DPT_UNIT_COUNT);
+    if(idx >= DPT_UNIT_COUNT)
+        return NULL;
     return &dpts[idx];
 }
 
@@ -109,4 +110,9 @@ void destroy_dpt()
     }
 
     restore_dpt();
+}
+
+filesys_dp_handle syscall_get_dp_handle_impl(const char *name)
+{
+    return get_dp_handle_by_name(name);
 }

@@ -76,6 +76,8 @@ enum filesys_opr_result get_child_file_info(filesys_dp_handle dp,
                                             uint32_t idx,
                                             struct syscall_filesys_file_info *rt);
 
+filesys_dp_handle get_dp(const char *name);
+
 /* 键盘状态与消息相关 */
 
 /* 某个给定的按键是否处于按压状态 */

@@ -1,6 +1,7 @@
 #include <kernel/syscall.h>
 
 #include <kernel/console/console.h>
+#include <kernel/filesys/dpt.h>
 #include <kernel/filesys/syscall.h>
 #include <kernel/driver/kbdriver.h>
 #include <kernel/process/process.h>
@@ -62,4 +63,7 @@ void init_syscall()
         (syscall_impl)&syscall_filesys_get_file_count;
     syscall_func_table[SYSCALL_FILESYS_GET_CHILD_INFO] =
         (syscall_impl)&syscall_filesys_get_child_info;
+    
+    syscall_func_table[SYSCALL_DP_GET_HANDLE] =
+        (syscall_impl)&syscall_get_dp_handle_impl;
 }

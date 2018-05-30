@@ -25,4 +25,6 @@ void restore_dpt();
 /* 销毁分区模块内容，顺带会销毁文件系统句柄 */
 void destroy_dpt();
 
+filesys_dp_handle syscall_get_dp_handle_impl(const char *name);
+
 #endif /* TINY_OS_DISK_PARTITION_TABLE_H */
