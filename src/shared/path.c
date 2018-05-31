@@ -182,3 +182,24 @@ bool cat_path_ex_s(filesys_dp_handle src_dp, const char *src_path,
 
     return true;
 }
+
+bool to_parent_dir(char *filepath)
+{
+    if(!filepath)
+        return false;
+    
+    // 查找最后一个'/'
+
+    uint32_t last_slash = 0;
+    for(uint32_t idx = 0; filepath[idx]; ++idx)
+    {
+        if(filepath[idx] == '/')
+            last_slash = idx;
+    }
+
+    if(filepath[last_slash] != '/')
+        return false;
+
+    filepath[last_slash] = '\0';
+    return true;
+}

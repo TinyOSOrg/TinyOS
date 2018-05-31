@@ -64,6 +64,8 @@ void init_syscall()
     syscall_func_table[SYSCALL_FILESYS_GET_CHILD_INFO] =
         (syscall_impl)&syscall_filesys_get_child_info;
     
+    // declared in kernel/filesys/dpt.h
+    
     syscall_func_table[SYSCALL_DP_GET_HANDLE] =
         (syscall_impl)&syscall_get_dp_handle_impl;
 }

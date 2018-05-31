@@ -17,8 +17,11 @@ void expl_exec(filesys_dp_handle dp, const char *working_dir,
     // 路径缓存
     char *path_buf = (char*)alloc_ker_page(false);
 
+#define DP_STR_BUF_SIZE 2048
+#define DP_STR_OFFSET (4096 - DP_STR_BUF_SIZE)
+
     uint32_t dst_dp;
-    if(!cat_path_ex_s(dp, working_dir, dst, &dst_dp, path_buf, 4096))
+    if(!cat_path_ex_s(dp, working_dir, dst, &dst_dp, path_buf, DP_STR_OFFSET))
     {
         disp_new_line();
         disp_printf("Invalid elf name");
@@ -28,8 +31,12 @@ void expl_exec(filesys_dp_handle dp, const char *working_dir,
     uint32_t pid;
     if(strcmp(proc_name, "`") == 0)
         proc_name = dst;
-    
-    args[0] = path_buf;
+        
+    char *final_path_arg = path_buf + DP_STR_OFFSET;
+    uint32_to_str(dst_dp, final_path_arg);
+    strcat(final_path_arg, ":");
+    strcat(final_path_arg, path_buf);
+    args[1] = final_path_arg;;
 
     enum exec_elf_result rt = exec_elf(
         proc_name, dst_dp, path_buf, false, args_cnt - 1, args, &pid);

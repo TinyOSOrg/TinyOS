@@ -1,15 +1,19 @@
+#include <shared/path.h>
+#include <shared/string.h>
 #include <shared/sys.h>
+
+#include <lib/mem.h>
 
 int main(int argc, char *argv[])
 {
-    if(argc < 2)
+    if(argc < 4)
     {
         printf("Usage: cp src dst\n");
         while(true);
     }
 
-    const char *src_name = argv[0];
-    const char *dst_name = argv[1];
+    const char *src_name = argv[2];
+    const char *dst_name = argv[3];
 
     usr_file_handle sfp, dfp;
     if(open_file(0, src_name, false, &sfp) != filesys_opr_success)

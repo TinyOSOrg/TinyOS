@@ -34,4 +34,7 @@ bool cat_path_ex_s(filesys_dp_handle src_dp, const char *src_path,
                    filesys_dp_handle *out_dp, char *out_path,
                    uint32_t out_path_buf_size);
 
+/* 给定一个文件路径，将其转换为父目录路径 */
+bool to_parent_dir(char *filepath);
+
 #endif /* TINY_OS_SHARD_PATH_H */
