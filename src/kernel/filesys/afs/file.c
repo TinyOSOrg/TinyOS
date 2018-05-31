@@ -137,7 +137,7 @@ static void release_index_tree(struct afs_dp_head *head, uint32_t root_sec)
     const struct afs_index_block *blk = (const struct afs_index_block*)
         afs_read_from_block_begin(root_sec);
 
-    ASSERT_S(blk->height > 0);
+    ASSERT(blk->height > 0);
 
     // 下一层就是叶节点，则直接释放块
     if(blk->height == 1)
@@ -191,7 +191,7 @@ void afs_remove_file(struct afs_dp_head *head, uint32_t entry_idx,
     }
 
     // 对索引树结构，递归地释放所有索引块
-    ASSERT_S(entry->index);
+    ASSERT(entry->index);
     release_index_tree(head, entry->sec_beg);
     SET_RT(afs_file_opr_success);
 
@@ -230,7 +230,7 @@ struct afs_file_desc *afs_open_file_for_reading(
         }
         else
         {
-            ASSERT_S(desc->rlock);
+            ASSERT(desc->rlock);
             desc->rlock++;
 
             spinlock_unlock(&head->opening_files_lock);
@@ -278,7 +278,7 @@ struct afs_file_desc *afs_open_file_for_writing(
         }
         else
         {
-            ASSERT_S(desc->rlock);
+            ASSERT(desc->rlock);
             spinlock_unlock(&head->opening_files_lock);
             SET_RT(afs_file_opr_reading_lock);
             return NULL;
@@ -304,7 +304,7 @@ struct afs_file_desc *afs_open_file_for_writing(
 bool afs_convert_reading_to_writing(struct afs_dp_head *head,
                                     struct afs_file_desc *desc)
 {
-    ASSERT_S(desc != NULL);
+    ASSERT(desc != NULL);
     spinlock_lock(&head->opening_files_lock);
 
     bool ret = false;
@@ -324,7 +324,7 @@ void afs_close_file_for_reading(struct afs_dp_head *head,
 {
     spinlock_lock(&head->opening_files_lock);
 
-    ASSERT_S(file->rlock);
+    ASSERT(file->rlock);
 
     // 若自己是最后一个操作者，则应释放desc
     if(!--file->rlock)
@@ -341,7 +341,7 @@ void afs_close_file_for_writing(struct afs_dp_head *head,
 {
     spinlock_lock(&head->opening_files_lock);
 
-    ASSERT_S(file->wlock && !file->rlock);
+    ASSERT(file->wlock && !file->rlock);
 
     // 写者一定是最后一个操作者，故应写回entry，释放desc
     rb_erase(&head->opening_files, &file->tree_node, KOF, rb_less);
@@ -373,7 +373,7 @@ static void read_from_index_tree(uint32_t block_sec,
     uint32_t ch_idx = offset_bytes / bytes_per_child;
     offset_bytes %= bytes_per_child;
 
-    ASSERT_S(ch_idx < AFS_BLOCK_MAX_CHILD_COUNT);
+    ASSERT(ch_idx < AFS_BLOCK_MAX_CHILD_COUNT);
 
     while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
     {
@@ -433,7 +433,7 @@ static void write_to_index_tree(uint32_t block_sec,
     uint32_t ch_idx = offset_bytes / bytes_per_child;
     offset_bytes %= bytes_per_child;
 
-    ASSERT_S(ch_idx < AFS_BLOCK_MAX_CHILD_COUNT);
+    ASSERT(ch_idx < AFS_BLOCK_MAX_CHILD_COUNT);
 
     while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
     {

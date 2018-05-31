@@ -11,7 +11,7 @@
 
 void init_semaphore(struct semaphore *s, int32_t init_val)
 {
-    ASSERT_S(s && init_val > 0);
+    ASSERT(s && init_val > 0);
     s->val = init_val;
     init_rlist(&s->blocked_threads);
 }

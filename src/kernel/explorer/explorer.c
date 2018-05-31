@@ -75,7 +75,7 @@ static void init_explorer()
     struct PCB *pcb = get_cur_PCB();
 
     // explorer应该是1号进程
-    ASSERT_S(pcb->pid == EXPL_PID);
+    ASSERT(pcb->pid == EXPL_PID);
 
     // 把自己从PCB列表中摘除
     erase_from_ilist(&pcb->processes_node);
@@ -126,7 +126,7 @@ static bool make_proc_foreground(uint32_t pid)
         return false;
     }
 
-    ASSERT_S(expl_stat == es_fg && pcb->pis == pis_background);
+    ASSERT(expl_stat == es_fg && pcb->pis == pis_background);
 
     expl_stat      = es_bg;
     expl_proc->pis = pis_expl_foreground;
@@ -147,12 +147,12 @@ static void explorer_usr_interrupt()
 
     if(!cur_fg_proc)
     {
-        ASSERT_S(expl_stat == es_fg);
+        ASSERT(expl_stat == es_fg);
         set_intr_state(is);
         return;
     }
 
-    ASSERT_S(expl_stat == es_bg);
+    ASSERT(expl_stat == es_bg);
 
     cur_fg_proc->pis = pis_background;
     copy_scr_to_con_buf(cur_fg_proc);

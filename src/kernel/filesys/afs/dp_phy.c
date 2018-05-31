@@ -19,7 +19,7 @@ bool afs_phy_reformat_dp(uint32_t beg, uint32_t cnt)
 {
     //********************* 各种数量分配 *********************
 
-    ASSERT_S(cnt > 0);
+    ASSERT(cnt > 0);
 
     // 设一个文件平均占用A个block，理论上我们能够精确地解出一个最佳entry数量来
     // 但是一个block的空间就够好几十个entry
@@ -178,7 +178,7 @@ uint32_t afs_alloc_disk_block(struct afs_dp_head *head)
         blkgrp_idx_to_head_sec(head, head->fst_avl_blkgrp_idx);
     struct afs_blkgrp_head *blkgrp_head = (struct afs_blkgrp_head *)
         afs_write_to_sector_begin(fst_avl_blkgrp_head_sec);
-    ASSERT_S(blkgrp_head->empty_blk_cnt != 0);
+    ASSERT(blkgrp_head->empty_blk_cnt != 0);
 
     // 在block group头部位图中搜索一个可用block
     uint32_t g_idx = 0, l_idx = 0;
@@ -227,7 +227,7 @@ void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec)
     // 把blk_sec对应的位图位置1
     uint32_t l_offset = (blk_sec - (blkgrp_head_sec + 1))
                       / AFS_BLOCK_SECTOR_COUNT;
-    ASSERT_S(l_offset < blkgrp_head->all_blk_cnt);
+    ASSERT(l_offset < blkgrp_head->all_blk_cnt);
     blkgrp_head->blk_btmp[l_offset >> 5] |= (1 << (l_offset & 0b11111));
 
     head->empty_block_cnt++;
@@ -268,7 +268,7 @@ bool afs_alloc_file_entry(struct afs_dp_head *head,
         return false;
     }
 
-    ASSERT_S(head && head->empty_entry_cnt != 0 && init_data);
+    ASSERT(head && head->empty_entry_cnt != 0 && init_data);
 
     // 计算首个空闲entry所处的扇区号及扇区内偏移
     uint32_t ret = head->fst_avl_entry_idx;
@@ -289,7 +289,7 @@ bool afs_alloc_file_entry(struct afs_dp_head *head,
 
     semaphore_signal(&head->lock);
 
-    ASSERT_S(entry_idx);
+    ASSERT(entry_idx);
     *entry_idx = ret;
     
     return true;

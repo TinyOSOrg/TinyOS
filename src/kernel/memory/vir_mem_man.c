@@ -254,7 +254,7 @@ void *alloc_ker_page(bool resident)
 
     // 页表一定存在，因为高255个页目录项在bootloader那里就填上了
     struct PTE_struct *PTEaddr = make_PTE_vir_addr(PTE_idx);
-    ASSERT_S(cur_addr_space->vir_PDE->PTE[PTE_idx] & PAGE_PRESENT_TRUE);
+    ASSERT(cur_addr_space->vir_PDE->PTE[PTE_idx] & PAGE_PRESENT_TRUE);
 
     // 把物理页填入页表
     PTEaddr->page[page_idx] = iPTE(

@@ -18,7 +18,7 @@ struct vir_page_man
 
 size_t get_vir_page_man_byte_size(size_t pool_begin, size_t pool_end)
 {
-    ASSERT_S(pool_begin < pool_end);
+    ASSERT(pool_begin < pool_end);
     
     return ((pool_end - pool_begin) / 32) * sizeof(uint32_t)
          + sizeof(struct vir_page_man);
@@ -27,8 +27,8 @@ size_t get_vir_page_man_byte_size(size_t pool_begin, size_t pool_end)
 void init_vir_page_man(struct vir_page_man *page_man,
                        size_t pool_begin, size_t pool_end)
 {
-    ASSERT_S(page_man != NULL);
-    ASSERT_S(pool_begin < pool_end);
+    ASSERT(page_man != NULL);
+    ASSERT(pool_begin < pool_end);
 
     page_man->begin  = pool_begin;
     page_man->end    = pool_end;
@@ -40,7 +40,7 @@ void init_vir_page_man(struct vir_page_man *page_man,
 
 uint32_t alloc_page_in_vir_addr_space(struct vir_page_man *page_man)
 {
-    ASSERT_S(page_man != NULL);
+    ASSERT(page_man != NULL);
     if(page_man->unused == 0)
         return 0;
     
@@ -59,8 +59,8 @@ uint32_t alloc_page_in_vir_addr_space(struct vir_page_man *page_man)
 
 void free_page_in_vir_addr_space(struct vir_page_man *page_man, uint32_t addr)
 {
-    ASSERT_S(page_man != NULL);
-    ASSERT_S(page_man->unused < page_man->total);
+    ASSERT(page_man != NULL);
+    ASSERT(page_man->unused < page_man->total);
     ++page_man->unused;
     uint32_t idx = (addr >> 12) - page_man->begin;
     page_man->bitmap[idx >> 5] |= (1 << (idx & 0x1f));

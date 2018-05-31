@@ -13,7 +13,7 @@ static bool get_file_from_usr_handle(usr_file_handle handle,
                                     filesys_dp_handle *dp,
                                     file_handle *file)
 {
-    ASSERT_S(dp && file);
+    ASSERT(dp && file);
 
     struct PCB *pcb = get_cur_TCB()->pcb;
     spinlock_lock(&pcb->file_table_lock);

@@ -17,7 +17,7 @@ void init_sysmsg()
 
 void init_sysmsg_queue(struct sysmsg_queue *queue)
 {
-    ASSERT_S(queue);
+    ASSERT(queue);
     queue->msgs = (struct sysmsg*)alloc_ker_page(false);
     queue->head = 0;
     queue->tail = 0;
@@ -26,13 +26,13 @@ void init_sysmsg_queue(struct sysmsg_queue *queue)
 
 void destroy_sysmsg_queue(struct sysmsg_queue *queue)
 {
-    ASSERT_S(queue);
+    ASSERT(queue);
     free_ker_page(queue->msgs);
 }
 
 bool send_sysmsg(struct sysmsg_queue *queue, const struct sysmsg *msg)
 {
-    ASSERT_S(queue && msg);
+    ASSERT(queue && msg);
 
     if(queue->size >= SYSMSG_QUEUE_MAX_SIZE)
         return false;
@@ -54,25 +54,25 @@ bool send_sysmsg(struct sysmsg_queue *queue, const struct sysmsg *msg)
 
 bool is_sysmsg_queue_empty(const struct sysmsg_queue *queue)
 {
-    ASSERT_S(queue);
+    ASSERT(queue);
     return queue->size == 0;
 }
 
 bool is_sysmsg_queue_full(const struct sysmsg_queue *queue)
 {
-    ASSERT_S(queue);
+    ASSERT(queue);
     return queue->size >= SYSMSG_QUEUE_MAX_SIZE;
 }
 
 const struct sysmsg *fetch_sysmsg_queue_front(const struct sysmsg_queue *queue)
 {
-    ASSERT_S(queue);
+    ASSERT(queue);
     return queue->size == 0 ? NULL : &queue->msgs[queue->head];
 }
 
 bool pop_sysmsg_queue_front(struct sysmsg_queue *queue, struct sysmsg *output)
 {
-    ASSERT_S(queue && output);
+    ASSERT(queue && output);
 
     if(queue->size == 0)
         return false;

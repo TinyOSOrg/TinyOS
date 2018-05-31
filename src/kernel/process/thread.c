@@ -348,7 +348,7 @@ void awake_thread(struct TCB *tcb)
 {
     intr_state intr_s = fetch_and_disable_intr();
 
-    ASSERT_S(tcb->state == thread_state_blocked);
+    ASSERT(tcb->state == thread_state_blocked);
     tcb->state = thread_state_ready;
     push_back_ilist(&ready_threads, &tcb->ready_block_threads_node);
 
@@ -359,7 +359,7 @@ static void do_kill_thread(struct TCB *tcb)
 {
     intr_state intr_s = fetch_and_disable_intr();
 
-    ASSERT_S(tcb->state != thread_state_killed);
+    ASSERT(tcb->state != thread_state_killed);
 
     if(tcb == cur_running_TCB)
     {
@@ -414,7 +414,7 @@ void do_releasing_thds_procs()
                                         + INTR_BAK_DATA_SIZE
                                         + sizeof(struct thread_init_stack)
                                         - 4096;
-        ASSERT_S(ker_stk_page % 4096 == 0);
+        ASSERT(ker_stk_page % 4096 == 0);
         free_ker_page((char*)ker_stk_page);
 
         // tcb空间
@@ -474,7 +474,7 @@ void disable_thread_scheduler()
 void enable_thread_scheduler()
 {
     intr_state is = fetch_and_disable_intr();
-    ASSERT_S(scheduler_disabler == get_cur_TCB());
+    ASSERT(scheduler_disabler == get_cur_TCB());
     scheduler_disabler = NULL;
     set_intr_state(is);
 }

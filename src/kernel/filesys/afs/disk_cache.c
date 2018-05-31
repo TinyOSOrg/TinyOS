@@ -118,7 +118,7 @@ RESTART:
     struct ilist_node *in = sec_list.next, *next = NULL;
     for(size_t i = 0;i != try_cnt; ++i, in = next)
     {
-        ASSERT_S(in != &sec_list);
+        ASSERT(in != &sec_list);
 
         // in所在空间稍后可能被释放，所以这里提前取得下一个节点的地址
         next = in->next;
@@ -215,10 +215,10 @@ static void afs_read_sector_exit(uint32_t sec)
 
     // 一定能在红黑树中找到这个扇区的缓存
     struct rb_node *rbn = rb_find(&sec_tree, KOF, &sec, rb_less);
-    ASSERT_S(rbn != NULL);
+    ASSERT(rbn != NULL);
     struct sector_node *node = GET_STRUCT_FROM_MEMBER(
             struct sector_node, tree_node, rbn);        
-    ASSERT_S(node->reader_count);
+    ASSERT(node->reader_count);
 
     // 如果自己是最后一个读者，查看是否需要将这块缓存释放
     node->reader_count--;
@@ -230,7 +230,7 @@ static void afs_read_sector_exit(uint32_t sec)
 
 void afs_read_from_sector(uint32_t sec, size_t offset, size_t size, void *data)
 {
-    ASSERT_S(size > 0 && offset + size <= AFS_SECTOR_BYTE_SIZE);
+    ASSERT(size > 0 && offset + size <= AFS_SECTOR_BYTE_SIZE);
 
     void *buf = afs_read_sector_entry(sec);
 
@@ -308,10 +308,10 @@ static void afs_write_sector_exit(uint32_t sec)
 
     // 一定能在红黑树中找到这个扇区的缓存
     struct rb_node *rbn = rb_find(&sec_tree, KOF, &sec, rb_less);
-    ASSERT_S(rbn != NULL);
+    ASSERT(rbn != NULL);
     struct sector_node *node = GET_STRUCT_FROM_MEMBER(
             struct sector_node, tree_node, rbn);
-    ASSERT_S(node->writer_lock && !node->reader_count);
+    ASSERT(node->writer_lock && !node->reader_count);
 
     // 自己肯定是唯一的操作者，查看这块缓存的释放标志
     node->writer_lock = 0;
@@ -323,7 +323,7 @@ static void afs_write_sector_exit(uint32_t sec)
 
 void afs_write_to_sector(uint32_t sec, size_t offset, size_t size, const void *data)
 {
-   ASSERT_S(size > 0 && offset + size <= AFS_SECTOR_BYTE_SIZE);
+   ASSERT(size > 0 && offset + size <= AFS_SECTOR_BYTE_SIZE);
 
    void *buf = afs_write_sector_entry(sec);
 
@@ -454,7 +454,7 @@ RESTART:
     struct ilist_node *in = blk_list.next, *next = NULL;
     for(size_t i = 0;i != try_cnt; ++i, in = next)
     {
-        ASSERT_S(in != &blk_list);
+        ASSERT(in != &blk_list);
         next = in->next;
 
         struct blk_node *node = GET_STRUCT_FROM_MEMBER(
@@ -534,10 +534,10 @@ static void afs_access_block_exit(uint32_t sec)
     intr_state is = fetch_and_disable_intr();
 
     struct rb_node *rbn = rb_find(&blk_tree, KOF, &sec, rb_less);
-    ASSERT_S(rbn != NULL);
+    ASSERT(rbn != NULL);
     struct blk_node *node = GET_STRUCT_FROM_MEMBER(
             struct blk_node, tree_node, rbn);
-    ASSERT_S(node->user_count);
+    ASSERT(node->user_count);
 
     node->user_count--;
     if(!node->user_count && node->release_flag)
@@ -548,7 +548,7 @@ static void afs_access_block_exit(uint32_t sec)
 
 void afs_read_from_block(uint32_t sec, size_t offset, size_t size, void *data)
 {
-    ASSERT_S(size > 0 && offset + size <= AFS_BLOCK_BYTE_SIZE);
+    ASSERT(size > 0 && offset + size <= AFS_BLOCK_BYTE_SIZE);
 
     void *buf = afs_access_block_entry(sec, false);
 
@@ -559,7 +559,7 @@ void afs_read_from_block(uint32_t sec, size_t offset, size_t size, void *data)
 
 void afs_write_to_block(uint32_t sec, size_t offset, size_t size, const void *data)
 {
-    ASSERT_S(size > 0 && offset + size <= AFS_BLOCK_BYTE_SIZE);
+    ASSERT(size > 0 && offset + size <= AFS_BLOCK_BYTE_SIZE);
 
     void *buf = afs_access_block_entry(sec, true);
 

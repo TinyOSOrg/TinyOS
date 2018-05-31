@@ -236,13 +236,13 @@ void init_kb_driver()
 
 void subscribe_kb(struct PCB *pcb)
 {
-    ASSERT_S(pcb);
+    ASSERT(pcb);
     register_sysmsg_source(pcb, &kb_receivers, &pcb->sys_msg_srcs);
 }
 
 void subscribe_char(struct PCB *pcb)
 {
-    ASSERT_S(pcb);
+    ASSERT(pcb);
     register_sysmsg_source(pcb, &char_receivers, &pcb->sys_msg_srcs);
 }
 

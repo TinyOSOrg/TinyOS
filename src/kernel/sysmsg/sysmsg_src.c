@@ -25,7 +25,7 @@ struct sysmsg_rcv_src_list_node *alloc_sysmsg_rcv_src_list_node()
 
 void destroy_sysmsg_receiver_list(struct sysmsg_receiver_list *L)
 {
-    ASSERT_S(L);
+    ASSERT(L);
     
     while(!is_ilist_empty(&L->processes))
     {
@@ -40,7 +40,7 @@ void destroy_sysmsg_receiver_list(struct sysmsg_receiver_list *L)
 
 void destroy_sysmsg_source_list(struct sysmsg_source_list *L)
 {
-    ASSERT_S(L);
+    ASSERT(L);
 
     while(!is_ilist_empty(&L->sources))
     {
@@ -69,7 +69,7 @@ void register_sysmsg_source(struct PCB *pcb,
                             struct sysmsg_receiver_list *rcv,
                             struct sysmsg_source_list   *src)
 {
-    ASSERT_S(rcv && src);
+    ASSERT(rcv && src);
 
     struct sysmsg_rcv_src_list_node *node = alloc_sysmsg_rcv_src_list_node();
     push_back_ilist(&rcv->processes, &node->rcv_node);

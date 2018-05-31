@@ -11,7 +11,7 @@
 void expl_exec(filesys_dp_handle dp, const char *working_dir,
                const char **_args, uint32_t args_cnt)
 {
-    ASSERT_S(_args && args_cnt >= 2);
+    ASSERT(_args && args_cnt >= 2);
     const char *dst = _args[0], *proc_name = _args[1], **args = _args + 1;
 
     // 路径缓存

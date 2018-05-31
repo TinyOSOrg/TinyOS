@@ -66,7 +66,7 @@ void *alloc_static_kernel_mem(size_t bytes, size_t align_bytes)
     static_kernel_mem_top += (size_t)static_kernel_mem_top % align_bytes;
     void *rt = static_kernel_mem_top;
     static_kernel_mem_top = (char*)static_kernel_mem_top + bytes;
-    ASSERT_S((uint32_t)static_kernel_mem_top < STATIC_KERNEL_MEM_START
+    ASSERT((uint32_t)static_kernel_mem_top < STATIC_KERNEL_MEM_START
                                              + STATIC_KERNEL_MEM_SIZE);
     return rt;
 }
@@ -85,19 +85,19 @@ static inline void clr_bitmap32(uint32_t *bms, size_t bm_count)
 
 static inline void set_local_bit(uint32_t *bm, size_t i)
 {
-    ASSERT_S(i < 32);
+    ASSERT(i < 32);
     *bm |= (1 << i);
 }
 
 static inline void clr_local_bit(uint32_t *bm, size_t i)
 {
-    ASSERT_S(i < 32);
+    ASSERT(i < 32);
     *bm &= ~(1 << i);
 }
 
 static inline bool get_local_bit(uint32_t bm, size_t i)
 {
-    ASSERT_S(i < 32);
+    ASSERT(i < 32);
     return (bm & (1 << i)) != 0;
 }
 
@@ -211,7 +211,7 @@ uint32_t alloc_phy_page(bool resident)
 void free_phy_page(uint32_t page_phy_addr)
 {
     size_t page_idx = (page_phy_addr >> 12) - phy_mem_page_pool->begin;
-    ASSERT(page_idx < phy_mem_page_pool->end, "invalid page addr (page_idx >= phy_mem_page_pool->end)");
+    ASSERT(page_idx < phy_mem_page_pool->end);
 
     uint32_t idxL3          = page_idx >> 5;
     uint32_t local_page_idx = page_idx & 0x1f;

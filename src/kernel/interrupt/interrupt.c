@@ -106,7 +106,7 @@ void init_IDT()
 
 void set_intr_function(uint8_t intr_number, void (*func)())
 {
-    ASSERT_S(intr_number < IDT_DESC_COUNT);
+    ASSERT(intr_number < IDT_DESC_COUNT);
     if(!func)
         intr_function[intr_number] = (void(*)())default_intr_function;
     else

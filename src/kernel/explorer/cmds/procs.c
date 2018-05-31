@@ -22,7 +22,7 @@ STATIC_ASSERT(sizeof(struct proc_info) * MAX_PROCESS_COUNT <= 4096,
 /* 将所有进程的显示数据放入buf数组中 */
 static void get_procs_info(struct proc_info *buf, uint32_t *cnt)
 {
-    ASSERT_S(buf && cnt);
+    ASSERT(buf && cnt);
     intr_state is = fetch_and_disable_intr();
 
     uint32_t _cnt = 0;

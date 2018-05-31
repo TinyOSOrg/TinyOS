@@ -7,7 +7,7 @@
 
 void kset_cursor_pos(struct con_buf *buf, uint16_t pos)
 {
-    ASSERT_S(pos < CON_BUF_CHAR_COUNT);
+    ASSERT(pos < CON_BUF_CHAR_COUNT);
     buf->cursor = pos;
 }
 

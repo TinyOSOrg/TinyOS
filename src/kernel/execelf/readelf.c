@@ -50,7 +50,7 @@ typedef struct {
 
 void *load_elf(const void *_filestart, size_t *beg, size_t *end)
 {
-    ASSERT_S(beg && end);
+    ASSERT(beg && end);
     size_t _beg = 0xffffffff, _end = 0;
 
     elf32_ehdr eh;

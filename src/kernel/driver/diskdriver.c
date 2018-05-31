@@ -45,7 +45,7 @@ static inline bool wait_for_ready()
 static void disk_cmd(const struct disk_rw_task *task)
 {
     // Sector count
-    ASSERT_S(task->sector_cnt < 256);
+    ASSERT(task->sector_cnt < 256);
     _out_byte_to_port(DISK_PORT_SECTOR_COUNT, (uint8_t)task->sector_cnt);
 
     // LBA low/mid/high

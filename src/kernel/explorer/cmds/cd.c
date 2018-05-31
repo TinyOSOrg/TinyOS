@@ -38,7 +38,7 @@ bool expl_cd(filesys_dp_handle *dp, char *cur,
         }
         else // 是分区名
         {
-            ASSERT_S(dp_name_buf[dp_name_len - 1] == '>');
+            ASSERT(dp_name_buf[dp_name_len - 1] == '>');
 
             dp_name_buf[dp_name_len - 1] = '\0';
             new_dp = get_dp_handle_by_name(dp_name_buf);

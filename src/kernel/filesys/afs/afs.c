@@ -120,7 +120,7 @@ static bool match_dir_name(const char *dir_name, const char *path_name,
 
 static const char *path_begin(const char *path, uint32_t *length)
 {
-    ASSERT_S(path && length);
+    ASSERT(path && length);
 
     if(*path++ != '/' || !*path || *path == '/')
         return NULL;
@@ -135,7 +135,7 @@ static const char *path_begin(const char *path, uint32_t *length)
 
 static const char *path_next(const char *path, uint32_t *length)
 {
-    ASSERT_S(path && length);
+    ASSERT(path && length);
 
     while(*path && *path != '/')
         ++path;
@@ -162,7 +162,7 @@ static bool find_in_dir(struct afs_dp_head *head,
                         uint32_t *inner_idx,
                         enum afs_file_operation_status *rt)
 {
-    ASSERT_S(head && dir && name && entry_idx);
+    ASSERT(head && dir && name && entry_idx);
 
     // 取得目录项数量
     struct dir_head H;
@@ -245,7 +245,7 @@ struct afs_file_desc *afs_open_regular_file_for_reading_by_path(
         
         dir_entry_idx = next_entry;
     }
-    ASSERT_S(file != NULL);
+    ASSERT(file != NULL);
 
     // 此时名字应该已经到末端了，否则出错
     if(name_beg)
@@ -375,7 +375,7 @@ uint32_t afs_create_dir_file_raw(struct afs_dp_head *head,
     }
     
     struct afs_file_desc *dir = afs_open_file_for_writing(head, ret, NULL);
-    ASSERT_S(dir != NULL);
+    ASSERT(dir != NULL);
 
     if(!afs_expand_file(head, dir,
             sizeof(struct dir_head) + 2 * sizeof(struct dir_unit),

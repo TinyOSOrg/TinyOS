@@ -54,7 +54,7 @@ enum exec_elf_result exec_elf(const char *proc_name,
     intr_state is = fetch_and_disable_intr();
     struct PCB *pcb = get_cur_PCB();
 
-    ASSERT_S(argc < EXEC_ELF_ARG_MAX_COUNT);
+    ASSERT(argc < EXEC_ELF_ARG_MAX_COUNT);
 
     // 备份原虚拟地址空间，设置新的虚拟地址空间
     vir_addr_space *ori_addr_space = pcb->addr_space;

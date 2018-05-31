@@ -45,7 +45,7 @@ static enum filesys_opr_result trans_afs_file_result(
         [afs_file_opr_rm_locked]        = filesys_opr_locked,
         [afs_file_opr_rm_wrong_type]    = filesys_opr_not_found
     };
-    ASSERT_S((uint32_t)rt < ARRAY_SIZE(trans));
+    ASSERT((uint32_t)rt < ARRAY_SIZE(trans));
 
     return trans[(uint32_t)rt];
 }
