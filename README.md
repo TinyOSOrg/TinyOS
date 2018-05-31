@@ -29,11 +29,11 @@ bochs的编译运行依赖于：
 
 要使用bochs运行该系统，可执行以下步骤：
 
-1. 跟据bochs所附带的显示插件，修改`bochsrc.txt`中的`display_library`项。
-2. 初次运行前，运行`bash setup.sh`初始化环境。
-3. 运行`make bochs`以构建项目并启动虚拟机。
+1. 跟据bochs所附带的显示插件，修改`bochsrc.txt`中的`display_library`项
+2. 初次运行前，运行`make fs`初始化磁盘映像
+3. 运行`make run`以构建项目并启动虚拟机
 
-由于磁盘映像创建工具bximage的命令参数格式曾发生变动，因此若无法正确创建磁盘映像文件，可尝试运行`bash setup_old.sh`以解决问题。
+由于磁盘映像创建工具bximage的命令参数格式曾发生变动，因此若无法正确初始化磁盘映像文件，可尝试运行`bash setup.sh`以解决问题。
 
 ## 截图
 
