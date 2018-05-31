@@ -32,11 +32,11 @@ void expl_exec(filesys_dp_handle dp, const char *working_dir,
     if(strcmp(proc_name, "`") == 0)
         proc_name = dst;
         
-    char *final_path_arg = path_buf + DP_STR_OFFSET;
-    uint32_to_str(dst_dp, final_path_arg);
-    strcat(final_path_arg, ":");
-    strcat(final_path_arg, path_buf);
-    args[1] = final_path_arg;;
+    char *arg_cur_buf = path_buf + DP_STR_OFFSET;
+    uint32_to_str(dst_dp, arg_cur_buf);
+    strcat(arg_cur_buf, ":");
+    strcat(arg_cur_buf, working_dir);
+    args[0] = arg_cur_buf;
 
     enum exec_elf_result rt = exec_elf(
         proc_name, dst_dp, path_buf, false, args_cnt - 1, args, &pid);

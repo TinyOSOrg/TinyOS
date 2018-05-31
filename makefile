@@ -36,8 +36,8 @@ CP = build/cp
 # 外部文件导入工具
 DISK_IPT = build/disk_ipt
 
-.PHONY : all
-all : $(HD) tools applications
+.PHONY : _all
+_all : $(HD) tools applications
 
 .PHONY : mkdpt
 mkdpt : $(MKDPT)
@@ -88,7 +88,6 @@ include ./make/applications/cp
 
 .PHONY: clean
 clean :
-#	rm -f $(BOOTBIN_FILE)
 
 	rm -f $(shell find ./src/ -name "*.dtmp")
 	rm -f $(shell find ./src/ -name "*.o")
@@ -96,43 +95,21 @@ clean :
 	rm -f $(shell find ./src/ -name "*.bootbin")
 	rm -f $(shell find ./src/ -name "*.bin")
 
-#	rm -f $(LIB_O_FILES)
-#	rm -f $(LIB_D_FILES)
-#
-#	rm -f $(SHARED_O_FILES)
-#	rm -f $(SHARED_D_FILES)
-#
-#	rm -f $(KER_O_FILES)
-#	rm -f $(KER_D_FILES)
-#	rm -f $(KER_BIN_FILES)
-#
-#	rm -f $(MKDPT)
-#	rm -f $(MKDPT_O_FILES)
-#	rm -f $(MKDPT_D_FILES)
-#
-#	rm -f $(BINTRANS)
-#	rm -f $(BINTRANS_O_FILES)
-#	rm -f $(BINTRANS_D_FILES)
-#
-#	rm -f $(DISK_IPT)
-#	rm -f $(DISK_IPT_O_FILES)
-#	rm -f $(DISK_IPT_D_FILES)
-#
-#	rm -f $(ELF_TESTER)
-#	rm -f $(ELF_O_FILES)
-#	rm -f $(ELF_D_FILES)
-#
-#	rm -f $(CP)
-#	rm -f $(CP_O_FILES)
-#	rm -f $(CP_D_FILES)
-
 	rm -f $(MKDPT) $(BINTRANS) $(DISP_IPT) $(ELF_TESTER) $(CP)
 
 .PHONY: bochs
 bochs :
-	make all
+	make _all
 	bochs
 
 .PHONY: setup
 setup :
 	bash setup_old.sh
+
+.PHONY : all
+all :
+	make setup _all
+
+.PHONY : run
+run :
+	bochs

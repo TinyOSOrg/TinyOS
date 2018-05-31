@@ -51,6 +51,36 @@ uint32_t get_dp_from_path_s(const char *path,
     return cpy_len;
 }
 
+filesys_dp_handle get_dp_handle_from_path(const char *path,
+                                          void *(*_malloc)(size_t),
+                                          void (*_free)(void*))
+{
+    uint32_t fst_slash = strfind(path, '/', 0);
+    if(fst_slash == STRING_NPOS || !fst_slash)
+        return DPT_UNIT_COUNT;
+    
+    char *buf = _malloc(fst_slash);
+    if(!buf)
+        return DPT_UNIT_COUNT;
+    
+    memcpy(buf, path, fst_slash);
+    char endch = buf[fst_slash - 1];
+    buf[fst_slash - 1] = '\0';
+
+    filesys_dp_handle ret = DPT_UNIT_COUNT;
+
+    if(endch == ':')
+    {
+        if(!str_to_uint32(buf, &ret) || ret >= DPT_UNIT_COUNT)
+            ret = DPT_UNIT_COUNT;
+    }
+    else if(endch == '>')
+        ret = get_dp(buf);
+
+    _free(buf);
+    return ret;
+}
+
 const char *skip_dp_in_abs_path(const char *path)
 {
     uint32_t beg = strfind(path, '/', 0);

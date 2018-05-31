@@ -17,6 +17,11 @@ bool is_path_containning_dp(const char *path);
 uint32_t get_dp_from_path_s(const char *path,
                             char *dst, uint32_t buf_size);
 
+/* 从一个路径中提取出分区handle，失败时返回 DPT_UNIT_COUNT */
+filesys_dp_handle get_dp_handle_from_path(const char *path,
+                                          void *(*_malloc)(size_t),
+                                          void (*_free)(void*));
+
 /* 跳过一个路径中的分区部分，要求输入是包含分区的 */
 const char *skip_dp_in_abs_path(const char *path);
 
