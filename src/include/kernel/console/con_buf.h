@@ -13,7 +13,7 @@ struct con_buf
     uint16_t cursor;
 };
 
-struct con_buf *alloc_con_buf();
+struct con_buf *kalloc_con_buf();
 
 void free_con_buf(struct con_buf *buf);
 

@@ -76,4 +76,10 @@ void init_syscall()
         (syscall_impl)&syscall_alloc_fg_impl;
     syscall_func_table[SYSCALL_EXPL_FREE_FOREGROUND] =
         (syscall_impl)&syscall_free_fg_impl;
+    syscall_func_table[SYSCALL_EXPL_ALLOC_CON_BUF] =
+        (syscall_impl)&syscall_alloc_con_buf_impl;
+    syscall_func_table[SYSCALL_EXPL_PUT_CHAR] =
+        (syscall_impl)&syscall_put_char_expl_impl;
+    syscall_func_table[SYSCALL_EXPL_NEW_LINE] =
+        (syscall_impl)&syscall_expl_new_line_impl;
 }

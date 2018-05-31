@@ -5,6 +5,7 @@
 
 #include <shared/screen.h>
 #include <shared/string.h>
+#include <shared/sys.h>
 
 static uint32_t (*functions[CONSOLE_SYSCALL_FUNCTION_COUNT])(struct con_buf *, uint32_t);
 
@@ -143,7 +144,11 @@ uint32_t syscall_console_impl(uint32_t func, uint32_t arg)
         return 0;
     struct con_buf *buf = get_cur_proc_con_buf();
     if(!buf)
+    {
+        if(func == CONSOLE_SYSCALL_FUNCTION_PUT_CHAR)
+            put_char_expl(arg & 0xff);
         return 0;
+    }
     semaphore_wait(&buf->lock);
     _enable_intr();
     uint32_t rt = functions[func](buf, arg);

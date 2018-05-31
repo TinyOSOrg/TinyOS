@@ -3,6 +3,7 @@
 #include <kernel/explorer/cmds.h>
 #include <kernel/explorer/disp.h>
 #include <kernel/filesys/dpt.h>
+#include <kernel/interrupt.h>
 #include <kernel/memory.h>
 
 #include <shared/path.h>
@@ -38,6 +39,8 @@ void expl_exec(filesys_dp_handle dp, const char *working_dir,
     strcat(arg_cur_buf, working_dir);
     args[0] = arg_cur_buf;
 
+    intr_state is = fetch_and_disable_intr();
+
     enum exec_elf_result rt = exec_elf(
         proc_name, dst_dp, path_buf, false, args_cnt - 1, args, &pid);
     
@@ -54,6 +57,8 @@ void expl_exec(filesys_dp_handle dp, const char *working_dir,
         disp_printf("Proc created: %u, %s", pid, proc_name);
         break;
     }
+
+    set_intr_state(is);
 
 EXIT:
 

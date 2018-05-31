@@ -36,8 +36,8 @@ CP = build/cp
 # 外部文件导入工具
 DISK_IPT = build/disk_ipt
 
-.PHONY : _all
-_all : $(HD) tools applications
+.PHONY : all
+all : $(HD) tools applications
 
 .PHONY : mkdpt
 mkdpt : $(MKDPT)
@@ -97,19 +97,11 @@ clean :
 
 	rm -f $(MKDPT) $(BINTRANS) $(DISP_IPT) $(ELF_TESTER) $(CP)
 
-.PHONY: bochs
-bochs :
-	make _all
-	bochs
-
-.PHONY: setup
-setup :
-	bash setup_old.sh
-
-.PHONY : all
-all :
-	make setup _all
-
-.PHONY : run
+.PHONY: run
 run :
+	make all
 	bochs
+
+.PHONY: fs
+fs :
+	bash setup_old.sh

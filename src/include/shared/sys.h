@@ -120,4 +120,13 @@ bool alloc_fg();
 /* 申请称为后台进程，成功时返回true。若本来就处于后台，返回false */
 bool free_fg();
 
+/* 申请后台屏幕缓存，成功时返回true。若本来就有缓存或者内存不足，返回false */
+bool alloc_con_buf();
+
+/* 往expl屏幕上输出一个字符，具体行为见shared/syscall.h */
+void put_char_expl(char ch);
+
+/* 让expl腾出一个新输出行，行为类似put_char_expl */
+void expl_new_line();
+
 #endif /* TINY_OS_SHARD_SYS_H */

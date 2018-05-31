@@ -145,7 +145,7 @@ static struct PCB *alloc_PCB()
     init_spinlock(&ret->file_table_lock);
 
     ret->pis      = pis_background;
-    ret->disp_buf = alloc_con_buf();
+    ret->disp_buf = NULL; // kalloc_con_buf();
 
     return ret;
 }

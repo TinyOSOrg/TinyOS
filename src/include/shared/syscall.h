@@ -2,7 +2,7 @@
 #define TINY_OS_SHARD_SYSCALL_H
 
 /* 系统调用入口数量 */
-#define SYSCALL_COUNT 20
+#define SYSCALL_COUNT 23
 
 /* 一个合法的系统调用应返回void或uint32_t，有0~3个uint32_t大小的参数 */
 
@@ -72,6 +72,20 @@
     若自己本来就不处于前台，返回false；否则切换成功，返回true
 */
 #define SYSCALL_EXPL_FREE_FOREGROUND (SYSCALL_EXPL_ALLOC_FOREGROUND + 1)
+
+#define SYSCALL_EXPL_ALLOC_CON_BUF (SYSCALL_EXPL_FREE_FOREGROUND + 1)
+
+/*
+    在disp区域输出一个字符
+    若调用方有自己的显示缓存，那么什么也不做，直接返回
+    若调用方处于前台，那么输出字符后返回
+    若调用方处于后台，那么一直等待直到进程被切换到前台后才输出字符并返回
+
+    仅一个参数 uint32_t arg，其最低字节为要输出的字符
+*/
+#define SYSCALL_EXPL_PUT_CHAR (SYSCALL_EXPL_ALLOC_CON_BUF + 1)
+
+#define SYSCALL_EXPL_NEW_LINE (SYSCALL_EXPL_PUT_CHAR + 1)
 
 #define syscall_param0(N) \
     ({ uint32_t r; \

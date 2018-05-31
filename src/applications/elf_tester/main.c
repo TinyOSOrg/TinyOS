@@ -2,6 +2,7 @@
 
 int main(int argc, char *argv[])
 {
+    alloc_con_buf();
     alloc_fg();
 
     for(int i = 0; i < argc; ++i)

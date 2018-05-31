@@ -2,14 +2,18 @@
 #include <shared/string.h>
 #include <shared/sys.h>
 
+#include <lib/input.h>
 #include <lib/mem.h>
 
 int main(int argc, char *argv[])
 {
+    alloc_fg();
+    expl_new_line();
+
     if(argc < 3)
     {
-        printf("Usage: cp src dst\n");
-        while(true);
+        printf("Usage: cp src dst");
+        return -1;
     }
 
     const char *_src_name = argv[1];
@@ -27,29 +31,29 @@ int main(int argc, char *argv[])
     if(!cat_path_ex_s(cur_dp, skip_dp_in_abs_path(argv[0]),
                       _src_name, &src_dp, src_name, src_buf_size))
     {
-        printf("Invalid src path: %s\n", _src_name);
-        while(true);
+        printf("Invalid src path: %s", _src_name);
+        return -1;
     }
 
     if(!cat_path_ex_s(cur_dp, skip_dp_in_abs_path(argv[0]),
                       _dst_name, &dst_dp, dst_name, dst_buf_size))
     {
-        printf("Invalid dst path: %s\n", _dst_name);
-        while(true);
+        printf("Invalid dst path: %s", _dst_name);
+        return -1;
     }
 
     usr_file_handle sfp, dfp;
     if(open_file(src_dp, src_name, false, &sfp) != filesys_opr_success)
     {
-        printf("Failed to open src file: %s\n", _src_name);
-        while(true);
+        printf("Failed to open src file: %s", _src_name);
+        return -1;
     }
 
     remove_file(dst_dp, dst_name); make_file(dst_dp, dst_name);
     if(open_file(dst_dp, dst_name, true, &dfp) != filesys_opr_success)
     {
-        printf("Failed to open dst file: %s\n", _dst_name);
-        while(true);
+        printf("Failed to open dst file: %s", _dst_name);
+        return -1;
     }
 
     uint32_t file_size = get_file_size(sfp);
@@ -68,7 +72,7 @@ int main(int argc, char *argv[])
     close_file(sfp);
     close_file(dfp);
 
-    printf("Done!\n");
-    while(true);
+    printf("Done!");
+
     return 0;
 }

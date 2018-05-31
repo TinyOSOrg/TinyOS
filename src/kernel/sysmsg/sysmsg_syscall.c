@@ -48,6 +48,8 @@ static uint32_t proc_sysmsg_syscall_register_charmsg(uint32_t a, uint32_t b)
 
 static uint32_t proc_sysmsg_syscall_block_onto_sysmsg(uint32_t a, uint32_t b)
 {
+    if(get_cur_PCB()->sys_msgs.size)
+        return 0;
     block_cur_thread_onto_sysmsg();
     return 0;
 }

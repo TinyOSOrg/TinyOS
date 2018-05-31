@@ -13,6 +13,7 @@
 #include <kernel/execelf/execelf.h>
 
 #include <shared/ctype.h>
+#include <shared/explorer.h>
 #include <shared/string.h>
 #include <shared/sys.h>
 
@@ -82,6 +83,7 @@ static void init_explorer()
 
     // explorer的pis标志永远是foreground，因为它必须相应如C+z这样的事件
     pcb->pis      = pis_foreground;
+    pcb->disp_buf = kalloc_con_buf();
 
     cur_fg_proc   = NULL;
     expl_proc     = pcb;
@@ -114,6 +116,13 @@ static void init_explorer()
     set_intr_state(is);
 }
 
+static void clear_input()
+{
+    clr_cmd();
+    expl_cmd_input_buf[0] = '\0';
+    expl_cmd_input_size   = 0;
+}
+
 /* 把一个进程调到前台来，失败时（如进程不存在）返回false */
 static bool make_proc_foreground(uint32_t pid)
 {
@@ -129,14 +138,17 @@ static bool make_proc_foreground(uint32_t pid)
     ASSERT(expl_stat == es_fg && pcb->pis == pis_background);
 
     expl_stat      = es_bg;
-    expl_proc->pis = pis_expl_foreground;
+    expl_proc->pis = pcb->disp_buf ? pis_expl_foreground : pis_foreground;
     pcb->pis       = pis_foreground;
     cur_fg_proc    = pcb;
-    copy_scr_to_con_buf(expl_proc);
-    copy_con_buf_to_scr(pcb);
+
+    if(pcb->disp_buf)
+    {
+        copy_scr_to_con_buf(expl_proc);
+        copy_con_buf_to_scr(pcb);
+    }
 
     set_intr_state(is);
-
     return true;
 }
 
@@ -157,7 +169,8 @@ static void explorer_usr_interrupt()
     cur_fg_proc->pis = pis_background;
     copy_scr_to_con_buf(cur_fg_proc);
     cur_fg_proc = NULL;
-    copy_con_buf_to_scr(expl_proc);
+    if(expl_proc->pis == pis_expl_foreground)
+        copy_con_buf_to_scr(expl_proc);
 
     expl_stat = es_fg;
     expl_proc->pis = pis_foreground;
@@ -179,8 +192,9 @@ static void explorer_usr_exit()
         kill_process(cur_fg_proc);
         cur_fg_proc    = NULL;
         expl_stat      = es_fg;
+        if(expl_proc->pis == pis_expl_foreground)
+            copy_con_buf_to_scr(expl_proc);
         expl_proc->pis = pis_foreground;
-        copy_con_buf_to_scr(expl_proc);
     }
 
     set_intr_state(is);
@@ -265,6 +279,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
         if(arg_cnt < 2)
             goto INVALID_ARGUMENT;
         
+        clr_sysmsgs();
         disp_new_line();
         expl_exec(expl_working_dp, expl_working_dir, args, arg_cnt);
     }
@@ -377,6 +392,7 @@ static bool explorer_submit_cmd()
     return ret;
 }
 
+/* 提交一个命令字符 */
 static void explorer_new_cmd_char(char ch)
 {
     // 退格
@@ -405,6 +421,91 @@ static void explorer_new_cmd_char(char ch)
     cmd_char2(expl_cmd_input_size, '_');
 }
 
+static void explorer_submit_proc_input()
+{
+    ASSERT(!is_intr_on(get_intr_state()));
+
+    uint32_t ipos = 0;
+    while(true)
+    {
+        struct expl_input_msg msg;
+        msg.type = SYSMSG_TYPE_EXPL_INPUT;
+        uint32_t remain = expl_cmd_input_size - ipos;
+
+        if(remain <= SYSMSG_PARAM_SIZE - 1)
+        {
+            memcpy(msg.params, expl_cmd_input_buf + ipos, remain);
+            msg.params[remain] = '\n';
+            if(remain <= SYSMSG_PARAM_SIZE - 2)
+                msg.params[remain + 1] = '\0';
+
+            send_sysmsg(&cur_fg_proc->sys_msgs, (struct sysmsg *)&msg);
+            break;
+        }
+
+        memcpy(msg.params, expl_cmd_input_buf + ipos, SYSMSG_PARAM_SIZE);
+        send_sysmsg(&cur_fg_proc->sys_msgs, (struct sysmsg *)&msg);
+        ipos += SYSMSG_PARAM_SIZE;
+    }
+
+    clear_input();
+}
+
+/* 提交一个托管输入字符 */
+static void explorer_new_proc_input_char(char ch)
+{
+    ASSERT(!is_intr_on(get_intr_state()));
+
+    // 退格
+    if(ch == '\b')
+    {
+        if(expl_cmd_input_size > 0)
+        {
+            cmd_char2(expl_cmd_input_size, ' ');
+            expl_cmd_input_buf[--expl_cmd_input_size] = '\0';
+            cmd_char2(expl_cmd_input_size, '_');
+        }
+        return;
+    }
+
+    // 命令缓冲区已满
+    if(expl_cmd_input_size >= CMD_INPUT_BUF_SIZE - 1)
+        return;
+
+    // 忽略制表符
+    if(ch == '\t')
+        return;
+
+    // 遇到换行符，可以提交一条输入了
+    if(ch == '\n')
+    {
+        explorer_submit_proc_input();
+        return;
+    }
+    
+    cmd_char2(expl_cmd_input_size, ch);
+    expl_cmd_input_buf[expl_cmd_input_size] = ch;
+    expl_cmd_input_buf[++expl_cmd_input_size] = '\0';
+    cmd_char2(expl_cmd_input_size, '_');
+}
+
+static bool process_expl_sysmsg(struct sysmsg *msg)
+{
+    if(msg->type == SYSMSG_TYPE_EXPL_INPUT)
+    {
+        disp_put_char((char)msg->params[0]);
+        return true;
+    }
+
+    if(msg->type == SYSMSG_TYPE_EXPL_NEW_LINE)
+    {
+        disp_new_line();
+        return true;
+    }
+
+    return false;
+}
+
 /*
     进行一次explorer状态转移
     返回false时停机
@@ -431,8 +532,9 @@ static bool explorer_transfer()
             else if(msg.type == SYSMSG_TYPE_CHAR) // 取得一条字符消息
             {
                 explorer_new_cmd_char(get_chmsg_char(&msg));
-                return true;
             }
+            else
+                process_expl_sysmsg(&msg);
         }
     }
     else if(expl_stat == es_bg)
@@ -461,6 +563,29 @@ static bool explorer_transfer()
                     clr_sysmsgs();
                     return true;
                 }
+            }
+            else if(process_expl_sysmsg(&msg))
+            {
+                return true;
+            }
+            else if(msg.type == SYSMSG_TYPE_CHAR)
+            {
+                // 如果前台进程没有显示缓存，那么字符消息应该作为中断输入缓存下来
+                // 因为涉及到进程状态，这里对前台进程显示缓存的查询需要关中断
+                intr_state is = fetch_and_disable_intr();
+
+                ASSERT(cur_fg_proc && cur_fg_proc->pis == pis_foreground);
+
+                if(cur_fg_proc->disp_buf)
+                {
+                    set_intr_state(is);
+                    return true;
+                }
+                
+                explorer_new_proc_input_char(get_chmsg_char(&msg));
+
+                set_intr_state(is);
+                return true;
             }
         }
     }
@@ -499,8 +624,9 @@ void foreground_exit(struct PCB *pcb)
 
     cur_fg_proc    = NULL;
     expl_stat      = es_fg;
+    if(expl_proc->pis == pis_expl_foreground)
+        copy_con_buf_to_scr(expl_proc);
     expl_proc->pis = pis_foreground;
-    copy_con_buf_to_scr(expl_proc);
 
     set_intr_state(is);
 }
@@ -518,4 +644,51 @@ uint32_t syscall_free_fg_impl()
         return false;
     explorer_usr_interrupt();
     return true;
+}
+
+uint32_t syscall_alloc_con_buf_impl()
+{
+    struct PCB *pcb = get_cur_PCB();
+    if(pcb->disp_buf || cur_fg_proc == pcb)
+        return false;
+    pcb->disp_buf = kalloc_con_buf();
+    return pcb->disp_buf != NULL;
+}
+
+uint32_t syscall_put_char_expl_impl(uint32_t arg)
+{
+    // 只有前台的、无显示缓存的进程能成功输出
+    if(get_cur_PCB()->disp_buf)
+        return 0;
+
+    while(get_cur_PCB() != cur_fg_proc)
+        yield_cpu();
+
+    struct expl_input_msg msg;
+    msg.type = SYSMSG_TYPE_EXPL_INPUT;
+    msg.params[0] = arg & 0xff;
+    msg.params[1] = 0;
+
+    while(!send_sysmsg(&expl_proc->sys_msgs, (struct sysmsg *)&msg))
+        yield_cpu();
+
+    return 0;
+}
+
+uint32_t syscall_expl_new_line_impl()
+{
+    // 只有前台的、无显示缓存的进程能成功输出
+    if(get_cur_PCB()->disp_buf)
+        return 0;
+
+    while(get_cur_PCB() != cur_fg_proc)
+        yield_cpu();
+    
+    struct expl_input_msg msg;
+    msg.type = SYSMSG_TYPE_EXPL_NEW_LINE;
+
+    while(!send_sysmsg(&expl_proc->sys_msgs, (struct sysmsg *)&msg))
+        yield_cpu();
+    
+    return 0;
 }
