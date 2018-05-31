@@ -140,6 +140,52 @@ static bool make_proc_foreground(uint32_t pid)
     return true;
 }
 
+/* 将当前前台进程切换到后台 */
+static void explorer_usr_interrupt()
+{
+    intr_state is = fetch_and_disable_intr();
+
+    if(!cur_fg_proc)
+    {
+        ASSERT_S(expl_stat == es_fg);
+        set_intr_state(is);
+        return;
+    }
+
+    ASSERT_S(expl_stat == es_bg);
+
+    cur_fg_proc->pis = pis_background;
+    copy_scr_to_con_buf(cur_fg_proc);
+    cur_fg_proc = NULL;
+    copy_con_buf_to_scr(expl_proc);
+
+    expl_stat = es_fg;
+    expl_proc->pis = pis_foreground;
+
+    set_intr_state(is);
+}
+
+/* 杀死当前前台进程 */
+static void explorer_usr_exit()
+{
+    intr_state is = fetch_and_disable_intr();
+
+    if(cur_fg_proc)
+    {
+        // 预先把目标进程的pis设置成后台
+        // 这样杀死它就不会通知explorer导致重复copy显示数据什么的
+        cur_fg_proc->pis = pis_background;
+
+        kill_process(cur_fg_proc);
+        cur_fg_proc    = NULL;
+        expl_stat      = es_fg;
+        expl_proc->pis = pis_foreground;
+        copy_con_buf_to_scr(expl_proc);
+    }
+
+    set_intr_state(is);
+}
+
 /*
     匹配形如 str1 str2 ... strN 的命令，会改写buf为
         str1 \0 str2 \0 ... strN \0
@@ -359,52 +405,6 @@ static void explorer_new_cmd_char(char ch)
     cmd_char2(expl_cmd_input_size, '_');
 }
 
-/* 将当前前台进程切换到后台 */
-static void explorer_usr_interrupt()
-{
-    intr_state is = fetch_and_disable_intr();
-
-    if(!cur_fg_proc)
-    {
-        ASSERT_S(expl_stat == es_fg);
-        set_intr_state(is);
-        return;
-    }
-
-    ASSERT_S(expl_stat == es_bg);
-
-    cur_fg_proc->pis = pis_background;
-    copy_scr_to_con_buf(cur_fg_proc);
-    cur_fg_proc = NULL;
-    copy_con_buf_to_scr(expl_proc);
-
-    expl_stat = es_fg;
-    expl_proc->pis = pis_foreground;
-
-    set_intr_state(is);
-}
-
-/* 杀死当前前台进程 */
-static void explorer_usr_exit()
-{
-    intr_state is = fetch_and_disable_intr();
-
-    if(cur_fg_proc)
-    {
-        // 预先把目标进程的pis设置成后台
-        // 这样杀死它就不会通知explorer导致重复copy显示数据什么的
-        cur_fg_proc->pis = pis_background;
-
-        kill_process(cur_fg_proc);
-        cur_fg_proc    = NULL;
-        expl_stat      = es_fg;
-        expl_proc->pis = pis_foreground;
-        copy_con_buf_to_scr(expl_proc);
-    }
-
-    set_intr_state(is);
-}
-
 /*
     进行一次explorer状态转移
     返回false时停机
@@ -503,4 +503,19 @@ void foreground_exit(struct PCB *pcb)
     copy_con_buf_to_scr(expl_proc);
 
     set_intr_state(is);
+}
+
+uint32_t syscall_alloc_fg_impl()
+{
+    if(cur_fg_proc)
+        return false;
+    return make_proc_foreground(get_cur_PCB()->pid);
+}
+
+uint32_t syscall_free_fg_impl()
+{
+    if(cur_fg_proc != get_cur_PCB())
+        return false;
+    explorer_usr_interrupt();
+    return true;
 }

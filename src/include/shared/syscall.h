@@ -2,7 +2,7 @@
 #define TINY_OS_SHARD_SYSCALL_H
 
 /* 系统调用入口数量 */
-#define SYSCALL_COUNT 18
+#define SYSCALL_COUNT 20
 
 /* 一个合法的系统调用应返回void或uint32_t，有0~3个uint32_t大小的参数 */
 
@@ -39,7 +39,7 @@
 */
 #define SYSCALL_KEYBOARD_QUERY (SYSCALL_SYSMSG_OPERATION + 1)
 
-/* 文件系统相关 */
+/* 文件系统相关，参数见kernel/filesys/syscall.h */
 
 #define SYSCALL_FILESYS_OPEN  (SYSCALL_KEYBOARD_QUERY + 1)
 #define SYSCALL_FILESYS_CLOSE (SYSCALL_FILESYS_OPEN + 1)
@@ -60,6 +60,18 @@
 #define SYSCALL_FILESYS_GET_CHILD_INFO (SYSCALL_FILESYS_GET_CHILD_COUNT + 1)
 
 #define SYSCALL_DP_GET_HANDLE (SYSCALL_FILESYS_GET_CHILD_INFO + 1)
+
+/*
+    申请称为当前的前台进程，无参数
+    成功时返回true；若此时有别的前台进程，则会申请失败，返回false
+*/
+#define SYSCALL_EXPL_ALLOC_FOREGROUND (SYSCALL_DP_GET_HANDLE + 1)
+
+/*
+    把自己切到后台
+    若自己本来就不处于前台，返回false；否则切换成功，返回true
+*/
+#define SYSCALL_EXPL_FREE_FOREGROUND (SYSCALL_EXPL_ALLOC_FOREGROUND + 1)
 
 #define syscall_param0(N) \
     ({ uint32_t r; \

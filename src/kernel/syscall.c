@@ -1,6 +1,7 @@
 #include <kernel/syscall.h>
 
 #include <kernel/console/console.h>
+#include <kernel/explorer/explorer.h>
 #include <kernel/filesys/dpt.h>
 #include <kernel/filesys/syscall.h>
 #include <kernel/driver/kbdriver.h>
@@ -68,4 +69,11 @@ void init_syscall()
     
     syscall_func_table[SYSCALL_DP_GET_HANDLE] =
         (syscall_impl)&syscall_get_dp_handle_impl;
+
+    // declared in kernel/explorer/explorer.h
+
+    syscall_func_table[SYSCALL_EXPL_ALLOC_FOREGROUND] =
+        (syscall_impl)&syscall_alloc_fg_impl;
+    syscall_func_table[SYSCALL_EXPL_FREE_FOREGROUND] =
+        (syscall_impl)&syscall_free_fg_impl;
 }

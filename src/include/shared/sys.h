@@ -112,4 +112,12 @@ void wait_for_sysmsg();
 /* 清空消息队列 */
 void clr_sysmsgs();
 
+/* explorer相关 */
+
+/* 申请成为前台进程，失败时返回false */
+bool alloc_fg();
+
+/* 申请称为后台进程，成功时返回true。若本来就处于后台，返回false */
+bool free_fg();
+
 #endif /* TINY_OS_SHARD_SYS_H */
