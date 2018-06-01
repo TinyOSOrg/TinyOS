@@ -1,0 +1,32 @@
+# 1: 伪目标名字 2: 生成目标路径变量
+define make_tool
+
+$(2) = ./build/$(1)
+
+.PHONY : $(1)
+$(1) : $$($(2))
+
+$(2)$(CPP_SUFFIX) = $$(shell find ./src/tools/$(1)/ -name "*.cpp")
+$(2)$(O_SUFFIX) = $$(patsubst %.cpp, %.o, $$($(2)$(CPP_SUFFIX)))
+$(2)$(D_SUFFIX) = $$(patsubst %.cpp, %.d, $$($(2)$(CPP_SUFFIX)))
+
+$$($(2)) : $$($(2)$(O_SUFFIX))
+	$$(CPPC) $$^ -o $$@
+
+$$($(2)$(O_SUFFIX)) : %.o : %.cpp
+	$$(CPPC) $$(CPPC_FLAGS) -c $$< -o $$@
+
+$$($(2)$(D_SUFFIX)) : %.d : %.cpp
+	@set -e; \
+	rm -f $$@; \
+	$$(CPPC) -MM $$(CPPC_FLAGS) $$< $$(CPPC_INCLUDE_FLAGS) > $$@.$$$$$$$$.dtmp; \
+	sed 's,\(.*\)\.o\:,$$*\.o $$*\.d\:,g' < $$@.$$$$$$$$.dtmp > $$@; \
+	rm -f $$@.$$$$$$$$.dtmp
+
+-include $$($(2)$(D_SUFFIX))
+
+TOOLS += $$($(2))
+
+TOOLS_TGTS += $(1)
+
+endef

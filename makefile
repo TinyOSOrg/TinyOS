@@ -16,91 +16,45 @@ LD_FLAGS = -m elf_i386
 ASM = nasm
 ASM_FLAGS =
 
-#=========================== 目标 ===========================
+C_SUFFIX = _C_FILES
+CPP_SUFFIX = _CPP_FILES
+O_SUFFIX = _O_FILES
+D_SUFFIX = _D_FILES
+
+TOOLS =
+TOOLS_TGTS =
+
+APPS =
+APPS_TGTS =
+
+include ./make/tool
+include ./make/application
 
 # 磁盘映像
 HD = hd.img
 
-# 分区表创建工具
-MKDPT = build/mkdpt
-
-# 将二进制文件转换为十进制字面量的工具
-BINTRANS = build/bin_trans
-
-# elf装载器测试程序
-ELF_TESTER = build/elf_tester
-
-# 应用程序
-CP = build/cp
-LS = build/ls
-PWD = build/pwd
-PTR = build/ptr
-
-# 外部文件导入工具
-DISK_IPT = build/disk_ipt
-
 .PHONY : all
-all : $(HD) tools applications
-
-.PHONY : mkdpt
-mkdpt : $(MKDPT)
-
-.PHONY : bin_trans
-bin_trans : $(BINTRANS)
-
-.PHONY : disk_ipt
-disk_ipt : $(DISK_IPT)
-
-.PHONY : elf_tester
-elf_tester : $(ELF_TESTER)
-
-.PHONY : cp
-cp : $(CP)
-
-.PHONY : ls
-ls : $(LS)
-
-.PHONY : pwd
-pwd : $(PWD)
-
-.PHONY : ptr
-ptr : $(PTR)
-
-.PHONY : tools
-tools : mkdpt bin_trans disk_ipt
-
-.PHONY : applications
-applications : elf_tester cp ls pwd ptr
-
-#=========================== 用户库 ===========================
+all : $(HD) apps tools 
 
 include ./make/lib
-
-#=========================== 共享代码 ===========================
-
 include ./make/shared
-
-#=========================== 内核 ===========================
-
 include ./make/kernel
 
-#=========================== 各种工具和应用程序 ===========================
+$(eval $(call make_tool,mkdpt,MKDPT))
+$(eval $(call make_tool,bin_trans,BIN_TRANS))
+$(eval $(call make_tool,disk_ipt,DISK_IPT))
 
-include ./make/tools/mkdpt
+$(eval $(call make_app,elf_tester,ELF_TESTER))
+$(eval $(call make_app,cp,CP))
+$(eval $(call make_app,ls,LS))
+$(eval $(call make_app,pwd,PWD))
+$(eval $(call make_app,ptr,PTR))
 
-include ./make/tools/bin_trans
+.PHONY : apps
+apps : $(APPS_TGTS)
 
-include ./make/tools/disk_ipt
-
-include ./make/applications/elf_tester
-
-include ./make/applications/cp
-
-include ./make/applications/ls
-
-include ./make/applications/pwd
-
-include ./make/applications/ptr
+.PHONY : tools
+tools : $(TOOLS_TGTS)
 
 #=========================== make选项 ===========================
 
@@ -113,8 +67,8 @@ clean :
 	rm -f $(shell find ./src/ -name "*.bootbin")
 	rm -f $(shell find ./src/ -name "*.bin")
 
-	rm -f $(MKDPT) $(BINTRANS) $(DISP_IPT)
-	rm -f $(ELF_TESTER) $(CP) $(LS) $(PWD) $(PTR)
+	rm -f $(TOOLS)
+	rm -f $(APPS)
 
 .PHONY: run
 run :

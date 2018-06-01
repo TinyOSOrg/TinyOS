@@ -1,0 +1,32 @@
+# 1: 伪目标名字 2: 生成目标路径变量
+define make_app
+
+$(2) = ./build/$(1)
+
+.PHONY : $(1)
+$(1) : $$($(2))
+
+$(2)$(C_SUFFIX) = $$(shell find ./src/applications/$(1)/ -name "*.c")
+$(2)$(O_SUFFIX) = $$(patsubst %.c, %.o, $$($(2)$(C_SUFFIX)))
+$(2)$(D_SUFFIX) = $$(patsubst %.c, %.d, $$($(2)$(C_SUFFIX)))
+
+$$($(2)) : $$($(2)$(O_SUFFIX)) $$(LIB_O_FILES) $$(SHARED_O_FILES)
+	$$(LD) $$(LD_FLAGS) $$^ -o $$@
+
+$$($(2)$(O_SUFFIX)) : %.o : %.c
+	$$(CC) $$(CC_FLAGS) -c $$< -o $$@
+
+$$($(2)$(D_SUFFIX)) : %.d : %.c
+	@set -e; \
+	rm -f $$@; \
+	$$(CC) -MM $$(CC_FLAGS) $$< $$(CC_INCLUDE_FLAGS) > $$@.$$$$$$$$.dtmp; \
+	sed 's,\(.*\)\.o\:,$$*\.o $$*\.d\:,g' < $$@.$$$$$$$$.dtmp > $$@; \
+	rm -f $$@.$$$$$$$$.dtmp
+
+-include $$($(2)$(D_SUFFIX))
+
+APPS += $$($(2))
+
+APPS_TGTS += $(1)
+
+endef
