@@ -26,4 +26,7 @@ uint32_t syscall_put_char_expl_impl(uint32_t arg);
 /* 系统调用实现：让disp区域开个新行 */
 uint32_t syscall_expl_new_line_impl();
 
+/* 系统调用进程：给管道的接收进程发个空字符 */
+uint32_t syscall_expl_pipe_null_char();
+
 #endif /* TINY_OS_EXPLORER_EXPLORER_H */

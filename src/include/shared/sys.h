@@ -129,4 +129,7 @@ void put_char_expl(char ch);
 /* 让expl腾出一个新输出行，行为类似put_char_expl */
 void expl_new_line();
 
+/* 给管道目标输送一个空字符 */
+void pipe_null_char();
+
 #endif /* TINY_OS_SHARD_SYS_H */

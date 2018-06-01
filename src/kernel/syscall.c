@@ -82,4 +82,6 @@ void init_syscall()
         (syscall_impl)&syscall_put_char_expl_impl;
     syscall_func_table[SYSCALL_EXPL_NEW_LINE] =
         (syscall_impl)&syscall_expl_new_line_impl;
+    syscall_func_table[SYSCALL_PIPE_NULL_CHAR] =
+        (syscall_impl)&syscall_expl_pipe_null_char;
 }

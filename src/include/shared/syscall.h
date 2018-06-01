@@ -2,7 +2,7 @@
 #define TINY_OS_SHARD_SYSCALL_H
 
 /* 系统调用入口数量 */
-#define SYSCALL_COUNT 23
+#define SYSCALL_COUNT 24
 
 /* 一个合法的系统调用应返回void或uint32_t，有0~3个uint32_t大小的参数 */
 
@@ -86,6 +86,8 @@
 #define SYSCALL_EXPL_PUT_CHAR (SYSCALL_EXPL_ALLOC_CON_BUF + 1)
 
 #define SYSCALL_EXPL_NEW_LINE (SYSCALL_EXPL_PUT_CHAR + 1)
+
+#define SYSCALL_PIPE_NULL_CHAR (SYSCALL_EXPL_NEW_LINE + 1)
 
 #define syscall_param0(N) \
     ({ uint32_t r; \

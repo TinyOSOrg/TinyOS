@@ -26,3 +26,8 @@ void expl_new_line()
 {
     syscall_param0(SYSCALL_EXPL_NEW_LINE);
 }
+
+void pipe_null_char()
+{
+    syscall_param0(SYSCALL_PIPE_NULL_CHAR);
+}

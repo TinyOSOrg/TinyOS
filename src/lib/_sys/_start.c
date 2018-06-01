@@ -22,5 +22,6 @@ void _start(void)
 
     main(argc, argv);
 
+    pipe_null_char();
     exit_thread();
 }

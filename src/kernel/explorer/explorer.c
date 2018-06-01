@@ -339,8 +339,8 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
             {
                 disp_new_line();
                 disp_printf("Last created process: null");
+                last_created_proc_pid = 0;
             }
-            last_created_proc_pid = 0;
         }
         else
         {
@@ -419,6 +419,8 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
         uint32_t pid = 0;
         struct PCB *last_pcb = NULL;
 
+        disable_thread_scheduler();
+
         while(seg_cnt)
         {
             if(strcmp(segs[seg_cnt - 1], "|") == 0)
@@ -426,6 +428,7 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
             else if(str_cnt)
             {
                 set_intr_state(is);
+                enable_thread_scheduler();
                 goto INVALID_ARGUMENT;
             }
 
@@ -433,6 +436,7 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
                           cmd, cmd, segs + 1, seg_cnt - 1, &pid))
             {
                 set_intr_state(is);
+                enable_thread_scheduler();
                 goto INVALID_ARGUMENT;
             }
 
@@ -448,6 +452,8 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
             str_cnt -= seg_cnt;
             cmd = segs[0];
         }
+
+        enable_thread_scheduler();
 
         last_created_proc_pid = pid;
         set_intr_state(is);
@@ -590,7 +596,7 @@ static bool process_expl_sysmsg(struct sysmsg *msg)
     if(msg->type == SYSMSG_TYPE_EXPL_OUTPUT)
     {
         ASSERT(!m->out_uid);
-        disp_put_char((char)msg->params[0]);
+        disp_put_char(m->ch);
         return true;
     }
 
@@ -752,30 +758,50 @@ uint32_t syscall_alloc_con_buf_impl()
     return pcb->disp_buf != NULL;
 }
 
+static struct PCB *get_out_pcb(struct PCB *src)
+{
+    struct PCB *ret = get_PCB_by_pid(src->out_pid);
+    if(!ret || ret->uid != src->out_uid)
+        return NULL;
+    return ret;
+}
+
+static struct sysmsg_queue *get_out_queue(struct PCB *src)
+{
+    if(src->out_uid)
+    {
+        struct PCB *pcb = get_out_pcb(src);
+        return pcb ? &pcb->sys_msgs : NULL;
+    }
+    return &expl_proc->sys_msgs;
+}
+
 uint32_t syscall_put_char_expl_impl(uint32_t arg)
 {
     struct PCB *pcb = get_cur_PCB();
 
-    struct expl_output_msg msg;
-    msg.type = SYSMSG_TYPE_EXPL_OUTPUT;
-    msg.ch   = arg & 0xff;
-    msg.out_pid = pcb->out_pid;
-    msg.out_uid = pcb->out_uid;
+    struct sysmsg msg;
 
-    struct sysmsg_queue *dst_que;
-
-    // 有输出重定向
     if(pcb->out_uid)
     {
-        struct PCB *out_pcb = get_PCB_by_pid(pcb->out_pid);
-        if(out_pcb->uid != pcb->out_uid) // 重定向目标进程已经GG了
-            return 0;
-        dst_que = &out_pcb->sys_msgs;
+        struct expl_input_msg *m = (struct expl_input_msg *)&msg;
+        m->type      = SYSMSG_TYPE_EXPL_INPUT;
+        m->params[0] = arg & 0xff;
+        m->params[1] = '\0';
     }
     else
-        dst_que = &expl_proc->sys_msgs;
+    {
+        struct expl_output_msg *m = (struct expl_output_msg *)&msg;
+        m->type = SYSMSG_TYPE_EXPL_OUTPUT;
+        m->ch   = arg & 0xff;
+        m->out_pid = pcb->out_pid;
+        m->out_uid = pcb->out_uid;
+    }
 
-    while(!send_sysmsg(dst_que, (struct sysmsg *)&msg))
+    // 这里如果消息发送失败（常常是因为对方消息队列满了），yield_cpu()的时候目标进程可能会挂掉
+    // 所以每一轮都要重新获取目标消息队列
+    struct sysmsg_queue *dst_que;
+    while((dst_que = get_out_queue(pcb)) && !send_sysmsg(dst_que, (struct sysmsg *)&msg))
     {
         thread_syscall_protector_entry();
         yield_cpu();
@@ -797,5 +823,27 @@ uint32_t syscall_expl_new_line_impl()
         thread_syscall_protector_exit();
     }
     
+    return 0;
+}
+
+uint32_t syscall_expl_pipe_null_char()
+{
+    struct PCB *pcb = get_cur_PCB();
+
+    // 只对到管道的输出有效
+    if(!pcb->out_uid)
+        return 0;
+    
+    struct sysmsg msg;
+    msg.type = SYSMSG_TYPE_PIPE_NULL_CHAR;
+
+    struct sysmsg_queue *dst_que;
+    while((dst_que = get_out_queue(pcb)) && !send_sysmsg(dst_que, (struct sysmsg *)&msg))
+    {
+        thread_syscall_protector_entry();
+        yield_cpu();
+        thread_syscall_protector_exit();
+    }
+
     return 0;
 }

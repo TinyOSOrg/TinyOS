@@ -24,12 +24,18 @@ char get_char()
     {
         wait_for_sysmsg();
         struct sysmsg msg;
-        if(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg) &&
-           msg.type == SYSMSG_TYPE_EXPL_INPUT)
+        if(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg))
         {
-            memcpy(input_buf, (char*)msg.params, SYSMSG_PARAM_SIZE);
-            input_buf_idx = 0;
-            break;
+            if(msg.type == SYSMSG_TYPE_EXPL_INPUT)
+            {
+                memcpy(input_buf, (char*)msg.params, SYSMSG_PARAM_SIZE);
+                input_buf_idx = 0;
+                break;
+            }
+            else if(msg.type == SYSMSG_TYPE_PIPE_NULL_CHAR)
+            {
+                return '\0';
+            }
         }
     }
 

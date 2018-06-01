@@ -119,7 +119,7 @@ clean :
 .PHONY: run
 run :
 	make all
-	bochs
+	echo c | bochs
 
 .PHONY: fs
 fs :

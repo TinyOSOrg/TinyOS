@@ -240,8 +240,6 @@ static void thread_scheduler()
                                                  pop_front_ilist(&ready_threads));
     }
     cur_running_TCB->state = thread_state_running;
-    cur_running_TCB->ready_block_threads_node.last =
-    cur_running_TCB->ready_block_threads_node.next = NULL;
 
     // 检查是否需要切换进程资源
     if(last->pcb != cur_running_TCB->pcb && cur_running_TCB->pcb)
@@ -484,6 +482,7 @@ void thread_syscall_protector_exit()
 void disable_thread_scheduler()
 {
     intr_state is = fetch_and_disable_intr();
+    ASSERT(scheduler_disabler == NULL);
     scheduler_disabler = get_cur_TCB();
     set_intr_state(is);
 }
