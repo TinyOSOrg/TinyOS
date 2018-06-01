@@ -30,8 +30,10 @@ BINTRANS = build/bin_trans
 # elf装载器测试程序
 ELF_TESTER = build/elf_tester
 
-# 应用程序cp
+# 应用程序
 CP = build/cp
+LS = build/ls
+PWD = build/pwd
 
 # 外部文件导入工具
 DISK_IPT = build/disk_ipt
@@ -54,11 +56,17 @@ elf_tester : $(ELF_TESTER)
 .PHONY : cp
 cp : $(CP)
 
+.PHONY : ls
+ls : $(LS)
+
+.PHONY : pwd
+pwd : $(PWD)
+
 .PHONY : tools
 tools : mkdpt bin_trans disk_ipt
 
 .PHONY : applications
-applications : elf_tester cp
+applications : elf_tester cp ls pwd
 
 #=========================== 用户库 ===========================
 
@@ -84,6 +92,10 @@ include ./make/applications/elf_tester
 
 include ./make/applications/cp
 
+include ./make/applications/ls
+
+include ./make/applications/pwd
+
 #=========================== make选项 ===========================
 
 .PHONY: clean
@@ -95,7 +107,8 @@ clean :
 	rm -f $(shell find ./src/ -name "*.bootbin")
 	rm -f $(shell find ./src/ -name "*.bin")
 
-	rm -f $(MKDPT) $(BINTRANS) $(DISP_IPT) $(ELF_TESTER) $(CP)
+	rm -f $(MKDPT) $(BINTRANS) $(DISP_IPT)
+	rm -f $(ELF_TESTER) $(CP) $(LS) $(PWD)
 
 .PHONY: run
 run :

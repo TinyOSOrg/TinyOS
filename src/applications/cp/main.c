@@ -7,7 +7,6 @@
 
 int main(int argc, char *argv[])
 {
-    alloc_fg();
     expl_new_line();
 
     if(argc < 3)
@@ -72,7 +71,7 @@ int main(int argc, char *argv[])
     close_file(sfp);
     close_file(dfp);
 
-    printf("Done!");
+    printf("Done");
 
     return 0;
 }

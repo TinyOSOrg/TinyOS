@@ -4,6 +4,7 @@
 
 #include <shared/filesys.h>
 #include <shared/sys.h>
+#include <shared/utility.h>
 
 #define IPT_SECTOR_BYTE_SIZE 512
 
@@ -96,13 +97,25 @@ void ipt_import_from_dp(uint32_t dp_beg)
         usr_file_handle fp;
         remove_file(dp, path);
         make_file(dp, path);
-        open_file(dp, path, true, &fp);
-        
-        for(uint32_t i = 0; i < file_size; ++i)
+        if(open_file(dp, path, true, &fp) != filesys_opr_success)
         {
-            uint8_t b;
-            PR(&b);
-            write_file(fp, i, 1, &b);
+            ipt_end(&ctx);
+            return;
+        }
+
+        uint32_t fpos = 0;
+        while(fpos < file_size)
+        {
+            uint8_t buf[128];
+            uint32_t remain = file_size - fpos;
+            uint32_t delta = MIN(remain, 128);
+
+            PS(buf);
+            for(uint32_t i = 0; i < delta; ++i)
+                PB();
+
+            write_file(fp, fpos, delta, buf);
+            fpos += delta;
         }
 
         close_file(fp);

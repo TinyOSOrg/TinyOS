@@ -66,6 +66,9 @@ static filesys_dp_handle expl_working_dp;
 static char *expl_working_dir;
 static uint32_t expl_working_dir_len;
 
+/* 上一个成功创建的进程号 */
+static uint32_t last_created_proc_pid;
+
 static void init_explorer()
 {
     intr_state is = fetch_and_disable_intr();
@@ -88,6 +91,8 @@ static void init_explorer()
     cur_fg_proc   = NULL;
     expl_proc     = pcb;
     expl_stat     = es_fg;
+
+    last_created_proc_pid = 0;
 
     // 初始化输入缓冲区
     expl_cmd_input_buf =
@@ -121,6 +126,7 @@ static void clear_input()
     clr_cmd();
     expl_cmd_input_buf[0] = '\0';
     expl_cmd_input_size   = 0;
+    cmd_char2(0, '_');
 }
 
 /* 把一个进程调到前台来，失败时（如进程不存在）返回false */
@@ -276,12 +282,16 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "exec") == 0)
     {
-        if(arg_cnt < 2)
+        if(arg_cnt < 1)
             goto INVALID_ARGUMENT;
         
         clr_sysmsgs();
         disp_new_line();
-        expl_exec(expl_working_dp, expl_working_dir, args, arg_cnt);
+        uint32_t pid;
+        if(!expl_exec(expl_working_dp, expl_working_dir,
+                      args[0], args + 1, arg_cnt - 1, &pid))
+            goto INVALID_ARGUMENT;
+        last_created_proc_pid = pid;
     }
     else if(strcmp(cmd, "exit") == 0)
     {
@@ -292,23 +302,34 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "fg") == 0)
     {
-        uint32_t pid;
-        if(arg_cnt != 1 || !str_to_uint32(args[0], &pid))
-            goto INVALID_ARGUMENT;
-
-        if(!make_proc_foreground(pid))
+        if(!arg_cnt)
         {
-            disp_new_line();
-            disp_printf("Invalid pid");
+            if(!make_proc_foreground(last_created_proc_pid))
+            {
+                disp_new_line();
+                disp_printf("Last created process: null");
+            }
+            last_created_proc_pid = 0;
+        }
+        else
+        {
+            uint32_t pid;
+            if(arg_cnt != 1 || !str_to_uint32(args[0], &pid))
+                goto INVALID_ARGUMENT;
+
+            if(!make_proc_foreground(pid))
+            {
+                disp_new_line();
+                disp_printf("Invalid pid");
+            }
         }
     }
-    else if(strcmp(cmd, "ls") == 0)
+    else if(strcmp(cmd, "ipt") == 0)
     {
         if(arg_cnt)
             goto INVALID_ARGUMENT;
         
-        disp_new_line();
-        expl_ls(expl_working_dp, expl_working_dir);
+        ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
     }
     else if(strcmp(cmd, "mkdir") == 0)
     {
@@ -325,15 +346,6 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
 
         disp_new_line();
         expl_show_procs();
-    }
-    else if(strcmp(cmd, "pwd") == 0)
-    {
-        if(arg_cnt)
-            goto INVALID_ARGUMENT;
-
-        disp_new_line();
-        disp_printf("Current working directory: %u:%s",
-                    expl_working_dp, expl_working_dir);
     }
     else if(strcmp(cmd, "rmdir") == 0)
     {
@@ -353,8 +365,13 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else
     {
+        clr_sysmsgs();
         disp_new_line();
-        disp_printf("Invalid command");
+        uint32_t pid;
+        if(!expl_exec(expl_working_dp, expl_working_dir,
+                      cmd, strs, str_cnt, &pid))
+            goto INVALID_ARGUMENT;
+        last_created_proc_pid = pid;
     }
 
     return true;
@@ -491,8 +508,11 @@ static void explorer_new_proc_input_char(char ch)
 
 static bool process_expl_sysmsg(struct sysmsg *msg)
 {
-    if(msg->type == SYSMSG_TYPE_EXPL_INPUT)
+    struct expl_output_msg *m = (struct expl_output_msg *)msg; 
+
+    if(msg->type == SYSMSG_TYPE_EXPL_OUTPUT)
     {
+        ASSERT(!m->out_uid);
         disp_put_char((char)msg->params[0]);
         return true;
     }
@@ -601,7 +621,9 @@ void explorer()
 
     reformat_dp(0, DISK_PT_AFS);
 
-    ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
+    make_directory(0, "/apps");
+
+    // ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
 
     while(explorer_transfer())
         ;
@@ -657,19 +679,28 @@ uint32_t syscall_alloc_con_buf_impl()
 
 uint32_t syscall_put_char_expl_impl(uint32_t arg)
 {
-    // 只有前台的、无显示缓存的进程能成功输出
-    if(get_cur_PCB()->disp_buf)
-        return 0;
+    struct PCB *pcb = get_cur_PCB();
 
-    while(get_cur_PCB() != cur_fg_proc)
-        yield_cpu();
+    struct expl_output_msg msg;
+    msg.type = SYSMSG_TYPE_EXPL_OUTPUT;
+    msg.ch   = arg & 0xff;
+    msg.out_pid = pcb->out_pid;
+    msg.out_uid = pcb->out_uid;
 
-    struct expl_input_msg msg;
-    msg.type = SYSMSG_TYPE_EXPL_INPUT;
-    msg.params[0] = arg & 0xff;
-    msg.params[1] = 0;
+    struct sysmsg_queue *dst_que;
 
-    while(!send_sysmsg(&expl_proc->sys_msgs, (struct sysmsg *)&msg))
+    // 有输出重定向
+    if(pcb->out_uid)
+    {
+        struct PCB *out_pcb = get_PCB_by_pid(pcb->out_pid);
+        if(out_pcb->uid != pcb->out_uid) // 重定向目标进程已经GG了
+            return 0;
+        dst_que = &out_pcb->sys_msgs;
+    }
+    else
+        dst_que = &expl_proc->sys_msgs;
+
+    while(!send_sysmsg(dst_que, (struct sysmsg *)&msg))
         yield_cpu();
 
     return 0;
@@ -677,13 +708,6 @@ uint32_t syscall_put_char_expl_impl(uint32_t arg)
 
 uint32_t syscall_expl_new_line_impl()
 {
-    // 只有前台的、无显示缓存的进程能成功输出
-    if(get_cur_PCB()->disp_buf)
-        return 0;
-
-    while(get_cur_PCB() != cur_fg_proc)
-        yield_cpu();
-    
     struct expl_input_msg msg;
     msg.type = SYSMSG_TYPE_EXPL_NEW_LINE;
 

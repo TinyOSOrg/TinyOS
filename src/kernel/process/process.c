@@ -99,6 +99,9 @@ static ilist processes;
 /* PID -> PCB映射 */
 struct PCB *pid_to_pcb[MAX_PROCESS_COUNT];
 
+/* 下一个进程uid */
+static uint32_t next_uid;
+
 /* PCB空间自由链表 */
 static freelist_handle PCB_freelist;
 
@@ -145,7 +148,11 @@ static struct PCB *alloc_PCB()
     init_spinlock(&ret->file_table_lock);
 
     ret->pis      = pis_background;
-    ret->disp_buf = NULL; // kalloc_con_buf();
+    ret->disp_buf = NULL;
+    ret->uid      = next_uid++;
+
+    ret->out_pid = 0;
+    ret->out_uid = 0;
 
     return ret;
 }
@@ -331,6 +338,8 @@ void init_process_man()
 {
     for(size_t i = 0;i != MAX_PROCESS_COUNT; ++i)
         pid_to_pcb[i] = NULL;
+    
+    next_uid = 1;
 
     init_TSS();
     init_user_segments();

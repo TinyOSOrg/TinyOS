@@ -53,6 +53,8 @@ typedef uint32_t sysmsg_type;
 
 #define SYSMSG_TYPE_EXPL_NEW_LINE 3 /* 让explorer开个新行 */
 
+#define SYSMSG_TYPE_EXPL_OUTPUT 4 /* 到explorer的输出 */
+
 /*
     内核消息参数字节数
     消息传递并不是拿来大规模发送数据的，所以允许的参数就很有限了……

@@ -60,6 +60,9 @@ struct PCB
     // 进程编号，初始为0，其他从1开始计
     uint32_t pid;
 
+    // 进程唯一标识符，0表示非法
+    uint32_t uid;
+
     // 是否是内核进程，即特权级是否是0
     bool is_PL_0;
 
@@ -86,6 +89,10 @@ struct PCB
 
     // 显示缓存
     struct con_buf *disp_buf;
+
+    // stdout重定向目标进程及其标识符
+    uint32_t out_pid;
+    uint32_t out_uid;
 };
 
 /* 进程文件记录 */

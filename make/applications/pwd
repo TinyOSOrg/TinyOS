@@ -1,0 +1,19 @@
+PWD_C_FILES  = $(shell find ./src/applications/pwd/ -name "*.c")
+
+PWD_O_FILES = $(patsubst %.c, %.o, $(PWD_C_FILES))
+PWD_D_FILES = $(patsubst %.c, %.d, $(PWD_C_FILES))
+
+$(PWD) : $(PWD_O_FILES) $(LIB_O_FILES) $(SHARED_O_FILES)
+	$(LD) $(LD_FLAGS) $^ -o $@
+
+$(PWD_O_FILES) : %.o : %.c
+	$(CC) $(CC_FLAGS) -c $< -o $@
+
+$(PWD_D_FILES) : %.d : %.c
+	@set -e; \
+	rm -f $@; \
+	$(CC) -MM $(CC_FLAGS) $< $(CC_INCLUDE_FLAGS) > $@.$$$$.dtmp; \
+	sed 's,\(.*\)\.o\:,$*\.o $*\.d\:,g' < $@.$$$$.dtmp > $@; \
+	rm -f $@.$$$$.dtmp
+
+-include $(PWD_D_FILES)

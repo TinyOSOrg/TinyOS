@@ -41,7 +41,7 @@
 #define EXEC_ELF_ARG_BUF_SIZE 256
 
 /* 至多有多少参数 */
-#define EXEC_ELF_ARG_MAX_COUNT 12
+#define EXEC_ELF_ARG_MAX_COUNT 24
 
 /* 进程参数区起始地址 */
 #define PROC_ARG_ZONE_ADDR \

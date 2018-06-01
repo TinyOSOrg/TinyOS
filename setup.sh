@@ -2,9 +2,10 @@ rm -rf build
 rm -f hd.img
 bximage -mode=create -hd=128M -imgmode=flat -q hd.img
 mkdir build
-make mkdpt
-make elf_tester
-make disk_ipt
+make tools applications
 ./build/mkdpt hd.img
-./build/disk_ipt hd.img ./build/elf_tester /test.elf
+./build/disk_ipt hd.img ./build/elf_tester /test.elf \
+                        ./build/cp         /apps/cp \
+                        ./build/ls         /apps/ls \
+                        ./build/pwd        /apps/pwd
 make clean
