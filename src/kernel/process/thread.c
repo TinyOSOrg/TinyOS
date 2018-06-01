@@ -153,7 +153,7 @@ static void init_idle_thread()
     init_stack->ebp = init_stack->ebx = 0;
     init_stack->esi = init_stack->edi = 0;
 }
-#include <kernel/explorer/disp.h>
+
 /*
     从进程的线程表中干掉一个线程
     如果是该进程的唯一一个线程，那么这个进程要干掉
@@ -240,6 +240,8 @@ static void thread_scheduler()
                                                  pop_front_ilist(&ready_threads));
     }
     cur_running_TCB->state = thread_state_running;
+    cur_running_TCB->ready_block_threads_node.last =
+    cur_running_TCB->ready_block_threads_node.next = NULL;
 
     // 检查是否需要切换进程资源
     if(last->pcb != cur_running_TCB->pcb && cur_running_TCB->pcb)
@@ -331,7 +333,8 @@ void block_cur_thread()
 {
     intr_state intr_s = fetch_and_disable_intr();
 
-    ASSERT(cur_running_TCB->ready_block_threads_node.next == NULL);
+    ASSERT(cur_running_TCB->state == thread_state_running);
+    
     cur_running_TCB->state = thread_state_blocked;
     thread_scheduler();
     
@@ -348,7 +351,9 @@ void block_cur_thread_onto_sysmsg()
         return;
     }
 
+    ASSERT(cur_running_TCB->state == thread_state_running);
     ASSERT(cur_running_TCB->ready_block_threads_node.next == NULL);
+
     cur_running_TCB->state = thread_state_blocked;
     cur_running_TCB->pcb->sysmsg_blocked_tcb = cur_running_TCB;
     thread_scheduler();

@@ -320,7 +320,7 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
         disp_new_line();
         uint32_t pid;
         if(!expl_exec(expl_working_dp, expl_working_dir,
-                      args[0], args + 1, arg_cnt - 1, &pid))
+                      cmd, args[0], args + 1, arg_cnt - 1, &pid))
             goto INVALID_ARGUMENT;
         last_created_proc_pid = pid;
     }
@@ -361,6 +361,22 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
             goto INVALID_ARGUMENT;
         
         ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
+    }
+    else if(strcmp(cmd, "kill") == 0)
+    {
+        if(!arg_cnt || str_cnt)
+            goto INVALID_ARGUMENT;
+        for(uint32_t i = 0; i < arg_cnt; ++i)
+        {
+            uint32_t pid;
+            if(!str_to_uint32(args[i], &pid) || pid < 2)
+                goto INVALID_ARGUMENT;
+            intr_state is = fetch_and_disable_intr();
+            struct PCB *pcb = get_PCB_by_pid(pid);
+            if(pcb)
+                kill_process(pcb);
+            set_intr_state(is);
+        }
     }
     else if(strcmp(cmd, "mkdir") == 0)
     {
@@ -414,7 +430,7 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
             }
 
             if(!expl_exec(expl_working_dp, expl_working_dir,
-                          cmd, segs, seg_cnt, &pid))
+                          cmd, cmd, segs + 1, seg_cnt - 1, &pid))
             {
                 set_intr_state(is);
                 goto INVALID_ARGUMENT;
@@ -683,8 +699,6 @@ void explorer()
     reformat_dp(0, DISK_PT_AFS);
 
     make_directory(0, "/apps");
-
-    // ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
 
     while(explorer_transfer())
         ;

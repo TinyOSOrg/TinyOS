@@ -21,7 +21,8 @@ bool expl_cd(filesys_dp_handle *dp, char *cur,
         程序路径（绝对/相对） 参数1 参数2 ……
 */
 bool expl_exec(filesys_dp_handle dp, const char *working_dir,
-               const char *dst, const char **args, uint32_t args_cnt,
+               const char *dst, const char *proc_name,
+               const char **args, uint32_t args_cnt,
                uint32_t *_pid);
 
 /* dp，显示当前分区名 */
