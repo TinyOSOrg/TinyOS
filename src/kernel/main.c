@@ -10,7 +10,7 @@ int main()
 
     create_process("explorer", explorer, true);
 
-    while(1)
+    while(true)
     {
         do_releasing_thds_procs();
         yield_CPU();

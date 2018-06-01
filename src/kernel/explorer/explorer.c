@@ -194,7 +194,7 @@ static void explorer_usr_exit()
         // 预先把目标进程的pis设置成后台
         // 这样杀死它就不会通知explorer导致重复copy显示数据什么的
         cur_fg_proc->pis = pis_background;
-
+        
         kill_process(cur_fg_proc);
         cur_fg_proc    = NULL;
         expl_stat      = es_fg;
@@ -209,12 +209,10 @@ static void explorer_usr_exit()
 /*
     匹配形如 str1 str2 ... strN 的命令，会改写buf为
         str1 \0 str2 \0 ... strN \0
-    且每个str的首元素地址被分别放到strs中
     所有空白字符均会被跳过
-    返回识别到的str数量，超出max_strs_cnt的str被忽略
+    返回识别到的str数量
 */
-static uint32_t expl_parse_cmd(char *buf, const char **strs,
-                               uint32_t max_strs_cnt)
+static uint32_t expl_parse_cmd(char *buf)
 {
     uint32_t ri = 0, wi = 0; //ri用于读buf，wi用于改写buf
     uint32_t cnt = 0;
@@ -230,34 +228,67 @@ static uint32_t expl_parse_cmd(char *buf, const char **strs,
             break;
 
         // 取得一条str
-        uint32_t str_beg = wi;
         while(buf[ri] && !isspace(buf[ri]))
             buf[wi++] = buf[ri++];
-        strs[cnt] = &buf[str_beg];
         ++cnt;
 
         // 把str末端置为\0
         if(buf[ri])
             ++ri;
         buf[wi++] = '\0';
-        
-        if(cnt >= max_strs_cnt)
-            break;
     }
 
     return cnt;
 }
 
-/* 就是一条一条地暴力匹配命令，反正这个不是很重要，先用着吧…… */
-static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
+static const char *next_strs(const char *str, const char **output,
+                             uint32_t total_cnt, uint32_t out_buf_size,
+                             uint32_t *out_size)
 {
-    const char *cmd    = strs[0];
-    const char **args  = &strs[1];
-    uint32_t arg_cnt   = str_cnt - 1;
+    ASSERT(str && output && out_buf_size && out_size);
+
+    uint32_t cnt = 0;
+    while(true)
+    {
+        if(cnt >= out_buf_size || cnt >= total_cnt)
+        {
+            *out_size = cnt;
+            return str;
+        }
+
+        output[cnt++] = str;
+
+        if(str[0] == '|' && !str[1])
+        {
+            *out_size = cnt;
+            return str += 2;
+        }
+
+        while(*str++)
+            ;
+    }
+}
+
+/* 就是一条一条地暴力匹配命令，反正这个不是很重要，先用着吧…… */
+static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
+{
+    uint32_t seg_cnt;
+    const char *segs[EXEC_ELF_ARG_MAX_COUNT + 1];
+    strs = next_strs(strs, segs, str_cnt, EXEC_ELF_ARG_MAX_COUNT, &seg_cnt);
+
+    ASSERT(seg_cnt);
+    if(seg_cnt >= EXEC_ELF_ARG_MAX_COUNT)
+        goto INVALID_ARGUMENT;
+    
+    const char *cmd = segs[0];
+    uint32_t arg_cnt = seg_cnt - 1;
+    const char **args = &segs[1];
+
+    str_cnt -= seg_cnt;
 
     if(strcmp(cmd, "cd") == 0)
     {
-        if(arg_cnt != 1)
+        if(arg_cnt != 1 || str_cnt)
             goto INVALID_ARGUMENT;
         
         disp_new_line();
@@ -266,7 +297,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "clear") == 0)
     {
-        if(arg_cnt)
+        if(arg_cnt || str_cnt)
             goto INVALID_ARGUMENT;
 
         clr_disp();
@@ -274,7 +305,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "dp") == 0)
     {
-        if(arg_cnt)
+        if(arg_cnt || str_cnt)
             goto INVALID_ARGUMENT;
         
         disp_new_line();
@@ -282,7 +313,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "exec") == 0)
     {
-        if(arg_cnt < 1)
+        if(arg_cnt < 1 || str_cnt) // exec命令并不支持管道
             goto INVALID_ARGUMENT;
         
         clr_sysmsgs();
@@ -295,14 +326,14 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "exit") == 0)
     {
-        if(arg_cnt)
+        if(arg_cnt || str_cnt)
             goto INVALID_ARGUMENT;
 
         return false;
     }
     else if(strcmp(cmd, "fg") == 0)
     {
-        if(!arg_cnt)
+        if(!arg_cnt || str_cnt)
         {
             if(!make_proc_foreground(last_created_proc_pid))
             {
@@ -314,7 +345,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
         else
         {
             uint32_t pid;
-            if(arg_cnt != 1 || !str_to_uint32(args[0], &pid))
+            if(arg_cnt != 1 || str_cnt || !str_to_uint32(args[0], &pid))
                 goto INVALID_ARGUMENT;
 
             if(!make_proc_foreground(pid))
@@ -326,14 +357,14 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "ipt") == 0)
     {
-        if(arg_cnt)
+        if(arg_cnt || str_cnt)
             goto INVALID_ARGUMENT;
         
         ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
     }
     else if(strcmp(cmd, "mkdir") == 0)
     {
-        if(arg_cnt != 1)
+        if(arg_cnt != 1 || str_cnt)
             goto INVALID_ARGUMENT;
         
         disp_new_line();
@@ -341,7 +372,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "ps") == 0)
     {
-        if(arg_cnt)
+        if(arg_cnt || str_cnt)
             goto INVALID_ARGUMENT;
 
         disp_new_line();
@@ -349,7 +380,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "rmdir") == 0)
     {
-        if(arg_cnt != 1)
+        if(arg_cnt != 1 || str_cnt)
             goto INVALID_ARGUMENT;
         
         disp_new_line();
@@ -357,7 +388,7 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     }
     else if(strcmp(cmd, "rmfile") == 0)
     {
-        if(arg_cnt != 1)
+        if(arg_cnt != 1 || str_cnt)
             goto INVALID_ARGUMENT;
         
         disp_new_line();
@@ -366,12 +397,44 @@ static bool explorer_exec_cmd(const char *strs[], uint32_t str_cnt)
     else
     {
         clr_sysmsgs();
-        disp_new_line();
-        uint32_t pid;
-        if(!expl_exec(expl_working_dp, expl_working_dir,
-                      cmd, strs, str_cnt, &pid))
-            goto INVALID_ARGUMENT;
+
+        intr_state is = fetch_and_disable_intr();
+
+        uint32_t pid = 0;
+        struct PCB *last_pcb = NULL;
+
+        while(seg_cnt)
+        {
+            if(strcmp(segs[seg_cnt - 1], "|") == 0)
+                --seg_cnt;
+            else if(str_cnt)
+            {
+                set_intr_state(is);
+                goto INVALID_ARGUMENT;
+            }
+
+            if(!expl_exec(expl_working_dp, expl_working_dir,
+                          cmd, segs, seg_cnt, &pid))
+            {
+                set_intr_state(is);
+                goto INVALID_ARGUMENT;
+            }
+
+            struct PCB *this_pcb = get_PCB_by_pid(pid);
+            if(last_pcb)
+            {
+                last_pcb->out_pid = pid;
+                last_pcb->out_uid = this_pcb->uid;
+            }
+            last_pcb = this_pcb;
+
+            strs = next_strs(strs, segs, str_cnt, EXEC_ELF_ARG_MAX_COUNT, &seg_cnt);
+            str_cnt -= seg_cnt;
+            cmd = segs[0];
+        }
+
         last_created_proc_pid = pid;
+        set_intr_state(is);
     }
 
     return true;
@@ -391,12 +454,10 @@ static bool explorer_submit_cmd()
     clr_cmd();
 
     // 命令参数解析
-    const char *strs[EXEC_ELF_ARG_MAX_COUNT];
-    uint32_t str_cnt = expl_parse_cmd(
-        expl_cmd_input_buf, strs, EXEC_ELF_ARG_MAX_COUNT);
+    uint32_t str_cnt = expl_parse_cmd(expl_cmd_input_buf);
     
     if(str_cnt)
-        ret = explorer_exec_cmd(strs, str_cnt);
+        ret = explorer_exec_cmd(expl_cmd_input_buf, str_cnt);
 
     expl_cmd_input_buf[0] = '\0';
     expl_cmd_input_size   = 0;
@@ -701,7 +762,11 @@ uint32_t syscall_put_char_expl_impl(uint32_t arg)
         dst_que = &expl_proc->sys_msgs;
 
     while(!send_sysmsg(dst_que, (struct sysmsg *)&msg))
+    {
+        thread_syscall_protector_entry();
         yield_cpu();
+        thread_syscall_protector_exit();
+    }
 
     return 0;
 }
@@ -712,7 +777,11 @@ uint32_t syscall_expl_new_line_impl()
     msg.type = SYSMSG_TYPE_EXPL_NEW_LINE;
 
     while(!send_sysmsg(&expl_proc->sys_msgs, (struct sysmsg *)&msg))
+    {
+        thread_syscall_protector_entry();
         yield_cpu();
+        thread_syscall_protector_exit();
+    }
     
     return 0;
 }

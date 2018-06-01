@@ -33,5 +33,5 @@ char get_char()
         }
     }
 
-    return get_char();
+    return input_buf[input_buf_idx++];
 }

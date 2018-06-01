@@ -13,12 +13,15 @@ static bool expl_exec_impl(filesys_dp_handle dp, const char *working_dir,
                            const char *dst, const char **args, uint32_t args_cnt, bool pa,
                            uint32_t *_pid)
 {
+    ASSERT(args && args_cnt >= 1);
+    const char *proc_name = args[0];
+
     const char *arg_working_dir = working_dir;
     if(pa)
         working_dir = "/apps";
 
-    ASSERT(args && args_cnt >= 1);
-    const char *proc_name = args[0];
+    if(strcmp(proc_name, "`") == 0)
+        proc_name = dst;
 
     // 路径缓存
     char *path_buf = (char*)alloc_ker_page(false);
@@ -32,8 +35,6 @@ static bool expl_exec_impl(filesys_dp_handle dp, const char *working_dir,
         goto FAILED;
 
     uint32_t pid;
-    if(strcmp(proc_name, "`") == 0)
-        proc_name = dst;
 
     char *arg_cur_buf = path_buf + DP_STR_OFFSET;
     uint32_to_str(dst_dp, arg_cur_buf);

@@ -80,7 +80,11 @@ static struct TCB *alloc_TCB()
             add_freelist(&TCB_freelist, &new_TCBs[i]);
     }
 
-    return fetch_freelist(&TCB_freelist);
+    struct TCB *rt = fetch_freelist(&TCB_freelist);
+    rt->ready_block_threads_node.last =
+    rt->ready_block_threads_node.next = NULL;
+
+    return rt;
 }
 
 /* 进入一个线程的前导操作 */
@@ -149,7 +153,7 @@ static void init_idle_thread()
     init_stack->ebp = init_stack->ebx = 0;
     init_stack->esi = init_stack->edi = 0;
 }
-
+#include <kernel/explorer/disp.h>
 /*
     从进程的线程表中干掉一个线程
     如果是该进程的唯一一个线程，那么这个进程要干掉
@@ -327,6 +331,7 @@ void block_cur_thread()
 {
     intr_state intr_s = fetch_and_disable_intr();
 
+    ASSERT(cur_running_TCB->ready_block_threads_node.next == NULL);
     cur_running_TCB->state = thread_state_blocked;
     thread_scheduler();
     
@@ -337,6 +342,13 @@ void block_cur_thread_onto_sysmsg()
 {
     intr_state intr_s = fetch_and_disable_intr();
 
+    if(cur_running_TCB->pcb->sysmsg_blocked_tcb)
+    {
+        set_intr_state(intr_s);
+        return;
+    }
+
+    ASSERT(cur_running_TCB->ready_block_threads_node.next == NULL);
     cur_running_TCB->state = thread_state_blocked;
     cur_running_TCB->pcb->sysmsg_blocked_tcb = cur_running_TCB;
     thread_scheduler();

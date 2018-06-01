@@ -93,6 +93,7 @@ struct ilist_node *pop_front_ilist(ilist *L)
     struct ilist_node *rt = L->next;
     rt->next->last = L;
     L->next = rt->next;
+    rt->last = rt->next = NULL;
     return rt;
 }
 

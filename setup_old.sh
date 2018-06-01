@@ -7,5 +7,6 @@ make tools applications
 ./build/disk_ipt hd.img ./build/elf_tester /test.elf \
                         ./build/cp         /apps/cp \
                         ./build/ls         /apps/ls \
-                        ./build/pwd        /apps/pwd
+                        ./build/pwd        /apps/pwd \
+                        ./build/ptr        /apps/ptr
 make clean
