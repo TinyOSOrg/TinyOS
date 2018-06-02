@@ -47,7 +47,7 @@ $(eval $(call make_app,ls,LS))
 $(eval $(call make_app,pwd,PWD))
 $(eval $(call make_app,cat,CAT))
 $(eval $(call make_app,ed,ED))
-$(eval $(call make_app,mf,MF))
+$(eval $(call make_app,file,FILE))
 
 .PHONY : apps
 apps : $(APPS_TGTS)

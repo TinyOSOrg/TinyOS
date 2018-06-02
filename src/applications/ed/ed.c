@@ -6,7 +6,6 @@
 #include <lib/assert.h>
 #include <lib/mem.h>
 
-#include "alloc.h"
 #include "ed.h"
 
 /* 初始文字缓冲区大小 */
@@ -382,16 +381,24 @@ static void draw_state_bar(const ed_t *ed)
     memset(buf, ' ', sizeof(buf));
 
     char *p = buf;
-    strcpy(p, ed->dirty ? " Unsaved = [*] Cursor = (" :
-                          " Unsaved = [ ] Cursor = (");
+    strcpy(p, ed->dirty ? "Unsaved = [*] Line = " :
+                          "Unsaved = [ ] Line = ");
     
-    p += strlen(p); uint32_to_str(1 + ed->cur_x, p);
-    p += strlen(p); strcpy(p, ", ");
     p += strlen(p); uint32_to_str(1 + ed->scr_top_lineno + ed->cur_y, p);
-    p += strlen(p); strcpy(p, ")");
+    p += strlen(p); strcpy(p, " Col = ");
+    p += strlen(p); uint32_to_str(1 + ed->cur_x, p);
+    p += strlen(p); strcpy(p, " File = ");
+    p += strlen(p); uint32_to_str(ed->dp, p);
+    p += strlen(p); strcpy(p, ":");
+    p += strlen(p); strcpy_s(p, ed->file, CON_BUF_BYTE_SIZE - (p - buf));
 
     for(int x = 0; x < CON_BUF_ROW_SIZE; ++x)
+    {
         set_char_row_col(SCR_HEIGHT, x, buf[x]);
+        set_char_attrib_row_col(SCR_HEIGHT, x, buf[x] == '*' ?
+                                               CH_RED | CH_LIGHT | BG_BLACK :
+                                               NOR_TXT_ATTRIB);
+    }
 }
 
 /* 保存文件 */

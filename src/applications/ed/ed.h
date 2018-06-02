@@ -1,7 +1,6 @@
 #ifndef ED_ED_H
 #define ED_ED_H
 
-#include <shared/ptrlist.h>
 #include <shared/sys.h>
 
 /* editor状态 */

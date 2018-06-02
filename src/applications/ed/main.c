@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
         printf("%LUsage: ed filename");
         return -1;
     }
-    
+
     // 解析待打开的文件路径
     filesys_dp_handle dp;
     char *path = malloc_and_cat_path(argv[0], argv[1], &dp);
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 
     usr_file_handle fp;
     enum filesys_opr_result frt = open_file(dp, path, false, &fp);
-    
+
     ed_t *ed = NULL;
 
     if(frt == filesys_opr_success)

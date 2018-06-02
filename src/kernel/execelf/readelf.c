@@ -1,6 +1,7 @@
 #include <kernel/assert.h>
 #include <kernel/execelf/readelf.h>
 
+#include <shared/proc_mem.h>
 #include <shared/stdint.h>
 #include <shared/string.h>
 #include <shared/sys.h>
@@ -56,9 +57,15 @@ void *load_elf(const void *_filestart, size_t *beg, size_t *end)
     elf32_ehdr eh;
     const char *filestart = (const char *)_filestart;
 
+    uint8_t magic_iden[EI_NIDENT] = { 0x7f, 0x45, 0x4c, 0x46, 0x01, 0x01, 0x01 };
+
     int pos = 0;
     for (pos = 0; pos < EI_NIDENT; pos++)
+    {
         eh.e_ident[pos] = *(filestart + pos);
+        if(eh.e_ident[pos] != magic_iden[pos])
+            return NULL;
+    }
     
     //initialize ELF header
     

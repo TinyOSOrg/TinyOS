@@ -9,5 +9,5 @@ make clean tools apps
                         ./build/pwd        /apps/pwd \
                         ./build/cat        /apps/cat \
                         ./build/ed         /apps/ed \
-                        ./build/mf         /apps/mf \
+                        ./build/file       /apps/file \
                         ./makefile         /makefile
