@@ -380,21 +380,15 @@ static void draw_state_bar(const ed_t *ed)
 {
     char buf[CON_BUF_ROW_SIZE];
     memset(buf, ' ', sizeof(buf));
-    char *p = buf;
 
-    if(ed->dirty)
-        strcpy(p, "[*] (");
-    else
-        strcpy(p, "[ ] (");
+    char *p = buf;
+    strcpy(p, ed->dirty ? " Unsaved = [*] Cursor = (" :
+                          " Unsaved = [ ] Cursor = (");
     
-    p += strlen(p);
-    uint32_to_str(1 + ed->cur_x, p);
-    p += strlen(p);
-    strcpy(p, ", ");
-    p += strlen(p);
-    uint32_to_str(1 + ed->scr_top_lineno + ed->cur_y, p);
-    p += strlen(p);
-    strcpy(p, ")");
+    p += strlen(p); uint32_to_str(1 + ed->cur_x, p);
+    p += strlen(p); strcpy(p, ", ");
+    p += strlen(p); uint32_to_str(1 + ed->scr_top_lineno + ed->cur_y, p);
+    p += strlen(p); strcpy(p, ")");
 
     for(int x = 0; x < CON_BUF_ROW_SIZE; ++x)
         set_char_row_col(SCR_HEIGHT, x, buf[x]);

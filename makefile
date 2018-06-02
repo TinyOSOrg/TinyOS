@@ -42,12 +42,12 @@ $(eval $(call make_tool,mkdpt,MKDPT))
 $(eval $(call make_tool,bin_trans,BIN_TRANS))
 $(eval $(call make_tool,disk_ipt,DISK_IPT))
 
-$(eval $(call make_app,elf_tester,ELF_TESTER))
 $(eval $(call make_app,cp,CP))
 $(eval $(call make_app,ls,LS))
 $(eval $(call make_app,pwd,PWD))
 $(eval $(call make_app,cat,CAT))
 $(eval $(call make_app,ed,ED))
+$(eval $(call make_app,mf,MF))
 
 .PHONY : apps
 apps : $(APPS_TGTS)

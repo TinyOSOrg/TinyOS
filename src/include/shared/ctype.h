@@ -3,6 +3,17 @@
 
 #include <shared/stdbool.h>
 
+static inline bool isprint(char ch)
+{
+    return 32 <= ch && ch <= 126;
+}
+
+static inline bool isalpha(char ch)
+{
+    return ('a' <= ch && ch <= 'z') ||
+           ('A' <= ch && ch <= 'Z');
+}
+
 static inline bool isdigit(char ch)
 {
     return '0' <= ch && ch <= '9';

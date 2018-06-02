@@ -2,6 +2,7 @@
 #include <kernel/assert.h>
 #include <kernel/console/print.h>
 
+#include <shared/ctype.h>
 #include <shared/stdbool.h>
 #include <shared/string.h>
 
@@ -73,6 +74,8 @@ void kput_char(struct con_buf *buf, char ch)
     }
     else // 普通字符
     {
+        if(!isprint(ch))
+            ch = '?';
         kset_word(buf, cursor_pos++, (uint8_t)ch, 0x07);
     }
 
@@ -102,6 +105,8 @@ void kput_str(struct con_buf *buf, const char *str)
 
 void kset_char(struct con_buf *buf, uint16_t pos, char ch)
 {
+    if(!isprint(ch))
+        ch = '?';
     *(buf->data + (pos << 1)) = ch;
 }
 
