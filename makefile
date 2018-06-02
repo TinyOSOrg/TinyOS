@@ -48,7 +48,8 @@ $(eval $(call make_app,elf_tester,ELF_TESTER))
 $(eval $(call make_app,cp,CP))
 $(eval $(call make_app,ls,LS))
 $(eval $(call make_app,pwd,PWD))
-$(eval $(call make_app,ptr,PTR))
+$(eval $(call make_app,cat,CAT))
+$(eval $(call make_app,ed,ED))
 
 .PHONY : apps
 apps : $(APPS_TGTS)
@@ -78,3 +79,9 @@ run :
 .PHONY: fs
 fs :
 	bash setup_old.sh
+	make clean
+
+.PHONY: fsrun
+fsrun :
+	bash setup_old.sh
+	make run

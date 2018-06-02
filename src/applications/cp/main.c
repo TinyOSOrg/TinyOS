@@ -1,9 +1,9 @@
-#include <shared/path.h>
 #include <shared/string.h>
 #include <shared/sys.h>
 
 #include <lib/input.h>
 #include <lib/mem.h>
+#include <lib/path.h>
 
 int main(int argc, char *argv[])
 {
@@ -18,24 +18,17 @@ int main(int argc, char *argv[])
     const char *_src_name = argv[1];
     const char *_dst_name = argv[2];
 
-    filesys_dp_handle cur_dp = get_dp_handle_from_path(argv[0], malloc, free);
     filesys_dp_handle src_dp, dst_dp;
-
-    uint32_t src_buf_size = strlen(argv[0]) + strlen(_src_name) + 1;
-    uint32_t dst_buf_size = strlen(argv[0]) + strlen(_dst_name) + 1;
-
-    char *src_name = malloc(src_buf_size);
-    char *dst_name = malloc(dst_buf_size);
-
-    if(!cat_path_ex_s(cur_dp, skip_dp_in_abs_path(argv[0]),
-                      _src_name, &src_dp, src_name, src_buf_size))
+    char *src_name = malloc_and_cat_path(argv[0], _src_name, &src_dp);
+    char *dst_name = malloc_and_cat_path(argv[0], _dst_name, &dst_dp);
+    
+    if(!src_name)
     {
         printf("Invalid src path: %s", _src_name);
         return -1;
     }
 
-    if(!cat_path_ex_s(cur_dp, skip_dp_in_abs_path(argv[0]),
-                      _dst_name, &dst_dp, dst_name, dst_buf_size))
+    if(!dst_name)
     {
         printf("Invalid dst path: %s", _dst_name);
         return -1;

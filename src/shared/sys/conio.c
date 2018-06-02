@@ -102,6 +102,9 @@ void printf(const char *fmt, ...)
                 break;
             case '\0':
                 return;
+            case 'L':
+                expl_new_line();
+                break;
             }
             ++fmt;
         }

@@ -8,5 +8,5 @@ make tools apps
                         ./build/cp         /apps/cp \
                         ./build/ls         /apps/ls \
                         ./build/pwd        /apps/pwd \
-                        ./build/ptr        /apps/ptr
-make clean
+                        ./build/cat        /apps/cat \
+                        ./build/ed         /apps/ed
