@@ -51,6 +51,7 @@ ed_t *new_ed(filesys_dp_handle dp, const char *filename,
 
     ed->scr_top_lineno = 0;
     ed->cur_x = ed->cur_y = 0;
+    ed->cur_exp_x = 0;
 
     int text_len = 0;
     ed->text = malloc(INIT_TEXT_BUF_SIZE);
@@ -93,6 +94,7 @@ void free_ed(ed_t *ed)
 #define NOR_TXT_ATTRIB (CH_GRAY  | BG_BLACK)
 #define CUR_TXT_ATTRIB (CH_BLACK | BG_GRAY)
 
+/* 在text中找到第一个在屏幕范围内的字符 */
 static int find_fst_ch_in_scr(const ed_t *ed)
 {
     int ip = 0, lineno = 0, x = 0;
@@ -113,9 +115,37 @@ static int find_fst_ch_in_scr(const ed_t *ed)
     return ip;
 }
 
+/* 绘制状态栏 */
+static void draw_state_bar(const ed_t *ed)
+{
+    char buf[CON_BUF_ROW_SIZE];
+    memset(buf, ' ', sizeof(buf));
+
+    char *p = buf;
+    strcpy(p, ed->dirty ? "Unsaved = [*] Line = " :
+                          "Unsaved = [ ] Line = ");
+    
+    p += strlen(p); uint32_to_str(1 + ed->scr_top_lineno + ed->cur_y, p);
+    p += strlen(p); strcpy(p, " Col = ");
+    p += strlen(p); uint32_to_str(1 + ed->cur_x, p);
+    p += strlen(p); strcpy(p, " File = ");
+    p += strlen(p); uint32_to_str(ed->dp, p);
+    p += strlen(p); strcpy(p, ":");
+    p += strlen(p); strcpy_s(p, ed->file, CON_BUF_BYTE_SIZE - (p - buf));
+
+    char *dst = ed->bg_buf + SCR_HEIGHT * SCR_WIDTH * 2;
+    for(int x = 0; x < CON_BUF_ROW_SIZE; ++x)
+    {
+        dst[x * 2]     = buf[x];
+        dst[x * 2 + 1] = buf[x] == '*' ? CH_RED | CH_LIGHT | BG_BLACK :
+                                         NOR_TXT_ATTRIB;
+    }
+}
+
 #define CHAR_IDX(x, y) (2 * ((x) + (y) * CON_BUF_ROW_SIZE))
 #define ATTRIB_IDX(x, y) (CHAR_IDX((x), (y)) + 1)
 
+/* 重绘编辑区，双缓冲避免闪烁 */
 static void refresh_ed(ed_t *ed)
 {
     for(int i = 0; i < CON_BUF_CHAR_COUNT; ++i)
@@ -124,7 +154,6 @@ static void refresh_ed(ed_t *ed)
         ed->bg_buf[i * 2 + 1] = NOR_TXT_ATTRIB;
     }
 
-    // 先要找到在屏幕范围内的第一个字符
     int ip = find_fst_ch_in_scr(ed);
 
     int x = 0, y = 0;
@@ -159,10 +188,14 @@ static void refresh_ed(ed_t *ed)
         }
     }
 
+    draw_state_bar(ed);
     set_scr(ed->bg_buf);
 }
 
-/* IMPROVE：这里建了个临时缓冲来搬运数据，显然可以优化 */
+/*
+    移动ed中gap的位置
+    IMPROVE：这里建了个临时缓冲来搬运数据，显然可以优化
+*/
 static void mov_gap(ed_t *ed, int new_beg)
 {
     int gap_size = ed->gap_end - ed->gap_beg;
@@ -218,11 +251,14 @@ static void cur_up(ed_t *ed)
     }
 
     if(!new_line)
+    {
+        ed->cur_exp_x = 0;
         new_beg = 0; // 纳尼，这就是第一行
+    }
     else
     {
         int new_x = 0;
-        while(new_x < ed->cur_x && ed->text[new_beg + new_x] != '\n')
+        while(new_x < ed->cur_exp_x && ed->text[new_beg + new_x] != '\n')
             ++new_x;
         new_beg += new_x;
     }
@@ -254,9 +290,9 @@ static void cur_down(ed_t *ed)
         }
         else if(new_line)
         {
-            if(new_x >= ed->cur_x)
+            if(new_x >= ed->cur_exp_x)
                 break;
-            if(++new_x >= ed->cur_x)
+            if(++new_x >= ed->cur_exp_x)
             {
                 ++new_beg;
                 break;
@@ -273,6 +309,9 @@ static void cur_down(ed_t *ed)
         ++new_beg;
     }
 
+    if(new_beg >= ed->text_buf_size - 1)
+        ed->cur_exp_x = new_x;
+
     new_beg -= (ed->gap_end - ed->gap_beg);
 
     // 是否要往下卷一行屏幕
@@ -286,6 +325,7 @@ static void cur_down(ed_t *ed)
 /* 光标左移 */
 static void cur_left(ed_t *ed)
 {
+    ed->cur_exp_x = ed->cur_x;
     if(ed->gap_beg <= 0)
         return;
     int new_beg = ed->gap_beg - 1;
@@ -293,17 +333,20 @@ static void cur_left(ed_t *ed)
         return;
     mov_gap(ed, new_beg);
     refresh_ed(ed);
+    ed->cur_exp_x = ed->cur_x;
 }
 
 /* 光标右移 */
 static void cur_right(ed_t *ed)
 {
+    ed->cur_exp_x = ed->cur_x;
     if(ed->gap_end >= ed->text_buf_size)
         return;
     if(ed->text[ed->gap_end] == '\n')
         return;
     mov_gap(ed, ed->gap_beg + 1);
     refresh_ed(ed);
+    ed->cur_exp_x = ed->cur_x;
 }
 
 #define GAP_EXPAND_UNIT 256
@@ -348,6 +391,7 @@ static void bs_ed(ed_t *ed)
     ed->scr_top_lineno = MAX(0, ed->scr_top_lineno);
     
     refresh_ed(ed);
+    ed->cur_exp_x = ed->cur_x;
 }
 
 /* 输入一个字符 */
@@ -375,33 +419,7 @@ static void enter_char(ed_t *ed, char ch)
         ++ed->scr_top_lineno;
     
     refresh_ed(ed);
-}
-
-/* 绘制状态栏 */
-static void draw_state_bar(const ed_t *ed)
-{
-    char buf[CON_BUF_ROW_SIZE];
-    memset(buf, ' ', sizeof(buf));
-
-    char *p = buf;
-    strcpy(p, ed->dirty ? "Unsaved = [*] Line = " :
-                          "Unsaved = [ ] Line = ");
-    
-    p += strlen(p); uint32_to_str(1 + ed->scr_top_lineno + ed->cur_y, p);
-    p += strlen(p); strcpy(p, " Col = ");
-    p += strlen(p); uint32_to_str(1 + ed->cur_x, p);
-    p += strlen(p); strcpy(p, " File = ");
-    p += strlen(p); uint32_to_str(ed->dp, p);
-    p += strlen(p); strcpy(p, ":");
-    p += strlen(p); strcpy_s(p, ed->file, CON_BUF_BYTE_SIZE - (p - buf));
-
-    for(int x = 0; x < CON_BUF_ROW_SIZE; ++x)
-    {
-        set_char_row_col(SCR_HEIGHT, x, buf[x]);
-        set_char_attrib_row_col(SCR_HEIGHT, x, buf[x] == '*' ?
-                                               CH_RED | CH_LIGHT | BG_BLACK :
-                                               NOR_TXT_ATTRIB);
-    }
+    ed->cur_exp_x = ed->cur_x;
 }
 
 /* 保存文件 */
@@ -434,6 +452,7 @@ static void save_file(ed_t *ed)
     ed->dirty = false;
 }
 
+/* 进行一次状态转移 */
 bool ed_trans(ed_t *ed)
 {
     struct sysmsg msg;
@@ -481,7 +500,6 @@ bool ed_trans(ed_t *ed)
 void ed_mainloop(ed_t *ed)
 {
     refresh_ed(ed);
-    draw_state_bar(ed);
     while(ed_trans(ed))
-        draw_state_bar(ed);
+        ;
 }

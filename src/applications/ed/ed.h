@@ -13,6 +13,10 @@ typedef struct
 
     int scr_top_lineno;             // 位于屏幕顶端位置是哪个显示行
     int cur_x, cur_y;               // 在屏幕上的x、y坐标
+
+    int cur_exp_x;                  // 光标的期望x位置
+                                    // 纵向转移时保持不变
+                                    // 横向转移和输入字符时和实际位置同步
     
     char *text;                     // 没错就是这么暴力（
     int text_buf_size;              // 缓冲区大小
