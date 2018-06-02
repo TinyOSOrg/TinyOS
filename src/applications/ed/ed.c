@@ -90,7 +90,7 @@ void free_ed(ed_t *ed)
     free(ed);
 }
 
-#define NOR_TXT_ATTRIB (CH_GRAY | BG_BLACK)
+#define NOR_TXT_ATTRIB (CH_GRAY  | BG_BLACK)
 #define CUR_TXT_ATTRIB (CH_BLACK | BG_GRAY)
 
 static int find_fst_ch_in_scr(const ed_t *ed)
@@ -173,8 +173,8 @@ static void mov_gap(ed_t *ed, int new_beg)
     int ra_end = MAX(new_end, ed->gap_end);
     int ra_size = ra_end - ra_beg;
 
-    char *buf = malloc(ra_size);
     int md_size = ra_size - gap_size;
+    char *buf = malloc(md_size);
 
     for(int i = ra_beg, j = 0; j < md_size; ++i, ++j)
     {
@@ -306,12 +306,14 @@ static void cur_right(ed_t *ed)
     refresh_ed(ed);
 }
 
+#define GAP_EXPAND_UNIT 256
+
 /* 扩充gap大小 */
 static void expand_gap_buffer(ed_t *ed)
 {
-    int new_buf_size = ed->text_buf_size * 2;
+    int new_buf_size = ed->text_buf_size + GAP_EXPAND_UNIT;
     int new_gap_beg  = ed->gap_beg;
-    int new_gap_end  = ed->gap_end + ed->text_buf_size;
+    int new_gap_end  = ed->gap_end + GAP_EXPAND_UNIT;
 
     char *new_buf = malloc(new_buf_size);
 
@@ -329,6 +331,7 @@ static void expand_gap_buffer(ed_t *ed)
     ed->gap_beg = new_gap_beg;
     ed->gap_end = new_gap_end;
     ed->text_buf_size = new_buf_size;
+    ed->text = new_buf;
 }
 
 /* 退格 */
@@ -426,7 +429,8 @@ static void save_file(ed_t *ed)
         write_file(fp, fpos, ed->text_buf_size - ed->gap_end,
                              ed->text + ed->gap_end);
     }
-    
+
+    close_file(fp);
     ed->dirty = false;
 }
 

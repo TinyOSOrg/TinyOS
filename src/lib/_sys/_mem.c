@@ -94,7 +94,9 @@ static inline uint32_t get_next_nei(void *node)
 {
     struct _mem_used_node *n = (struct _mem_used_node *)(node);
     size_t ret = (size_t)n + GET_MEM_NODE_SIZE(n);
-    return (ret != end1 && ret != end2) ? ret : 0;
+    if((end1 <= ret && ret < beg2) || ret >= end2)
+        return 0;
+    return ret;
 }
 
 /* 将一个被占用的节点加入自由链表中 */
@@ -112,11 +114,14 @@ static void add_to_freelist(struct _mem_used_node *n)
 
         size_t sum_size = GET_MEM_NODE_SIZE(last_nei) + size;
 
+        struct _mem_free_node *next_nei = (struct _mem_free_node *)get_next_nei(n);
+        if(next_nei)
+            next_nei->last_nei = (uint32_t)last_nei;
+
         SET_MEM_NODE_SIZE(last_nei, sum_size);
         SET_MEM_NODE_USED(last_nei);
 
         add_to_freelist((struct _mem_used_node *)last_nei);
-
         return;
     }
 
@@ -128,11 +133,15 @@ static void add_to_freelist(struct _mem_used_node *n)
         
         size_t sum_size = size + GET_MEM_NODE_SIZE(next_nei);
 
+        struct _mem_free_node *next_next_nei =
+            (struct _mem_free_node *)get_next_nei(next_nei);
+        if(next_next_nei)
+            next_next_nei->last_nei = (uint32_t)n;
+
         SET_MEM_NODE_SIZE(n, sum_size);
         SET_MEM_NODE_USED(n);
 
         add_to_freelist((struct _mem_used_node *)n);
-
         return;
     }
 
@@ -227,6 +236,9 @@ static struct _mem_used_node *alloc_from_freelist(size_t size)
 void _init_mem_man()
 {
     memset((char*)free_entrys, 0x0, sizeof(free_entrys));
+
+    _init_usr_addr_interval->size1 &= ~3;
+    _init_usr_addr_interval->size2 &= ~3;
     
     // 将两个初始空闲区加入自由链表
 
@@ -252,7 +264,6 @@ void *_malloc(size_t size)
     size_t node_size = ((size + sizeof(struct _mem_used_node)) + 3) & (~3);
 
     struct _mem_used_node *node = alloc_from_freelist(node_size);
-    
     return node ? (void*)((uint32_t)node + sizeof(struct _mem_used_node)) : NULL; 
 }
 
