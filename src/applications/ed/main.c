@@ -60,10 +60,7 @@ int main(int argc, char *argv[])
     alloc_fg();
     register_char_msg();
 
-    // 状态转移循环
-    render_ed(ed);
-    while(ed_trans(ed))
-        ;
+    ed_mainloop(ed);
 
     free_ed(ed);
     return 0;

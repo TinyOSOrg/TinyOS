@@ -14,4 +14,18 @@ static inline bool isspace(char ch)
     return ch == ' ' || ch == '\n' || ch == '\t';
 }
 
+static inline char to_upper(char ch)
+{
+    if('a' <= ch && ch <= 'z')
+        return ch - 'a' + 'A';
+    return ch;
+}
+
+static inline char to_lower(char ch)
+{
+    if('A' <= ch && ch <= 'Z')
+        return ch - 'A' + 'a';
+    return ch;
+}
+
 #endif /* TINY_OS_SHARD_CTYPE_H */

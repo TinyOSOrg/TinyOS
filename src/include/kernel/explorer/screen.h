@@ -13,7 +13,7 @@ struct PCB;
 #define SCR_DISP_HEIGHT (CON_BUF_COL_SIZE - 2 - SCR_CMD_HEIGHT)
 
 /* 清除整个屏幕的内容 */
-void clr_scr();
+void scr_clr();
 
 /* 绘制展示区标题栏 */
 void scr_disp_caption(const char *title);

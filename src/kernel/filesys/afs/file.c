@@ -377,7 +377,7 @@ static void read_from_index_tree(uint32_t block_sec,
 
     while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
     {
-        uint32_t local_read_bytes = MIN(remain_bytes, bytes_per_child);
+        uint32_t local_read_bytes = MIN(remain_bytes, bytes_per_child - offset_bytes);
         reader(block->child_sec[ch_idx], offset_bytes, local_read_bytes, data);
         
         remain_bytes -= local_read_bytes;
@@ -437,8 +437,7 @@ static void write_to_index_tree(uint32_t block_sec,
 
     while(remain_bytes > 0 && ch_idx < AFS_BLOCK_MAX_CHILD_COUNT)
     {
-        uint32_t local_write_bytes = MIN(remain_bytes, bytes_per_child);
-
+        uint32_t local_write_bytes = MIN(remain_bytes, bytes_per_child - offset_bytes);
         writer(block->child_sec[ch_idx], offset_bytes, local_write_bytes, data);
         
         remain_bytes -= local_write_bytes;

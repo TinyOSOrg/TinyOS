@@ -68,7 +68,7 @@ static void clr_rect(uint32_t xbeg, uint32_t xend,
     }
 }
 
-void clr_scr()
+void scr_clr()
 {
     clr_rect(0, CON_BUF_ROW_SIZE, 0, CON_BUF_COL_SIZE);
 }

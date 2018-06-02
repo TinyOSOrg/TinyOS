@@ -13,11 +13,13 @@ typedef struct
     bool dirty;                     // 是否有未保存的内容
 
     int scr_top_lineno;             // 位于屏幕顶端位置是哪个显示行
-    int cur_x, cur_y;               // 光标的全局位置
+    int cur_x, cur_y;               // 在屏幕上的x、y坐标
     
     char *text;                     // 没错就是这么暴力（
-    size_t text_buf_size;           // 缓冲区大小
-    size_t gap_beg, gap_end;           // gap区间[beg, end)
+    int text_buf_size;              // 缓冲区大小
+    int gap_beg, gap_end;           // gap区间[beg, end)
+
+    char *bg_buf;                   // 后台显示缓冲
 } ed_t;
 
 /* 字符流接口 */
@@ -33,10 +35,7 @@ ed_t *new_ed(filesys_dp_handle dp, const char *filename,
 /* 销毁一个编辑器 */
 void free_ed(ed_t *ed);
 
-/* 一般来说只需要第一次创建editor后调用，平时它会自己刷新屏幕 */
-void render_ed(const ed_t *ed);
-
-/* 进行一次状态转移，退出时返回false */
-bool ed_trans(ed_t *ed);
+/* editor主循环 */
+void ed_mainloop(ed_t *ed);
 
 #endif /* ED_ED_H */

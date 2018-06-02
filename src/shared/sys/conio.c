@@ -118,3 +118,13 @@ void roll_scr(uint32_t beg_row, uint32_t end_row)
     uint32_t arg = (((beg_row & 0xff) << 8) | (end_row & 0xff)) & 0xffff;
     CONSOLE_SYSCALL(CONSOLE_SYSCALL_FUNCTION_ROLL_SCREEN_BETWEEN, arg);
 }
+
+void clr_scr()
+{
+    CONSOLE_SYSCALL(CONSOLE_SYSCALL_FUNCTION_CLEAR_SCREEN, 0);
+}
+
+void set_scr(void *data)
+{
+    CONSOLE_SYSCALL(CONSOLE_SYSCALL_FUNCTION_SET_BUFFER_DATA, data);
+}

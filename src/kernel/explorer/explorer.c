@@ -141,6 +141,7 @@ static bool make_proc_foreground(uint32_t pid)
         return false;
     }
 
+    ASSERT(cur_fg_proc == NULL);
     ASSERT(expl_stat == es_fg && pcb->pis == pis_background);
 
     expl_stat      = es_bg;
@@ -736,9 +737,10 @@ void foreground_exit(struct PCB *pcb)
 
 uint32_t syscall_alloc_fg_impl()
 {
+    struct PCB *pcb = get_cur_PCB();
     if(cur_fg_proc)
-        return false;
-    return make_proc_foreground(get_cur_PCB()->pid);
+        return cur_fg_proc == pcb;
+    return make_proc_foreground(pcb->pid);
 }
 
 uint32_t syscall_free_fg_impl()

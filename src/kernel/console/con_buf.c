@@ -14,6 +14,11 @@ struct con_buf *kalloc_con_buf()
     memset(ret->data, 0x0, CON_BUF_BYTE_SIZE);
     ret->cursor = 0;
     init_semaphore(&ret->lock, 1);
+    for(uint32_t i = 0; i < CON_BUF_CHAR_COUNT; ++i)
+    {
+        ret->data[i * 2]     = ' ';
+        ret->data[i * 2 + 1] = CH_GRAY | BG_BLACK;
+    }
     return ret;
 }
 

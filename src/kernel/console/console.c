@@ -50,7 +50,11 @@ static uint32_t console_syscall_function_set_char_attrib(struct con_buf *buf, ui
 
 static uint32_t console_syscall_function_clear_screen(struct con_buf *buf, uint32_t arg)
 {
-    memset(buf->data, 0x0, CON_BUF_BYTE_SIZE);
+    for(uint32_t i = 0; i < CON_BUF_CHAR_COUNT; ++i)
+    {
+        buf->data[i * 2] = ' ';
+        buf->data[i * 2 + 1] = CH_GRAY | BG_BLACK;
+    }
     return 0;
 }
 
@@ -103,6 +107,12 @@ static uint32_t console_syscall_function_roll_screen_between(struct con_buf *buf
     return 0;
 }
 
+static uint32_t console_syscall_function_set_buf_data(struct con_buf *buf, uint32_t arg)
+{
+    memcpy(buf->data, (char*)arg, CON_BUF_BYTE_SIZE);
+    return 0;
+}
+
 void init_console()
 {
     struct con_buf *sys_con_buf = get_sys_con_buf();
@@ -131,6 +141,8 @@ void init_console()
         console_syscall_function_get_char;
     functions[CONSOLE_SYSCALL_FUNCTION_ROLL_SCREEN_BETWEEN] =
         console_syscall_function_roll_screen_between;
+    functions[CONSOLE_SYSCALL_FUNCTION_SET_BUFFER_DATA] =
+        console_syscall_function_set_buf_data;
     
     _out_byte_to_port(0x03d4, 0x0e);
     _out_byte_to_port(0x03d5, 2000 >> 8);

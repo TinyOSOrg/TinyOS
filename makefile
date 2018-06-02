@@ -1,5 +1,3 @@
-#=========================== 编译链接选项 ===========================
-
 CC = gcc
 CC_INCLUDE_FLAGS = -nostdinc -I src/include/
 CC_FLAGS = -m32 $(CC_INCLUDE_FLAGS) \
@@ -30,7 +28,7 @@ APPS_TGTS =
 include ./make/tool
 include ./make/application
 
-# 磁盘映像
+# disk img
 HD = hd.img
 
 .PHONY : all
@@ -56,8 +54,6 @@ apps : $(APPS_TGTS)
 
 .PHONY : tools
 tools : $(TOOLS_TGTS)
-
-#=========================== make选项 ===========================
 
 .PHONY: clean
 clean :
