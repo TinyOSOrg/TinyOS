@@ -247,7 +247,7 @@ struct afs_file_desc *afs_open_regular_file_for_reading_by_path(
     }
     ASSERT(file != NULL);
 
-    // 此时名字应该已经到末端了，否则出错
+    // 此时名字应该已经到末端了，否则是误把常规文件当目录
     if(name_beg)
     {
         afs_close_file_for_reading(head, file);

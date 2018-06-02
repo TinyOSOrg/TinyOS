@@ -34,7 +34,7 @@ include ./make/application
 HD = hd.img
 
 .PHONY : all
-all : $(HD) apps tools 
+all : $(HD) apps tools
 
 include ./make/lib
 include ./make/shared
@@ -61,15 +61,12 @@ tools : $(TOOLS_TGTS)
 
 .PHONY: clean
 clean :
-
 	rm -f $(shell find ./src/ -name "*.dtmp")
 	rm -f $(shell find ./src/ -name "*.o")
 	rm -f $(shell find ./src/ -name "*.d")
 	rm -f $(shell find ./src/ -name "*.bootbin")
 	rm -f $(shell find ./src/ -name "*.bin")
-
-	rm -f $(TOOLS)
-	rm -f $(APPS)
+	rm -f $(TOOLS) $(APPS)
 
 .PHONY: run
 run :
@@ -80,8 +77,3 @@ run :
 fs :
 	bash setup_old.sh
 	make clean
-
-.PHONY: fsrun
-fsrun :
-	bash setup_old.sh
-	make run

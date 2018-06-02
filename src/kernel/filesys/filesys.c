@@ -43,7 +43,7 @@ static enum filesys_opr_result trans_afs_file_result(
         [afs_file_opr_rm_nonempty]      = filesys_opr_rm_nonempty,
         [afs_file_opr_file_existed]     = filesys_opr_existed,
         [afs_file_opr_rm_locked]        = filesys_opr_locked,
-        [afs_file_opr_rm_wrong_type]    = filesys_opr_not_found
+        [afs_file_opr_rm_wrong_type]    = filesys_opr_wrong_type
     };
     ASSERT((uint32_t)rt < ARRAY_SIZE(trans));
 

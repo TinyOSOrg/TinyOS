@@ -26,16 +26,17 @@ int main(int argc, char *argv[])
     
     ed_t *ed = NULL;
 
-    if(frt == filesys_opr_not_found)
-    {
-        // 如果是找不到，就认为这是在试图创建一个新文件
-        ed = new_ed(dp, path, default_ed_text_provider_null);
-    }
-    else if(frt == filesys_opr_success)
+    if(frt == filesys_opr_success)
     {
         rf_init(fp);
         ed = new_ed(dp, path, rf_provider);
         close_file(fp);
+    }
+    else if(frt == filesys_opr_not_found &&
+            make_file(dp, path) == filesys_opr_success)
+    {
+        // 如果是找不到，就认为这是在试图创建一个新文件
+        ed = new_ed(dp, path, default_ed_text_provider_null);
     }
     else
     {

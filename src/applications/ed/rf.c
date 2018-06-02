@@ -27,10 +27,11 @@ char rf_provider()
         if(fpos >= fsize)
             return '\0';
 
-        uint32_t delta = MIN(BUF_SIZE, fsize - fpos);
-        read_file(fp, fpos, delta, buf);
+        uint32_t delta  = MIN(BUF_SIZE, fsize - fpos);
+        uint32_t offset = BUF_SIZE - delta;
+        read_file(fp, fpos, delta, buf + offset);
         fpos += delta;
-        buf_idx = 0;
+        buf_idx = offset;
     }
 
     return buf[buf_idx++];

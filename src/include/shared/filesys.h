@@ -21,6 +21,7 @@ enum filesys_opr_result
     filesys_opr_invalid_dp,        // 非法文件分区
     filesys_opr_file_table_full,   // 进程打开的文件数过多
     filesys_opr_invalid_args,      // 参数非法
+    filesys_opr_wrong_type,        // 常规文件和目录文件混淆
     filesys_opr_others,            // 其他错误
 };
 

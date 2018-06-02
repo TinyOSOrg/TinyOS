@@ -79,7 +79,7 @@ void free_ed(ed_t *ed)
 
 void render_ed(const ed_t *ed)
 {
-    printf("Minecraft is a good game!\n");
+    printf("File size = %u\n", ed->text_buf_size - (ed->gap_end - ed->gap_beg));
 }
 
 bool ed_trans(ed_t *ed)
