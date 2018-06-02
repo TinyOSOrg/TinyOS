@@ -54,6 +54,36 @@
 
 #define VK_CAPS    34 /* caps lock */
 
+#define VK_NUMLOCK 35
+#define VK_SCRLOCK 36
+
+#define VK_PAD_HOME    37
+#define VK_PAD_UP      38
+#define VK_PAD_DOWN    39
+#define VK_PAD_LEFT    40
+#define VK_PAD_RIGHT   41
+#define VK_PAD_PGUP    42
+#define VK_PAD_PGDOWN  43
+#define VK_PAD_FIVE    44
+#define VK_PAD_END     45
+#define VK_PAD_INS     46
+#define VK_PAD_DEL     47
+#define VK_PAD_PLUS    48
+#define VK_PAD_ENTER   49
+#define VK_PAD_MINUS   50
+#define VK_PAD_DIV     51
+
+#define VK_INSERT   52
+#define VK_HOME     53
+#define VK_PGUP     54
+#define VK_PGDOWN   55
+#define VK_DELETE   56
+#define VK_END      47
+#define VK_LEFT     48
+#define VK_RIGHT    49
+#define VK_UP       50
+#define VK_DOWN     51
+
 /*
     系统调用功能号：某个按键是否按下
     第一个参数为虚拟键值

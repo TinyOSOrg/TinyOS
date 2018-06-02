@@ -8,6 +8,14 @@
 #include <shared/keyboard.h>
 #include <shared/utility.h>
 
+/*
+    采用scan code set 1
+    数据来源见 https://blog.csdn.net/cmdasm/article/details/10168907
+
+    IMPROVE: 普通键位的转码是用的数组查表，但e0引导键是switch
+             这个不一定会被优化成查表，有闲心了可以改改
+*/
+
 /* 按键位图数量 */
 #define KB_PRESSED_BITMAP_COUNT (256 / 32)
 
@@ -29,76 +37,96 @@ struct scancode_trans_unit
 /* 访问方式：scancode_translator[通码 - 1] */
 static struct scancode_trans_unit scancode_translator[] =
 {
-    { VK_ESCAPE,  CHAR_NULL, CHAR_NULL },
-    { '1',        '1',       '!'       },
-    { '2',        '2',       '@'       },
-    { '3',        '3',       '#'       },
-    { '4',        '4',       '$'       },
-    { '5',        '5',       '%'       },
-    { '6',        '6',       '^'       },
-    { '7',        '7',       '&'       },
-    { '8',        '8',       '*'       },
-    { '9',        '9',       '('       },
-    { '0',        '0',       ')'       },
-    { VK_MINUS,   '-',       '_'       },
-    { VK_EQUAL,   '=',       '+'       },
-    { VK_BS,      '\b',      '\b'      },
-    { VK_TAB,     '\t',      '\t'      },
-    { 'Q',        'q',       'Q'       },
-    { 'W',        'w',       'W'       },
-    { 'E',        'e',       'E'       },
-    { 'R',        'r',       'R'       },
-    { 'T',        't',       'T'       },
-    { 'Y',        'y',       'Y'       },
-    { 'U',        'u',       'U'       },
-    { 'I',        'i',       'I'       },
-    { 'O',        'o',       'O'       },
-    { 'P',        'p',       'P'       },
-    { VK_LBRAC,   '[',       '{'       },
-    { VK_RBRAC,   ']',       '}'       },
-    { VK_ENTER,   '\n',      '\n'      },
-    { VK_LCTRL,   CHAR_NULL, CHAR_NULL },
-    { 'A',        'a',       'A'       },
-    { 'S',        's',       'S'       },
-    { 'D',        'd',       'D'       },
-    { 'F',        'f',       'F'       },
-    { 'G',        'g',       'G'       },
-    { 'H',        'h',       'H'       },
-    { 'J',        'j',       'J'       },
-    { 'K',        'k',       'K'       },
-    { 'L',        'l',       'L'       },
-    { VK_SEMICOL, ';',       ':'       },
-    { VK_QOT,     '\'',      '\"'      },
-    { VK_SIM,     '`',       '~'       },
-    { VK_LSHIFT,  CHAR_NULL, CHAR_NULL },
-    { VK_BACKSL,  '\\',      '|'       },
-    { 'Z',        'z',       'Z'       },
-    { 'X',        'x',       'X'       },
-    { 'C',        'c',       'C'       },
-    { 'V',        'v',       'V'       },
-    { 'B',        'b',       'B'       },
-    { 'N',        'n',       'N'       },
-    { 'M',        'm',       'M'       },
-    { VK_COMMA,   ',',       '<'       },
-    { VK_POINT,   '.',       '>'       },
-    { VK_DIV,     '/',       '?'       },
-    { VK_RSHIFT,  CHAR_NULL, CHAR_NULL },
-    { VK_NULL,    CHAR_NULL, CHAR_NULL },
-    { VK_LALT,    CHAR_NULL, CHAR_NULL },
-    { VK_SPACE,   ' ',       ' '       },
-    { VK_CAPS,    CHAR_NULL, CHAR_NULL },
-    { VK_F1,      CHAR_NULL, CHAR_NULL },
-    { VK_F2,      CHAR_NULL, CHAR_NULL },
-    { VK_F3,      CHAR_NULL, CHAR_NULL },
-    { VK_F4,      CHAR_NULL, CHAR_NULL },
-    { VK_F5,      CHAR_NULL, CHAR_NULL },
-    { VK_F6,      CHAR_NULL, CHAR_NULL },
-    { VK_F7,      CHAR_NULL, CHAR_NULL },
-    { VK_F8,      CHAR_NULL, CHAR_NULL },
-    { VK_F9,      CHAR_NULL, CHAR_NULL },
-    { VK_F10,     CHAR_NULL, CHAR_NULL },
-    /* F11和F12的扫描码并不跟在F10后面，懒得支持了…… */
-    /* RCTRL和RALT都是e0打头，这两个键单独判断 */
+    { VK_ESCAPE,        CHAR_NULL, CHAR_NULL },
+    { '1',              '1',       '!'       },
+    { '2',              '2',       '@'       },
+    { '3',              '3',       '#'       },
+    { '4',              '4',       '$'       },
+    { '5',              '5',       '%'       },
+    { '6',              '6',       '^'       },
+    { '7',              '7',       '&'       },
+    { '8',              '8',       '*'       },
+    { '9',              '9',       '('       },
+    { '0',              '0',       ')'       },
+    { VK_MINUS,         '-',       '_'       },
+    { VK_EQUAL,         '=',       '+'       },
+    { VK_BS,            '\b',      '\b'      },
+    { VK_TAB,           '\t',      '\t'      },
+    { 'Q',              'q',       'Q'       },
+    { 'W',              'w',       'W'       },
+    { 'E',              'e',       'E'       },
+    { 'R',              'r',       'R'       },
+    { 'T',              't',       'T'       },
+    { 'Y',              'y',       'Y'       },
+    { 'U',              'u',       'U'       },
+    { 'I',              'i',       'I'       },
+    { 'O',              'o',       'O'       },
+    { 'P',              'p',       'P'       },
+    { VK_LBRAC,         '[',       '{'       },
+    { VK_RBRAC,         ']',       '}'       },
+    { VK_ENTER,         '\n',      '\n'      },
+    { VK_LCTRL,         CHAR_NULL, CHAR_NULL },
+    { 'A',              'a',       'A'       },
+    { 'S',              's',       'S'       },
+    { 'D',              'd',       'D'       },
+    { 'F',              'f',       'F'       },
+    { 'G',              'g',       'G'       },
+    { 'H',              'h',       'H'       },
+    { 'J',              'j',       'J'       },
+    { 'K',              'k',       'K'       },
+    { 'L',              'l',       'L'       },
+    { VK_SEMICOL,       ';',       ':'       },
+    { VK_QOT,           '\'',      '\"'      },
+    { VK_SIM,           '`',       '~'       },
+    { VK_LSHIFT,        CHAR_NULL, CHAR_NULL },
+    { VK_BACKSL,        '\\',      '|'       },
+    { 'Z',              'z',       'Z'       },
+    { 'X',              'x',       'X'       },
+    { 'C',              'c',       'C'       },
+    { 'V',              'v',       'V'       },
+    { 'B',              'b',       'B'       },
+    { 'N',              'n',       'N'       },
+    { 'M',              'm',       'M'       },
+    { VK_COMMA,         ',',       '<'       },
+    { VK_POINT,         '.',       '>'       },
+    { VK_DIV,           '/',       '?'       },
+    { VK_RSHIFT,        CHAR_NULL, CHAR_NULL },
+    { VK_NULL,          CHAR_NULL, CHAR_NULL },
+    { VK_LALT,          CHAR_NULL, CHAR_NULL },
+    { VK_SPACE,         ' ',       ' '       },
+    { VK_CAPS,          CHAR_NULL, CHAR_NULL },
+    { VK_F1,            CHAR_NULL, CHAR_NULL },
+    { VK_F2,            CHAR_NULL, CHAR_NULL },
+    { VK_F3,            CHAR_NULL, CHAR_NULL },
+    { VK_F4,            CHAR_NULL, CHAR_NULL },
+    { VK_F5,            CHAR_NULL, CHAR_NULL },
+    { VK_F6,            CHAR_NULL, CHAR_NULL },
+    { VK_F7,            CHAR_NULL, CHAR_NULL },
+    { VK_F8,            CHAR_NULL, CHAR_NULL },
+    { VK_F9,            CHAR_NULL, CHAR_NULL },
+    { VK_F10,           CHAR_NULL, CHAR_NULL },
+    { VK_NUMLOCK,       CHAR_NULL, CHAR_NULL },
+    { VK_SCRLOCK,       CHAR_NULL, CHAR_NULL },
+    { VK_PAD_HOME,      CHAR_NULL, CHAR_NULL },
+    { VK_PAD_UP,        CHAR_NULL, CHAR_NULL },
+    { VK_PAD_PGUP,      CHAR_NULL, CHAR_NULL },
+    { VK_PAD_MINUS,     CHAR_NULL, CHAR_NULL },
+    { VK_PAD_LEFT,      CHAR_NULL, CHAR_NULL },
+    { VK_PAD_FIVE,      CHAR_NULL, CHAR_NULL },
+    { VK_PAD_RIGHT,     CHAR_NULL, CHAR_NULL },
+    { VK_PAD_PLUS,      CHAR_NULL, CHAR_NULL },
+    { VK_PAD_END,       CHAR_NULL, CHAR_NULL },
+    { VK_PAD_DOWN,      CHAR_NULL, CHAR_NULL },
+    { VK_PAD_PGDOWN,    CHAR_NULL, CHAR_NULL },
+    { VK_PAD_INS,       CHAR_NULL, CHAR_NULL },
+    { VK_PAD_DEL,       CHAR_NULL, CHAR_NULL },
+    { VK_NULL,          CHAR_NULL, CHAR_NULL },
+    { VK_NULL,          CHAR_NULL, CHAR_NULL },
+    { VK_NULL,          CHAR_NULL, CHAR_NULL },
+    { VK_F11,           CHAR_NULL, CHAR_NULL },
+    { VK_F12,           CHAR_NULL, CHAR_NULL }
+
+    /* RCTRL和RALT等都是e0打头，这些键单独判断 */
 };
 
 /* 按键消息接收者队列 */
@@ -157,19 +185,30 @@ static void kb_intr_handler()
     else if(scancode_e0)
     {
         scancode_e0 = false;
-        if(sc == 0x1d)      // R CTRL down
-            vk = VK_RCTRL;
-        else if(sc == 0x38) // R ALT down
-            vk = VK_RALT;
-        else if(sc == 0x9d) // R CTRL up
+        if(sc >= 0x80)
         {
-            vk = VK_RCTRL;
             up = true;
+            sc -= 0x80;
         }
-        else if(sc == 0xb8) // R ALT up
+        switch(sc)
         {
-            vk = VK_RALT;
-            up = true;
+        case 0x1d: vk = VK_RCTRL; break;            // R CTRL down
+        case 0x38: vk = VK_RALT;  break;            // R ALT down
+        case 0x35: vk = VK_PAD_DIV; break;          // pad / down
+        case 0x1c: vk = VK_PAD_ENTER; break;        // pad enter down
+        case 0x47: vk = VK_HOME; break;             // home down
+        case 0x48: vk = VK_UP; break;               // up down
+        case 0x49: vk = VK_PGUP; break;             // page up down
+        case 0x4a: vk = VK_PAD_MINUS; break;        // pad - down
+        case 0x4b: vk = VK_LEFT; break;             // left down
+        case 0x4d: vk = VK_RIGHT; break;            // right down
+        case 0x4f: vk = VK_END; break;              // end down
+        case 0x50: vk = VK_DOWN; break;             // down down
+        case 0x51: vk = VK_PGDOWN; break;           // page down down
+        case 0x52: vk = VK_INSERT; break;           // insert down
+        case 0x53: vk = VK_DELETE; break;           // delete down
+        default:
+            up = false;
         }
     }
     else

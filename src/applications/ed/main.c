@@ -58,6 +58,8 @@ int main(int argc, char *argv[])
         return -1;
     }
     alloc_fg();
+    
+    register_key_msg();
     register_char_msg();
 
     ed_mainloop(ed);

@@ -20,9 +20,9 @@ void destroy_filesys()
 }
 
 /*
-    IMPROVE：这里的文件操作函数基本是switch把不同类型文件系统的操作
-        分派到不同具体函数，可能会很慢而且还不灵活
-        有时间优化成跳转表的形式
+    IMPROVE: 这里的文件操作函数基本是switch把不同类型文件系统的操作
+             分派到不同具体函数，可能会很慢
+             有时间优化成跳转表的形式
 */
 
 static enum filesys_opr_result trans_afs_file_result(

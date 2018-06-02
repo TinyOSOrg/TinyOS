@@ -436,10 +436,11 @@ static void save_file(ed_t *ed)
 
 bool ed_trans(ed_t *ed)
 {
-    wait_for_sysmsg();
     struct sysmsg msg;
-    if(peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg) &&
-       msg.type == SYSMSG_TYPE_CHAR)
+    while(!peek_sysmsg(SYSMSG_SYSCALL_PEEK_OPERATION_REMOVE, &msg))
+        wait_for_sysmsg();
+
+    if(msg.type == SYSMSG_TYPE_CHAR)
     {
         bool ctrl = is_key_pressed(VK_LCTRL);
         char ch = get_chmsg_char(&msg);
@@ -452,26 +453,28 @@ bool ed_trans(ed_t *ed)
                 if(!ed->dirty || is_key_pressed(VK_LSHIFT))
                     return false;
                 break;
-            case 'k':
-                cur_down(ed);
-                break;
-            case 'i':
-                cur_up(ed);
-                break;
-            case 'j':
-                cur_left(ed);
-                break;
-            case 'l':
-                cur_right(ed);
-                break;
-            case 's':
-                save_file(ed);
-                break;
+            case 'j': cur_left(ed);  break;
+            case 'l': cur_right(ed); break;
+            case 'i': cur_up(ed);    break;
+            case 'k': cur_down(ed);  break;
+            case 's': save_file(ed); break;
             }
         }
         else
             enter_char(ed, ch);
     }
+    else if(msg.type == SYSMSG_TYPE_KEYBOARD && is_kbmsg_down(&msg))
+    {
+        uint8_t key = get_kbmsg_key(&msg);
+        switch(key)
+        {
+        case VK_LEFT:  cur_left(ed);  break;
+        case VK_RIGHT: cur_right(ed); break;
+        case VK_UP:    cur_up(ed);    break;
+        case VK_DOWN:  cur_down(ed);  break;
+        }
+    }
+    
     return true;
 }
 

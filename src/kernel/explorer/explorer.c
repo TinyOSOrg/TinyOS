@@ -613,8 +613,6 @@ static bool process_expl_sysmsg(struct sysmsg *msg)
 /*
     进行一次explorer状态转移
     返回false时停机
-
-    IMPROVE：这段代码的逻辑表述实在丑……
 */
 static bool explorer_transfer()
 {
