@@ -105,7 +105,7 @@ static uint32_t next_uid;
 /* PCB空间自由链表 */
 static freelist_handle PCB_freelist;
 
-#define FILE_TABLE_ZONE_BYTE_SIZE (4096 / 4)
+#define FILE_TABLE_ZONE_BYTE_SIZE (4096 / 16)
 
 /* 空闲的文件表空间自由链表 */
 static freelist_handle file_table_fl;
@@ -115,8 +115,8 @@ static void *alloc_file_table_zone()
 {
     if(is_freelist_empty(&file_table_fl))
     {
-        char *data = alloc_ker_page(false);
-        uint32_t end = 4096 / sizeof(FILE_TABLE_ZONE_BYTE_SIZE);
+        char *data = alloc_ker_page(true);
+        uint32_t end = 4096 / FILE_TABLE_ZONE_BYTE_SIZE;
         for(uint32_t i = 0; i < end; ++i)
         {
             add_freelist(&file_table_fl, data);

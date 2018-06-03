@@ -33,6 +33,9 @@ static bool get_file_from_usr_handle(usr_file_handle handle,
     *dp   = rcd->dp;
     *file = rcd->file;
 
+    ASSERT(is_atrc_unit_valid(&pcb->file_table,
+                              ATRC_ELEM_SIZE(struct pcb_file_record),
+                              handle));
     spinlock_unlock(&pcb->file_table_lock);
 
     return true;
@@ -105,7 +108,9 @@ enum filesys_opr_result syscall_filesys_open_impl(
         *params->result = usr_handle;
 
     thread_syscall_protector_exit();
-
+    ASSERT(is_atrc_unit_valid(&pcb->file_table,
+                ATRC_ELEM_SIZE(struct pcb_file_record),
+                usr_handle));
     return ret;
 }
 

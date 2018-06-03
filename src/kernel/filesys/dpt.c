@@ -19,10 +19,10 @@ static uint32_t dp_fs_handles[DPT_UNIT_COUNT];
 void init_dpt()
 {
     // 这里直接申请一个扇区的大小，后面那点零头不用在意，主要是重写dpt的时候方便
-    dpts = alloc_static_kernel_mem(512, sizeof(struct dpt_unit));
+    dpts = alloc_static_kernel_mem(DISK_SECTOR_BYTE_SIZE, sizeof(struct dpt_unit));
     
     // dpt_sec_data在内核进程栈上，不用担心缺页，所以直接无缓冲读取
-    uint8_t dpt_sec_data[512];
+    uint8_t dpt_sec_data[DISK_SECTOR_BYTE_SIZE];
     disk_read(DPT_SECTOR_POSITION, 1, dpt_sec_data);
     memcpy((char*)dpts, (const char*)dpt_sec_data, DPT_BYTE_SIZE);
 

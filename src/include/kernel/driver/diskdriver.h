@@ -13,6 +13,8 @@ typedef uint8_t disk_rw_task_type;
 #define DISK_RW_TASK_TYPE_READ 0
 #define DISK_RW_TASK_TYPE_WRITE 1
 
+#define DISK_SECTOR_BYTE_SIZE 512
+
 /* 磁盘读写任务 */
 struct disk_rw_task
 {

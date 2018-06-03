@@ -103,7 +103,7 @@ static void disk_read_raw_impl(const struct disk_rw_task *task)
         FATAL_ERROR("invalid disk status");
     
     _in_words_from_port(DISK_PORT_DATA, task->addr.read_dst,
-                                        task->sector_cnt * 512 / 2);
+                                        task->sector_cnt * DISK_SECTOR_BYTE_SIZE / 2);
 
     task_exit();
 }
@@ -118,7 +118,7 @@ static void disk_write_raw_impl(const struct disk_rw_task *task)
         FATAL_ERROR("invalid disk status");
     
     _out_words_to_port(DISK_PORT_DATA, task->addr.write_src,
-                                       task->sector_cnt * 512 / 2);
+                                       task->sector_cnt * DISK_SECTOR_BYTE_SIZE / 2);
         
     block_cur_thread();
 

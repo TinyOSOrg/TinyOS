@@ -2,7 +2,7 @@
 
 #define ATRC_ELEM_USED (-2)
 
-#define IDX_FIELD(S) (*(uint32_t*)((uint32_t)(S) + elem_size - 4))
+#define IDX_FIELD(S) (*(uint32_t*)((uint32_t)(S) - 4))
 
 void init_atrc(struct atrc *a, size_t elem_size,
                void *data_zone, size_t data_zone_size)
@@ -26,6 +26,11 @@ bool is_atrc_unit_valid(struct atrc *a, size_t elem_size, atrc_elem_handle unit)
 {
     return 0 <= unit && unit < a->total_size &&
             IDX_FIELD(get_atrc_unit(a, elem_size, unit)) == ATRC_ELEM_USED;
+}
+
+uint32_t get_atrc_unit_idxfield(struct atrc *a, size_t elem_size, atrc_elem_handle unit)
+{
+    return IDX_FIELD(get_atrc_unit(a, elem_size, unit));
 }
 
 atrc_elem_handle alloc_atrc_unit(struct atrc *a, size_t elem_size)

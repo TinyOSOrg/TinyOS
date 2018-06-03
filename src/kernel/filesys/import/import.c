@@ -106,9 +106,9 @@ void ipt_import_from_dp(uint32_t dp_beg)
         uint32_t fpos = 0;
         while(fpos < file_size)
         {
-            uint8_t buf[128];
+            uint8_t buf[256];
             uint32_t remain = file_size - fpos;
-            uint32_t delta = MIN(remain, 128);
+            uint32_t delta = MIN(remain, 256);
 
             PS(buf);
             for(uint32_t i = 0; i < delta; ++i)
