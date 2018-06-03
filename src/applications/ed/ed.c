@@ -137,8 +137,8 @@ static void draw_state_bar(const ed_t *ed)
     for(int x = 0; x < CON_BUF_ROW_SIZE; ++x)
     {
         dst[x * 2]     = buf[x];
-        dst[x * 2 + 1] = buf[x] == '*' ? CH_RED | CH_LIGHT | BG_BLACK :
-                                         NOR_TXT_ATTRIB;
+        dst[x * 2 + 1] = (buf[x] == '*' ? (CH_RED | CH_LIGHT | BG_BLACK) :
+                                          NOR_TXT_ATTRIB);
     }
 }
 
@@ -405,6 +405,16 @@ static void enter_char(ed_t *ed, char ch)
         return;
     }
 
+    // tab就是四个空格，不服憋着（
+    if(ch == '\t')
+    {
+        int x = ed->cur_x;
+        int e = (x & 3) ? ((x + 3) & ~3) : (x + 4);
+        while(x++ < e)
+            enter_char(ed, ' ');
+        return;
+    }
+
     // 检查是否需要扩充buffer
     if(ed->gap_end <= ed->gap_beg)
         expand_gap_buffer(ed);
@@ -450,6 +460,7 @@ static void save_file(ed_t *ed)
 
     close_file(fp);
     ed->dirty = false;
+    refresh_ed(ed);
 }
 
 /* 进行一次状态转移 */
@@ -461,7 +472,7 @@ bool ed_trans(ed_t *ed)
 
     if(msg.type == SYSMSG_TYPE_CHAR)
     {
-        bool ctrl = is_key_pressed(VK_LCTRL);
+        bool ctrl = is_key_pressed(VK_LCTRL) || is_key_pressed(VK_RCTRL);
         char ch = get_chmsg_char(&msg);
 
         if(ctrl)
@@ -469,7 +480,8 @@ bool ed_trans(ed_t *ed)
             switch(to_lower(ch))
             {
             case 'q':
-                if(!ed->dirty || is_key_pressed(VK_LSHIFT))
+                if(!ed->dirty || is_key_pressed(VK_LSHIFT) ||
+                                 is_key_pressed(VK_RSHIFT))
                     return false;
                 break;
             case 'j': cur_left(ed);  break;

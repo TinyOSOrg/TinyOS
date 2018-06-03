@@ -73,16 +73,16 @@
 #define VK_PAD_MINUS   50
 #define VK_PAD_DIV     51
 
-#define VK_INSERT   52
-#define VK_HOME     53
-#define VK_PGUP     54
-#define VK_PGDOWN   55
-#define VK_DELETE   56
-#define VK_END      47
-#define VK_LEFT     48
-#define VK_RIGHT    49
-#define VK_UP       50
-#define VK_DOWN     51
+#define VK_INSERT      52
+#define VK_HOME        53
+#define VK_PGUP        54
+#define VK_PGDOWN      55
+#define VK_DELETE      56
+#define VK_END         57
+#define VK_LEFT        58
+#define VK_RIGHT       59
+#define VK_UP          60
+#define VK_DOWN        61
 
 /*
     系统调用功能号：某个按键是否按下

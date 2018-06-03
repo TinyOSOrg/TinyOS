@@ -192,21 +192,21 @@ static void kb_intr_handler()
         }
         switch(sc)
         {
-        case 0x1d: vk = VK_RCTRL; break;            // R CTRL down
-        case 0x38: vk = VK_RALT;  break;            // R ALT down
-        case 0x35: vk = VK_PAD_DIV; break;          // pad / down
-        case 0x1c: vk = VK_PAD_ENTER; break;        // pad enter down
-        case 0x47: vk = VK_HOME; break;             // home down
-        case 0x48: vk = VK_UP; break;               // up down
-        case 0x49: vk = VK_PGUP; break;             // page up down
-        case 0x4a: vk = VK_PAD_MINUS; break;        // pad - down
-        case 0x4b: vk = VK_LEFT; break;             // left down
-        case 0x4d: vk = VK_RIGHT; break;            // right down
-        case 0x4f: vk = VK_END; break;              // end down
-        case 0x50: vk = VK_DOWN; break;             // down down
-        case 0x51: vk = VK_PGDOWN; break;           // page down down
-        case 0x52: vk = VK_INSERT; break;           // insert down
-        case 0x53: vk = VK_DELETE; break;           // delete down
+        case 0x1d: vk = VK_RCTRL;     break; // R CTRL down
+        case 0x38: vk = VK_RALT;      break; // R ALT down
+        case 0x35: vk = VK_PAD_DIV;   break; // pad / down
+        case 0x1c: vk = VK_PAD_ENTER; break; // pad enter down
+        case 0x47: vk = VK_HOME;      break; // home down
+        case 0x48: vk = VK_UP;        break; // up down
+        case 0x49: vk = VK_PGUP;      break; // page up down
+        case 0x4a: vk = VK_PAD_MINUS; break; // pad - down
+        case 0x4b: vk = VK_LEFT;      break; // left down
+        case 0x4d: vk = VK_RIGHT;     break; // right down
+        case 0x4f: vk = VK_END;       break; // end down
+        case 0x50: vk = VK_DOWN;      break; // down down
+        case 0x51: vk = VK_PGDOWN;    break; // page down down
+        case 0x52: vk = VK_INSERT;    break; // insert down
+        case 0x53: vk = VK_DELETE;    break; // delete down
         default:
             up = false;
         }
