@@ -24,7 +24,7 @@
 #define AFS_SECTOR_BYTE_SIZE 512
 
 /* 一个block含多少扇区 */
-#define AFS_BLOCK_SECTOR_COUNT 2
+#define AFS_BLOCK_SECTOR_COUNT 8
 
 /*
     平均一个文件能够占用多少block

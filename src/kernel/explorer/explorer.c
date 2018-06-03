@@ -465,7 +465,8 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
 INVALID_ARGUMENT:
 
     disp_new_line();
-    disp_printf("Invalid argument(s)");
+    disp_put_str("Invalid command/argument(s), "
+                 "enter 'help' for user documentation");
     return true;
 }
 
@@ -704,6 +705,12 @@ void explorer()
     reformat_dp(0, DISK_PT_AFS);
 
     make_directory(0, "/apps");
+    ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
+
+    static const char welcome[] =
+        "Welcome to TinyOS\n"
+        "Enter 'help' for user documentation";
+    disp_put_str(welcome);
 
     while(explorer_transfer())
         ;

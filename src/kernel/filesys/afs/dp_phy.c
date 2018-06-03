@@ -239,7 +239,7 @@ void afs_free_disk_block(struct afs_dp_head *head, uint32_t blk_sec)
         blkgrp_head->next_avl_blkgrp = head->fst_avl_blkgrp_idx;
         head->fst_avl_blkgrp_idx = blkgrp_idx;
     }
-
+    
     afs_write_to_sector_end(blkgrp_head_sec);
 
     semaphore_signal(&head->lock);

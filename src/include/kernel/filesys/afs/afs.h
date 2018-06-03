@@ -8,6 +8,11 @@
 #include <shared/stdbool.h>
 #include <shared/stdint.h>
 
+/*
+    FIXME：1M以上的文件导入可能导致目录文件写坏
+           这个bug好让人绝望，我为什么要设计索引树结构啊……
+*/
+
 struct afs_dp_head;
 struct afs_file_desc;
 

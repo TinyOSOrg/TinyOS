@@ -248,6 +248,7 @@ void afs_read_from_sector(uint32_t sec, size_t offset, size_t size, void *data)
 static void *afs_write_sector_entry(uint32_t sec)
 {
     intr_state is = fetch_and_disable_intr();
+
     void *ret = NULL;
     struct rb_node *rbn = NULL;
 
@@ -308,6 +309,7 @@ static void afs_write_sector_exit(uint32_t sec)
 
     // 一定能在红黑树中找到这个扇区的缓存
     struct rb_node *rbn = rb_find(&sec_tree, KOF, &sec, rb_less);
+
     ASSERT(rbn != NULL);
     struct sector_node *node = GET_STRUCT_FROM_MEMBER(
             struct sector_node, tree_node, rbn);
@@ -323,13 +325,13 @@ static void afs_write_sector_exit(uint32_t sec)
 
 void afs_write_to_sector(uint32_t sec, size_t offset, size_t size, const void *data)
 {
-   ASSERT(size > 0 && offset + size <= AFS_SECTOR_BYTE_SIZE);
+    ASSERT(size > 0 && offset + size <= AFS_SECTOR_BYTE_SIZE);
 
-   void *buf = afs_write_sector_entry(sec);
+    void *buf = afs_write_sector_entry(sec);
 
-   memcpy((char*)buf + offset, (char*)data, size);
-
-   afs_write_sector_exit(sec);
+    memcpy((char*)buf + offset, (char*)data, size);
+    
+    afs_write_sector_exit(sec);
 }
 
 void afs_release_all_sector_cache()

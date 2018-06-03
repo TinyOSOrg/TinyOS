@@ -9,6 +9,7 @@
 
 #include <shared/freelist.h>
 #include <shared/ptrlist.h>
+#include <shared/string.h>
 #include <shared/utility.h>
 
 struct afs_file_desc
@@ -90,7 +91,7 @@ void init_afs_file()
 
     full_index_tree_bytes[0] = AFS_BLOCK_BYTE_SIZE;
     for(size_t i = 1;i != 12; ++i)
-        full_index_tree_bytes[i] = full_index_tree_bytes[i - 1] * AFS_BLOCK_BYTE_SIZE;
+        full_index_tree_bytes[i] = full_index_tree_bytes[i - 1] * AFS_BLOCK_MAX_CHILD_COUNT;
 }
 
 uint32_t afs_create_empty_file(struct afs_dp_head *head,
@@ -507,7 +508,7 @@ static bool expand_index_tree(struct afs_dp_head *head,
     uint32_t old_height = block->height;
 
     // 如果孩子是content block，遍历之
-    if(old_height == 1)
+    if(old_height <= 1)
     {    
         // 最后一个孩子节点已经用了多少字节
         uint32_t content_used = used_bytes -
@@ -547,9 +548,9 @@ static bool expand_index_tree(struct afs_dp_head *head,
                     afs_write_to_block_begin(block->child_sec[ch_idx]);
 
                 ch_blk->height = old_height - 1;
-                ch_blk->child_count = 0;
-
-                afs_write_to_sector_end(block->child_sec[ch_idx]);
+                ch_blk->child_count = 1;
+                ch_blk->child_sec[0] = afs_alloc_disk_block(head);
+                afs_write_to_block_end(block->child_sec[ch_idx]);
                 block->child_count++;
             }
 
@@ -644,7 +645,7 @@ bool afs_expand_file(struct afs_dp_head *head,
         file->entry.byte_size = AFS_BLOCK_BYTE_SIZE;
     }
 
-    uint32_t dexp;
+    uint32_t dexp = 0;
     expand_index_tree(head, file->entry.sec_beg, &file->entry.sec_beg,
                       file->entry.byte_size, new_size - file->entry.byte_size,
                       &dexp, rt);
