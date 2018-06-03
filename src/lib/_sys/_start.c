@@ -4,7 +4,7 @@
 #include <lib/_sys/_mem.h>
 #include <lib/input.h>
 
-void _start(void)
+void _start()
 {
     extern int main(int, char **);
 

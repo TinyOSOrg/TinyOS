@@ -1,0 +1,3 @@
+Make a process (running in background) foreground.
+    Usage: fg [pid]
+With pid omitted, process created most recently will be chosen.

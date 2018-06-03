@@ -1,0 +1,2 @@
+Save process output to specified file.
+    Usage: (...) | file filename

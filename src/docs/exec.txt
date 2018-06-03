@@ -1,0 +1,4 @@
+Create a user process with specified name with an elf file.
+    Usage: exec filename procname ...(args)
+If procname == "`", filename will be the final process name.
+exec doesn't support pipe between processes.

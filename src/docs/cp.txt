@@ -1,0 +1,2 @@
+Make a copy of specified file.
+    Usage: cp source-filename destination-filename

@@ -1,0 +1,5 @@
+List all running user processes.
+    Usage: ps
+If all information can be printed without rolling the screen,
+ps will simply list of processes in explorer.
+Otherwise, follow the hints on the screen to browse process list.

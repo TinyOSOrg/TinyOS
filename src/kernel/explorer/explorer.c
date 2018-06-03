@@ -304,14 +304,6 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
         clr_disp();
         disp_set_cursor(0, 0);
     }
-    else if(strcmp(cmd, "dp") == 0)
-    {
-        if(arg_cnt || str_cnt)
-            goto INVALID_ARGUMENT;
-        
-        disp_new_line();
-        expl_dp(expl_working_dp);
-    }
     else if(strcmp(cmd, "exec") == 0)
     {
         if(arg_cnt < 1 || str_cnt) // exec命令并不支持管道
@@ -356,13 +348,6 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
             }
         }
     }
-    else if(strcmp(cmd, "ipt") == 0)
-    {
-        if(arg_cnt || str_cnt)
-            goto INVALID_ARGUMENT;
-        
-        ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
-    }
     else if(strcmp(cmd, "kill") == 0)
     {
         if(!arg_cnt || str_cnt)
@@ -379,14 +364,6 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
             set_intr_state(is);
         }
     }
-    else if(strcmp(cmd, "mkdir") == 0)
-    {
-        if(arg_cnt != 1 || str_cnt)
-            goto INVALID_ARGUMENT;
-        
-        disp_new_line();
-        expl_mkdir(expl_working_dp, expl_working_dir, args[0]);
-    }
     else if(strcmp(cmd, "ps") == 0)
     {
         if(arg_cnt || str_cnt)
@@ -394,22 +371,6 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
 
         disp_new_line();
         expl_show_procs();
-    }
-    else if(strcmp(cmd, "rmdir") == 0)
-    {
-        if(arg_cnt != 1 || str_cnt)
-            goto INVALID_ARGUMENT;
-        
-        disp_new_line();
-        expl_rmdir(expl_working_dp, expl_working_dir, args[0]);
-    }
-    else if(strcmp(cmd, "rmfile") == 0)
-    {
-        if(arg_cnt != 1 || str_cnt)
-            goto INVALID_ARGUMENT;
-        
-        disp_new_line();
-        expl_rmfile(expl_working_dp, expl_working_dir, args[0]);
     }
     else
     {
@@ -466,7 +427,7 @@ INVALID_ARGUMENT:
 
     disp_new_line();
     disp_put_str("Invalid command/argument(s), "
-                 "enter 'help' for user documentation");
+                 "enter 'man' for command documentation");
     return true;
 }
 
@@ -705,11 +666,12 @@ void explorer()
     reformat_dp(0, DISK_PT_AFS);
 
     make_directory(0, "/apps");
+    make_directory(0, "/docs");
     ipt_import_from_dp(get_dpt_unit(DPT_UNIT_COUNT - 1)->sector_begin);
 
     static const char welcome[] =
         "Welcome to TinyOS\n"
-        "Enter 'help' for user documentation";
+        "Enter 'man' for command documentation";
     disp_put_str(welcome);
 
     while(explorer_transfer())

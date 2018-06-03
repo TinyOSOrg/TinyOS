@@ -1,0 +1,15 @@
+Change current working directory.
+    Usage: cd pathname
+A valid pathname must be in one of the following form:
+    1. .
+        current working directory
+    2. ..
+        parent of current working directory
+    3. dirname
+        path relative to current working directory
+    4. absolute path
+        absolute path under current disk partition
+    4. dp_number:absolute path
+        absolute path under specified disk partition (by partition number)
+    5. dp_name>absolute path
+        absolute path under specified disk partition (by partition name)

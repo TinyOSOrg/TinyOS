@@ -1,0 +1,3 @@
+View file content (read only).
+    Usage: less filename
+           (...) | less

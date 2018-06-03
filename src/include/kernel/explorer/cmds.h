@@ -25,19 +25,4 @@ bool expl_exec(filesys_dp_handle dp, const char *working_dir,
                const char **args, uint32_t args_cnt,
                uint32_t *_pid);
 
-/* dp，显示当前分区名 */
-void expl_dp(filesys_dp_handle dp);
-
-/* mkdir，不解释 */
-void expl_mkdir(filesys_dp_handle dp, const char *working_dir,
-                const char *dirname);
-
-/* rmdir，不解释 */
-void expl_rmdir(filesys_dp_handle dp, const char *working_dir,
-                const char *dirname);
-
-/* rmfile，不解释 */
-void expl_rmfile(filesys_dp_handle dp, const char *working_dir,
-                 const char *filename);
-
 #endif /* TINY_OS_EXPLORER_PROCS_H */

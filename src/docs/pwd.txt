@@ -1,0 +1,2 @@
+Print current working directory.
+    Usage: pwd

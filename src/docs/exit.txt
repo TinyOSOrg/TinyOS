@@ -1,0 +1,2 @@
+Shutdown.
+    Usage: exit

@@ -1,0 +1,2 @@
+Command/application documentation.
+    Usage: help command/application

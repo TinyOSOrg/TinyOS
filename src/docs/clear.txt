@@ -1,0 +1,2 @@
+Clear explorer output.
+    Usage: clear

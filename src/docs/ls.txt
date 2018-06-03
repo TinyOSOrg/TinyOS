@@ -1,0 +1,6 @@
+List all files in current working directory.
+    Usage: ls
+    Output:
+        (d/r) filename
+    where d = directory
+          r = regular file
