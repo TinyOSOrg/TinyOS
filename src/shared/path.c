@@ -141,10 +141,6 @@ bool cat_path_s(const char *src, const char *delta,
         return true;
     }
 
-    // IMPROVE: 相对路径中不能出现'/'，心情好了倒是可以支持
-    if(strfind(delta, '/', 0) != STRING_NPOS)
-        return false;
-
     uint32_t deltalen = strlen(delta);
     
     if(srclen == 1) // 如果当前目录就是根目录，不用拼上'/'
