@@ -39,7 +39,7 @@ void init_atrc(struct atrc *a, size_t elem_size,
                void *data_zone, size_t data_zone_size);
 
 /* atrc容器是否已经装满 */
-#define is_atrc_full(A) (A->fst_avl_idx == ATRC_ELEM_HANDLE_NULL)
+#define is_atrc_full(A) ((A)->fst_avl_idx == ATRC_ELEM_HANDLE_NULL)
 
 /* 取得一个atrc容器中以UNIT为句柄的元素地址 */
 #define get_atrc_unit(A, ELEM_SIZE, UNIT) \

@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    char *text = fetch_input(argv[0], argv[1]);
+    char *text = fetch_input(argv[0], argc == 2 ? argv[1] : NULL);
     if(!text)
         return -1;
 

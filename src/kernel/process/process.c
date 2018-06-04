@@ -105,7 +105,7 @@ static uint32_t next_uid;
 /* PCB空间自由链表 */
 static freelist_handle PCB_freelist;
 
-#define FILE_TABLE_ZONE_BYTE_SIZE (4096 / 16)
+#define FILE_TABLE_ZONE_BYTE_SIZE (4096 / 8)
 
 /* 空闲的文件表空间自由链表 */
 static freelist_handle file_table_fl;

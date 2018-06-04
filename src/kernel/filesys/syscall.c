@@ -40,7 +40,7 @@ static bool get_file_from_usr_handle(usr_file_handle handle,
 
     return true;
 }
-
+#include <shared/sys.h>
 enum filesys_opr_result syscall_filesys_open_impl(
         struct syscall_filesys_open_params *params)
 {
@@ -57,8 +57,11 @@ enum filesys_opr_result syscall_filesys_open_impl(
 
     spinlock_lock(&pcb->file_table_lock);
     usr_file_handle usr_handle = alloc_atrc_unit(
-        &get_cur_TCB()->pcb->file_table,
-        ATRC_ELEM_SIZE(struct pcb_file_record));
+        &pcb->file_table, ATRC_ELEM_SIZE(struct pcb_file_record));
+
+    ASSERT(is_atrc_unit_valid(&pcb->file_table,
+                            ATRC_ELEM_SIZE(struct pcb_file_record),
+                            usr_handle));
     spinlock_unlock(&pcb->file_table_lock);
 
     if(usr_handle == ATRC_ELEM_HANDLE_NULL)
@@ -102,15 +105,16 @@ enum filesys_opr_result syscall_filesys_open_impl(
                                     usr_handle);
     rcd->dp   = params->dp;
     rcd->file = handle;
+
+    ASSERT(is_atrc_unit_valid(&pcb->file_table,
+                              ATRC_ELEM_SIZE(struct pcb_file_record),
+                              usr_handle));
+
+    thread_syscall_protector_exit();
     spinlock_unlock(&pcb->file_table_lock);
 
     if(params->result)
         *params->result = usr_handle;
-
-    thread_syscall_protector_exit();
-    ASSERT(is_atrc_unit_valid(&pcb->file_table,
-                ATRC_ELEM_SIZE(struct pcb_file_record),
-                usr_handle));
     return ret;
 }
 

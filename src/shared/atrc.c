@@ -9,11 +9,11 @@ void init_atrc(struct atrc *a, size_t elem_size,
 {
     uint32_t end = data_zone_size / elem_size;
 
-    a->fst_avl_idx = end ? 0 : ATRC_ELEM_HANDLE_NULL;
+    a->fst_avl_idx = (end ? 0 : ATRC_ELEM_HANDLE_NULL);
     a->data        = data_zone;
     a->total_size  = (int32_t)end;
     
-    char *d = (char*)data_zone;
+    char *d = (char*)data_zone + 4;
     for(size_t i = 0; i + 1 < end; ++i)
     {
         IDX_FIELD(d) = i + 1;
@@ -25,7 +25,7 @@ void init_atrc(struct atrc *a, size_t elem_size,
 bool is_atrc_unit_valid(struct atrc *a, size_t elem_size, atrc_elem_handle unit)
 {
     return 0 <= unit && unit < a->total_size &&
-            IDX_FIELD(get_atrc_unit(a, elem_size, unit)) == ATRC_ELEM_USED;
+            get_atrc_unit_idxfield(a, elem_size, unit) == ATRC_ELEM_USED;
 }
 
 uint32_t get_atrc_unit_idxfield(struct atrc *a, size_t elem_size, atrc_elem_handle unit)
@@ -39,7 +39,7 @@ atrc_elem_handle alloc_atrc_unit(struct atrc *a, size_t elem_size)
         return ATRC_ELEM_HANDLE_NULL;
     
     atrc_elem_handle ret = a->fst_avl_idx;
-    void *unit = get_atrc_unit(a, elem_size, a->fst_avl_idx);
+    void *unit = get_atrc_unit(a, elem_size, ret);
     a->fst_avl_idx = IDX_FIELD(unit);
     IDX_FIELD(unit) = ATRC_ELEM_USED;
 
