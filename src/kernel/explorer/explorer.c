@@ -64,7 +64,6 @@ static uint32_t expl_cmd_input_size;
 /* explorer工作路径buffer */
 static filesys_dp_handle expl_working_dp;
 static char *expl_working_dir;
-static uint32_t expl_working_dir_len;
 
 /* 上一个成功创建的进程号 */
 static uint32_t last_created_proc_pid;
@@ -105,7 +104,6 @@ static void init_explorer()
     expl_working_dir =
         (char*)alloc_static_kernel_mem(EXPL_WORKING_DIR_BUF_SIZE, 1);
     strcpy(expl_working_dir, INIT_WORKING_DIR);
-    expl_working_dir_len = strlen(INIT_WORKING_DIR);
 
     cmd_char2(0, '_');
 
@@ -293,7 +291,7 @@ static bool explorer_exec_cmd(const char *strs, uint32_t str_cnt)
             goto INVALID_ARGUMENT;
         
         disp_new_line();
-        expl_cd(&expl_working_dp, expl_working_dir, &expl_working_dir_len,
+        expl_cd(&expl_working_dp, expl_working_dir,
                 EXPL_WORKING_DIR_BUF_SIZE - 1, args[0]);
     }
     else if(strcmp(cmd, "clear") == 0)

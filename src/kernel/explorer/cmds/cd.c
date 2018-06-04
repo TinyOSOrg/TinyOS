@@ -10,8 +10,7 @@
 #include <shared/sys.h>
 
 bool expl_cd(filesys_dp_handle *dp, char *cur,
-             uint32_t *len, uint32_t max_len,
-             const char *dst)
+             uint32_t max_len, const char *dst)
 {
     // 申请一块缓冲区作为dst缓冲
     char *cur_tmp = (char*)alloc_ker_page(false);
@@ -78,6 +77,9 @@ FAILED:
 
 SUCCEED:
 
+    disp_printf("Current working directory: %u:%s\n",
+                *dp, cur);
+    compress_path(cur);
     free_ker_page(cur_tmp);
     disp_printf("Current working directory: %u:%s",
                 *dp, cur);

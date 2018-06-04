@@ -42,4 +42,7 @@ bool cat_path_ex_s(filesys_dp_handle src_dp, const char *src_path,
 /* 给定一个文件路径，将其转换为父目录路径 */
 bool to_parent_dir(char *filepath);
 
+/* 原地把一个路径中的..和.字给压缩掉，返回压缩后路径字符串的长度 */
+uint32_t compress_path(char *path);
+
 #endif /* TINY_OS_SHARD_PATH_H */

@@ -229,3 +229,68 @@ bool to_parent_dir(char *filepath)
     filepath[last_slash] = '\0';
     return true;
 }
+
+static bool match_prefix(const char *dst,
+                         const char *prefix, size_t prefix_len)
+{
+    for(size_t i = 0; i < prefix_len; ++i)
+    {
+        if(dst[i] != prefix[i])
+            return false;
+    }
+    return true;
+}
+
+uint32_t compress_path(char *path)
+{
+    uint32_t dp_field_len = 0;
+    if(is_path_containning_dp(path))
+    {
+        const char *_path = skip_dp_in_abs_path(path);
+        dp_field_len = _path - path;
+        path += dp_field_len;
+    }
+
+    uint32_t ip = 0, wp = 0;
+    while(true)
+    {
+        if(!path[ip])
+            break;
+        if(match_prefix(&path[ip], "/.", 3))
+        {
+            if(wp == 0)
+                path[wp++] = '/';
+            break;
+        }
+        if(match_prefix(&path[ip], "/./", 3))
+        {
+            ip += 2;
+            continue;
+        }
+        if(match_prefix(&path[ip], "/..", 4))
+        {
+            if(wp == 0)
+                path[wp++] = '/';
+            while(path[--wp] != '/')
+                ;
+            break;
+        }
+        if(match_prefix(&path[ip], "/../", 4))
+        {
+            if(wp == 0)
+                path[wp++] = '/';
+            while(path[--wp] != '/')
+                ;
+            ip += 3;
+            continue;
+        }
+        path[wp++] = path[ip++];
+        while(path[ip] && path[ip] != '/')
+            path[wp++] = path[ip++];
+    }
+
+    if(!wp)
+        path[wp++] = '/';
+    path[wp] = '\0';
+    return dp_field_len + wp;
+}
