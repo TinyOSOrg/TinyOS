@@ -224,7 +224,12 @@ static void kb_intr_handler()
 
         uint32_t idx = sc - 1;
         vk = scancode_translator[idx].vk;
-        if((kis_key_pressed(VK_LSHIFT) || kis_key_pressed(VK_RSHIFT)) ^ caps_lock)
+
+        bool upper = (kis_key_pressed(VK_LSHIFT) || kis_key_pressed(VK_RSHIFT));
+        ch = scancode_translator[idx].ch;
+        if('a' <= ch && ch <= 'z') // 只有字母受大写锁定的影响
+            upper ^= caps_lock;
+        if(upper)
             ch = scancode_translator[idx].upch;
         else
             ch = scancode_translator[idx].ch;
