@@ -77,8 +77,6 @@ FAILED:
 
 SUCCEED:
 
-    disp_printf("Current working directory: %u:%s\n",
-                *dp, cur);
     compress_path(cur);
     free_ker_page(cur_tmp);
     disp_printf("Current working directory: %u:%s",

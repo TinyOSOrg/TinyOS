@@ -636,9 +636,7 @@ static bool explorer_transfer()
                 // 因为涉及到进程状态，这里对前台进程显示缓存的查询需要关中断
                 intr_state is = fetch_and_disable_intr();
 
-                ASSERT(cur_fg_proc && cur_fg_proc->pis == pis_foreground);
-
-                if(cur_fg_proc->disp_buf)
+                if(!cur_fg_proc || cur_fg_proc->disp_buf)
                 {
                     set_intr_state(is);
                     return true;
