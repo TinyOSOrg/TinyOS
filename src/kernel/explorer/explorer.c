@@ -427,7 +427,7 @@ INVALID_ARGUMENT:
 
     disp_new_line();
     disp_put_str("Invalid command/argument(s), "
-                 "enter 'man' for command documentation");
+                 "enter 'help' for command documentation");
     return true;
 }
 
@@ -671,7 +671,7 @@ void explorer()
 
     static const char welcome[] =
         "Welcome to TinyOS\n"
-        "Enter 'man' for command documentation";
+        "Enter 'help' for command documentation";
     disp_put_str(welcome);
 
     while(explorer_transfer())
