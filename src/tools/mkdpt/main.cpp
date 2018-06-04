@@ -61,11 +61,8 @@ int main(int argc, const char *argv[])
     stringstream sst;
     sst << "dd if=mkdpttmp of=" << argv[1] << " bs=512 count=1 seek="
         << to_string(DPT_SECTOR_POSITION) << " conv=notrunc";
-    int x = system(sst.str().c_str());
-
-    x = system("rm -f mkdpttmp");
-
-    (void)x;
+    system(sst.str().c_str());
+    system("rm -f mkdpttmp");
 
     cout << "DPT inited" << endl;
 }

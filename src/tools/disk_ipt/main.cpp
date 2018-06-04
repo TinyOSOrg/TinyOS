@@ -80,11 +80,8 @@ int main(int argc, char *argv[])
     sst << "dd if=disk_ipt_tmp of=" << argv[1] << " bs=512 count="
         << sec_cnt << " seek=" << to_string(DISK_IMPORT_DP_BEGIN)
         << " conv=notrunc";
-    int x = system(sst.str().c_str());
-
-    x = system("rm -f disk_ipt_tmp");
-
-    (void)x;
+    system(sst.str().c_str());
+    system("rm -f disk_ipt_tmp");
 
     cout << "Import dp inited" << endl;
 }

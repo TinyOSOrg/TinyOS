@@ -6,7 +6,8 @@ CC_FLAGS = -m32 $(CC_INCLUDE_FLAGS) \
 
 CPPC = g++
 CPPC_INCLUDE_FLAGS = -I src/include/ -I .
-CPPC_FLAGS = -std=c++14 -Werror -Wall -O2 $(CPPC_INCLUDE_FLAGS)
+CPPC_FLAGS = -std=c++14 -Werror -Wall -O2 $(CPPC_INCLUDE_FLAGS) \
+			 -Wno-unused-result
 
 LD = ld
 LD_FLAGS = -m elf_i386
