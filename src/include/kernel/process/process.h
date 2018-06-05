@@ -159,4 +159,6 @@ uint32_t syscall_yield_CPU_impl();
 
 uint32_t syscall_thread_exit_impl();
 
+uint32_t syscall_new_thread_impl(void (*entry)());
+
 #endif /* TINY_OS_PROCESS_H */

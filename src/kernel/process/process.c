@@ -539,3 +539,18 @@ uint32_t syscall_thread_exit_impl()
     kexit_thread();
     return 0;
 }
+
+uint32_t syscall_new_thread_impl(void (*entry)())
+{
+    if((uint32_t)entry >= KER_ADDR_BEGIN)
+        return false;
+
+    struct PCB *pcb = get_cur_PCB();
+    thread_exec_func thread_entry = (thread_exec_func)
+        (pcb->is_PL_0 ? process_thread_entry_PL_0 :
+                        process_thread_entry_PL_3);
+    struct TCB *tcb = create_thread(thread_entry, entry, pcb);
+    push_back_ilist(&pcb->threads_list, &tcb->threads_in_proc_node);
+
+    return true;
+}

@@ -15,6 +15,8 @@ void yield_cpu();
 
 void exit_thread();
 
+bool new_thread(void (*entry)());
+
 /* 屏幕输出相关 */
 
 void set_char_row_col(uint8_t row, uint8_t col, char ch);

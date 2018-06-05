@@ -13,6 +13,9 @@
 /* 内核页目录开头（物理） */
 #define KER_PDE_PHY_ADDR 0x200000
 
+/* 内核地址空间起点 */
+#define KER_ADDR_BEGIN 0xc0000000
+
 /* 内核页目录地址（虚拟） */
 #define KER_PDE_VIR_ADDR (0xc0000000 + KER_PDE_PHY_ADDR)
 

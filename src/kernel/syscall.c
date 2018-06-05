@@ -24,6 +24,8 @@ void init_syscall()
         (syscall_impl)&syscall_yield_CPU_impl;
     syscall_func_table[SYSCALL_EXIT_THREAD] =
         (syscall_impl)&syscall_thread_exit_impl;
+    syscall_func_table[SYSCALL_NEW_THREAD] =
+        (syscall_impl)&syscall_new_thread_impl;
 
     // declared in kernel/console/console.h
 
