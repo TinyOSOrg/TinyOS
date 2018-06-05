@@ -243,11 +243,10 @@ static void thread_scheduler()
 
     // 检查是否需要切换进程资源
     if(last->pcb != cur_running_TCB->pcb && cur_running_TCB->pcb)
-    {
         set_current_vir_addr_space(cur_running_TCB->pcb->addr_space);
-        if(!cur_running_TCB->pcb->is_PL_0)
-            _set_tss_esp0((uint32_t)(cur_running_TCB->init_ker_stack));
-    }
+
+    if(!cur_running_TCB->pcb->is_PL_0)
+        _set_tss_esp0((uint32_t)(cur_running_TCB->init_ker_stack));
 
     if(last->state == thread_state_killed)
     {
