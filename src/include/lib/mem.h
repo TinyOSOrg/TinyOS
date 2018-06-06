@@ -15,4 +15,11 @@ static inline void free(void *ptr)
     _free(ptr);
 }
 
+/* IMPROVE */
+static inline void *remalloc(void *ptr, size_t size)
+{
+    free(ptr);
+    return malloc(size);
+}
+
 #endif /* TINY_OS_LIB_MEM_H */
