@@ -41,7 +41,7 @@ bochs的编译运行依赖于：
 ![ss01](./doc/pics/01-explorer.png)
 ![ss02](./doc/pics/02-ed.png)
 
-系统默认交互界面分为上边的Output区域和下边的Command区域，Output区域用于显示输出，Command区域用于输入命令。系统已经提供的命令包括：
+系统默认交互界面分为Output区域和Command区域，前者用于显示输出，后者用于输入命令。系统已经提供的命令包括：
 
 1. cd path              : 修改当前工作路径
 2. clear                : 清空Output区域
