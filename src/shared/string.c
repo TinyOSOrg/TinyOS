@@ -38,6 +38,11 @@ int strcmp(const char *lhs, const char *rhs)
     return L ? 1 : (R ? -1 : 0);
 }
 
+int strcoll(const char *L, const char *R)
+{
+    return strcmp(L, R);
+}
+
 void strcat(char *fst, const char *snd)
 {
     while(*fst)
@@ -54,6 +59,14 @@ uint32_t strfind(const char *str, char c, uint32_t beg)
         ++beg;
     }
     return STRING_NPOS;
+}
+
+const char *strchr(const char *str, int ch)
+{
+    size_t offset = strfind(str, (char)ch, 0);
+    if(offset != STRING_NPOS)
+        return str + offset;
+    return NULL;
 }
 
 void uint32_to_str(uint32_t intval, char *buf)
@@ -102,16 +115,31 @@ bool str_to_uint32(const char *str, uint32_t *_val)
     return true;
 }
 
-void memset(char *dst, uint8_t val, size_t byte_size)
+void memset(void *_dst, uint8_t val, size_t byte_size)
 {
+    char *dst = (char*)_dst;
     for(size_t i = 0;i != byte_size; ++i)
         dst[i] = val;
 }
 
-void memcpy(char *dst, const char *src, size_t byte_size)
+void memcpy(void *_dst, const void *_src, size_t byte_size)
 {
+    char *dst = (char*)_dst, *src = (char*)_src;
     for(size_t i = 0;i != byte_size; ++i)
         dst[i] = src[i];
+}
+
+int memcmp(const void *L, const void *R, size_t byte_size)
+{
+    uint8_t *l = (uint8_t*)L, *r = (uint8_t*)R;
+    for(size_t i = 0; i < byte_size; ++i)
+    {
+        if(l[i] < r[i])
+            return -1;
+        if(l[i] > r[i])
+            return 1;
+    }
+    return 0;
 }
 
 /* 算法：ELFHash */

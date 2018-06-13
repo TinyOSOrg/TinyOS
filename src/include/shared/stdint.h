@@ -14,6 +14,21 @@ typedef unsigned int       uint32_t;
 typedef unsigned long long uint64_t;
 
 typedef uint32_t size_t;
+typedef int32_t  ptrdiff_t;
+
+#define LLONG_MAX 0x7fffffffffffffffLL
+#define LLONG_MIN 0x8000000000000000LL
+
+#define INT_MAX   0x7fffffff
+#define INT_MIN   0x80000000
+
+#define SHRT_MAX 0x7fff
+
+#define UINT_MAX 0xffffffff
+
+#define UCHAR_MAX 0x255
+
+#define CHAR_BIT 8
 
 #endif /* no TINY_OS_NO_INTDEF */
 

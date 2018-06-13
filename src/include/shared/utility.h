@@ -30,6 +30,8 @@
 #define GET_STRUCT_FROM_MEMBER(STU, MEM, p_mem) \
     ((STU*)((char*)(p_mem) - (char*)(&((STU*)0)->MEM)))
 
+#define offsetof(S, M) ((size_t)&(((S*)0)->M))
+
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof(A[0]))
 
 static inline uint32_t ceil_int_div(uint32_t a, uint32_t b)
