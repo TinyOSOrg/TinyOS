@@ -19,6 +19,11 @@ static inline bool isdigit(char ch)
     return '0' <= ch && ch <= '9';
 }
 
+static inline bool isalnum(char ch)
+{
+    return isalpha(ch) || isdigit(ch);
+}
+
 static inline bool isspace(char ch)
 {
     // 暂时只管这三个……
