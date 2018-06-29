@@ -1,6 +1,6 @@
 # TinyOS
 
-学习用小型操作系统，运行在x86（32位）计算机上。
+学习用小型操作系统，运行在x86（32位）单核计算机上。
 
 ---
 
@@ -22,11 +22,7 @@
 
 bochs的编译运行依赖于：
 
-1. bochs(2.65+)
-2. gnu make，gcc (C99)，g++ (C++14)，ld
-3. 汇编器nasm
-4. 命令行工具dd
-5. bximage（通常随bochs一起安装）
+> bochs 2.65+, gnu make, gcc, g++, ld, nasm, dd, bximage（通常随bochs一起安装）
 
 要使用bochs运行该系统，可执行以下步骤：
 
